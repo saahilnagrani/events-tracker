@@ -1,5 +1,5 @@
 {
   "_comment": "Paste the two public values from Supabase: Dashboard -> Project Settings -> API. Both are safe to commit: the anon key is designed to ship in a page, and access is enforced by the Row Level Security policies in supabase/schema.sql, not by keeping this key secret. Leave them empty and the app stays local-only, saving to the browser as before.",
-  "supabase_url": "",
-  "supabase_anon_key": ""
+  "supabase_url": "https://dwqgjokitoimkjyqgenm.supabase.co",
+  "supabase_anon_key": "sb_publishable_I3CMGxGXPc3kviggzn2pjA_V-JCTqz3"
 }
