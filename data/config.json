@@ -34,5 +34,10 @@
   "low_windows": [
     ["2026-08-01", "2026-08-31", { "delta": -1.0, "label": "Late-August low season: a large share of residents are still away" }]
   ],
-  "nye_dates": ["2026-12-31", "2027-01-01"]
+  "nye_dates": ["2026-12-31", "2027-01-01"],
+  "_scrape_note": "Fail-loud thresholds for src/scrape.py, not used by the model. The 17 Aug 2026 sweep saw 67 events (64 Dubai, 3 Abu Dhabi), so min_events has little headroom once a festival wave rolls off; raise it only with evidence.",
+  "scrape": {
+    "min_events": 60,
+    "required_cities": ["Dubai", "Abu Dhabi"]
+  }
 }
