@@ -1,0 +1,38 @@
+{
+  "_comment": "Tuning for the viability model. Dates are ISO. Weights are added to the day-of-week base; negatives are penalties.",
+  "range": ["2026-08-13", "2027-03-31"],
+  "base_by_weekday": {
+    "0": 1.5, "1": 1.5, "2": 2.0, "3": 3.0, "4": 4.5, "5": 5.0, "6": 3.0
+  },
+  "_base_note": "0=Mon .. 6=Sun. Saturday leads because this circuit already books Saturdays: Atul Khatri, Gaurav Kapoor, Sumukhi Suresh, Kunal Kamra, Biswa Kalyan Rath and Varun Grover all play Sat.",
+  "weights": {
+    "adjacent_direct": -1.0,
+    "desi_concert": -2.5,
+    "other_comedy": -0.8,
+    "festival_window": -2.5,
+    "eid_window": 1.5,
+    "public_holiday": 1.0,
+    "nye": -2.5
+  },
+  "tiers": { "prime": 4.0, "good": 2.5, "weak": 1.0 },
+  "festival_window": ["2026-10-09", "2026-10-18"],
+  "ramadan": ["2027-02-08", "2027-03-09"],
+  "eid_window": ["2027-03-10", "2027-03-14"],
+  "_moon_note": "Ramadan and Eid are astronomical forecasts and move with the moon sighting. Re-check each year and update these two windows; the model treats them as hard inputs.",
+  "holidays": {
+    "2026-12-02": "Eid Al Etihad (National Day)",
+    "2026-12-03": "Eid Al Etihad (National Day)",
+    "2027-01-01": "New Year's Day",
+    "2027-03-10": "Eid Al Fitr (expected)",
+    "2027-03-11": "Eid Al Fitr (expected)",
+    "2027-03-12": "Eid Al Fitr (expected)"
+  },
+  "peak_windows": [
+    ["2026-12-20", "2026-12-31", { "delta": 0.7, "label": "Dubai Shopping Festival and winter peak: visitor numbers high" }],
+    ["2027-01-01", "2027-01-15", { "delta": 0.5, "label": "Winter peak season" }]
+  ],
+  "low_windows": [
+    ["2026-08-01", "2026-08-31", { "delta": -1.0, "label": "Late-August low season: a large share of residents are still away" }]
+  ],
+  "nye_dates": ["2026-12-31", "2027-01-01"]
+}
