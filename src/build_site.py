@@ -314,7 +314,8 @@ def checklist_html(checklists):
 
     return f"""
  <div class="cl-bar">
-  <select id="cl-pick" aria-label="Which checklist">{picker}</select>
+  <span class="sel"><select id="cl-pick"
+   aria-label="Which checklist">{picker}</select></span>
   <label class="cl-date">Show date
    <input type="date" id="cl-date"></label>
   <button type="button" id="cl-export" class="icon-btn">Copy JSON</button>
@@ -522,7 +523,30 @@ h2 small{font-weight:400;color:var(--ink-2);font-size:12.5px;margin-left:6px}
  scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px}
 .months::-webkit-scrollbar{display:none}
 .mo{flex:0 0 100%;scroll-snap-align:center;background:var(--surface-1);
- border:1px solid var(--ring);border-radius:14px;padding:10px}
+ border:1px solid var(--ring);border-radius:14px;padding:10px;container-type:inline-size}
+/* When a panel is too narrow for the word, the icon and the hatch carry the tier
+   instead. Both are non-colour signals, so a colour-blind reader still separates the
+   tiers; the word is still in the cell's aria-label, the hover summary and the detail
+   panel. Truncating it to "BLOCK..." would be worse than dropping it cleanly. */
+/* Selectors are .grid-prefixed so they outrank the plain .day/.lb rules declared
+   further down; container queries do not add specificity of their own. */
+@container (max-width:339px){
+ .grid .day{padding:2px}
+ .grid .lb{font-size:5.6px}
+}
+@container (max-width:399px){
+ .grid .day{padding:3px}
+ .grid .dn{font-size:12.5px}
+ .grid .ic{font-size:12px}
+}
+@container (min-width:400px){
+ .grid .lb{font-size:7.5px;letter-spacing:.02em}
+}
+@container (min-width:470px){
+ .grid .lb{font-size:9px;letter-spacing:.05em}
+ .grid .dn{font-size:14px}
+ .grid .ic{font-size:13px}
+}
 .mo h3{margin:0 0 8px;font-size:14.5px}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
 .hd{font-size:10.5px;color:var(--muted);text-align:center;padding-bottom:3px;
@@ -641,9 +665,19 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 
 /* ---- checklist ---- */
 .cl-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 6px}
-.cl-bar select,.cl-bar input[type="date"]{font:inherit;font-size:13px;padding:7px 10px;
+/* These sit alongside the .ms facet dropdowns, so they take the same shape. The
+   checklist picker is a native select because it is a single choice, but it was the
+   only control on the page still wearing the browser's own styling. */
+.cl-bar select,.cl-bar input[type="date"]{font:inherit;font-size:13px;padding:8px 12px;
  border-radius:9px;border:1px solid var(--ring);background:var(--surface-1);
  color:var(--ink);min-height:38px}
+.sel{position:relative;display:inline-flex;max-width:100%;min-width:min(280px,100%)}
+.sel select{appearance:none;-webkit-appearance:none;padding-right:28px;width:100%;
+ text-overflow:ellipsis}
+.sel::after{content:"▾";position:absolute;right:11px;top:50%;
+ transform:translateY(-50%);color:var(--muted);font-size:10px;pointer-events:none}
+.cl-bar select:focus-visible,.cl-bar input[type="date"]:focus-visible{
+ outline:2px solid var(--ink);outline-offset:2px}
 .cl-date{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
 .cl-hint{font-size:12px;margin:2px 0 10px}
 .cl-hint code{font-size:11.5px}
@@ -691,11 +725,6 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 
 /* Very narrow phones (320px, an SE-sized screen) leave about 31px of cell for the
    label. Shrink it rather than let BLOCKED be ellipsised. */
-@media (max-width:359px){
- .day{padding:2px}
- .lb{font-size:5.8px}
-}
-
 /* Hover summary. Pointer devices get the prototype's tooltip back; touch devices never
    see it and use the detail panel instead. */
 #tip{position:fixed;z-index:60;max-width:330px;background:var(--ink);color:var(--plane);
@@ -719,20 +748,30 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
  .only-desk{display:inline}
  .only-mob{display:none}
 
- /* Seven columns each have to fit the word BLOCKED without truncating. Measured, that
-    needs a cell of about 66px, so a panel of about 520px. Three months to a row forces
-    a 55px cell and clips the label, which would break the never-colour-only rule, so
-    two roomy months beat three cramped ones. */
- .months{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));
+ /* Column count steps up with width. Below, a container query on each panel drops
+    the tier label once a panel is too narrow to render it, because at four months to
+    a row a cell is about 37px and the word BLOCKED needs 37px on its own. */
+ .months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
   gap:16px;overflow:visible;margin:0;padding:0}
  .mo{flex:none;padding:16px}
  .mo h3{font-size:16px;margin-bottom:10px}
  .mo-nav{display:none}
  .grid{gap:4px}
  .day{min-height:66px;padding:5px 7px}
- .dn{font-size:14px}
- .ic{font-size:13px}
- .lb{font-size:9px;letter-spacing:.05em}
+ /* On a laptop a four-up panel gives a 31px cell. A label small enough to fit there
+    is not readable, so below this width the icon and the hatch carry the tier on
+    their own. Both are non-colour signals, and the word is still in the cell's
+    aria-label, the hover summary and the detail panel. Phones keep their label at
+    similar panel widths, because a 5.6px label on a high-density screen held close
+    is legible in a way the same label on a laptop is not. */
+ /* Threshold is the panel's content box, which excludes its 16px padding: a 334px
+    panel measures 300px here. Three and four months to a row fall below it, two do
+    not. */
+ @container (max-width:299px){
+  .grid .lb{display:none}
+  .grid .ic{font-size:15px;margin-top:2px}
+  .grid .day{min-height:54px;justify-content:flex-start}
+ }
  .hd{font-size:11.5px;padding-bottom:6px}
 
  /* Controls are sized for thumbs on a phone; on a laptop that reads as oversized. */
@@ -786,8 +825,18 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
  .wrap{padding:0 24px 72px}
  .top-in,.wrap{max-width:1180px;margin-left:0}
 }
+@media (min-width:1150px){
+ .months{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (min-width:1350px){
+ /* Twelve months as three rows of four. */
+ .months{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
 @media (min-width:1400px){
- .top-in,.wrap{max-width:1320px}
+ .top-in,.wrap{max-width:1400px}
+}
+@media (min-width:1750px){
+ .top-in,.wrap{max-width:1680px}
 }
 
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto !important}}
