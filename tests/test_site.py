@@ -626,8 +626,15 @@ def main():
                                                  count_of(ctx) > 0)[1])
 
             print("\nsync backend")
-            check("no account row until a backend is configured",
-                  ctx.eval_on_selector("#cl-account", "el => el.hidden"))
+            # Asserts the relationship, not a fixed state: docs/ is built local-only
+            # or configured depending on data/backend.json, and both are valid.
+            check("the account row appears exactly when a backend is configured",
+                  ctx.evaluate("""() => {
+                      const b = window.__BACKEND__ || {};
+                      const on = !!(b.supabase_url && b.supabase_anon_key);
+                      return document.getElementById('cl-account').hidden === !on; }"""),
+                  "configured" if ctx.evaluate(
+                      "() => !!((window.__BACKEND__||{}).supabase_url)") else "local only")
             check("the page states its backend config either way",
                   ctx.evaluate("() => typeof window.__BACKEND__ === 'object'"))
 
