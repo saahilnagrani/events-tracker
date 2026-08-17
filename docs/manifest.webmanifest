@@ -1,6 +1,6 @@
 {
- "name": "UAE comedy and desi events tracker",
- "short_name": "Viable dates",
+ "name": "Events Tracker",
+ "short_name": "Events Tracker",
  "description": "Which UAE dates are free for an Indian stand-up show, scored against everything already on sale.",
  "start_url": ".",
  "scope": ".",

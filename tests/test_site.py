@@ -105,18 +105,23 @@ def main():
             ctx.goto(url, wait_until="load")
 
             print("\ntabs")
-            check("page is titled just the product name", ctx.title() == "Viable dates",
-                  ctx.title())
-            check("header carries the title and nothing else",
-                  ctx.inner_text("h1").strip() == "Viable dates"
-                  and ctx.eval_on_selector_all(".top p", "els => els.length") == 0
+            check("header carries a name and nothing else",
+                  ctx.eval_on_selector_all(".top p", "els => els.length") == 0
                   and ctx.eval_on_selector_all(".scope", "els => els.length") == 0)
             check("events is the landing tab", ctx.is_visible("#panel-events"))
-            for name in ("calendar", "checklist", "events"):
+            # The app is Events Tracker; each section is a page that names itself in the
+            # heading and in the browser tab.
+            for name, page in (("calendar", "Calendar"), ("checklist", "Checklist"),
+                               ("events", "Events")):
                 ctx.click(f"#tab-{name}")
-                ctx.wait_for_timeout(100)
+                ctx.wait_for_timeout(120)
                 check(f"{name} tab opens", ctx.is_visible(f"#panel-{name}")
                       and ctx.get_attribute(f"#tab-{name}", "aria-pressed") == "true")
+                check(f"{name} names itself in the heading",
+                      ctx.inner_text("#page-title").strip() == page,
+                      ctx.inner_text("#page-title"))
+                check(f"{name} names itself in the browser tab",
+                      ctx.title() == f"{page} \u00b7 Events Tracker", ctx.title())
 
             print("\nevent filters")
             total = int(ctx.get_attribute("#ev-count", "data-count"))
@@ -431,6 +436,8 @@ def main():
 
             print("\ninstallability and offline")
             man = json.loads(Path(DOCS / "manifest.webmanifest").read_text())
+            check("the installed app is named for the app, not a page",
+                  man["name"] == "Events Tracker", man["name"])
             check("manifest start_url is relative",
                   not str(man["start_url"]).startswith("/"), man["start_url"])
             check("manifest scope is relative",
