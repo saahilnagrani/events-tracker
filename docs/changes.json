@@ -1,0 +1,124 @@
+{
+ "generated": "2026-08-17",
+ "has_changes": true,
+ "summary": {
+  "added": 0,
+  "removed": 0,
+  "changed": 0,
+  "dates_lost": 0,
+  "dates_gained": 0,
+  "review_queue": 13,
+  "review_queue_new": 13
+ },
+ "added": [],
+ "removed": [],
+ "changed": [],
+ "dates_lost": [],
+ "dates_gained": [],
+ "review_queue": [
+  {
+   "event": "The Revolution Tour - Sonu Nigam in Abu Dhabi",
+   "url": "https://abu-dhabi.platinumlist.net/event-tickets/106429/the-revolution-tour-sonu-nigam",
+   "city": "Abu Dhabi",
+   "start": "2026-08-21",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "Bhuwin Experience - Noor-e-Daastan in Dubai",
+   "url": "https://dubai.platinumlist.net/event-tickets/105332/bhuwin-experience-noor-e-daastan",
+   "city": "Dubai",
+   "start": "2026-08-30",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "Bhakti 2.0 at Oud Mehta Theater in Dubai",
+   "url": "https://dubai.platinumlist.net/event-tickets/107427/bhakti-at-oud-mehta-theater-in-dubai",
+   "city": "Dubai",
+   "start": "2026-09-25",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "KHUSHIYAN: A Live Storytelling Experience Featuring Laksh Maheshwari in Dubai",
+   "url": "https://dubai.platinumlist.net/event-tickets/106836/khushiyan-a-live-storytelling-experience-featuring-laksh-maheshwari",
+   "city": "Dubai",
+   "start": "2026-09-26",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "Alaa Abu Diab at The Raj Mahal Theatre in Dubai Parks and Resorts",
+   "url": "https://dubai.platinumlist.net/event-tickets/107702/alaa-abu-diab-at-the-raj-mahal-theatre-in-dubai-parks-and-resorts",
+   "city": "Dubai",
+   "start": "2026-10-03",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "Baithak ft. Osman Mir & Aamir Mir",
+   "url": "https://dubai.platinumlist.net/event-tickets/107705/baithak-ft-osman-mir-and-aamir-mir",
+   "city": "Dubai",
+   "start": "2026-10-03",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "Morgan Jay - The Goofy Guy Tour in Abu Dhabi",
+   "url": "https://abu-dhabi.platinumlist.net/event-tickets/106036/morgan-jay-the-goofy-guy-tour",
+   "city": "Abu Dhabi",
+   "start": "2026-10-11",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "Navratri Utsav 2026 in Dubai",
+   "url": "https://dubai.platinumlist.net/event-tickets/107326/navratri-utsav-2026-in-dubai",
+   "city": "Dubai",
+   "start": "2026-10-16",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "Falguni Pathak Live in Dubai",
+   "url": "https://dubai.platinumlist.net/event-tickets/107047/falguni-pathak-live-in-dubai",
+   "city": "Dubai",
+   "start": "2026-10-24",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "Bassam Wehbe - One Way Ticket in Dubai",
+   "url": "https://dubai.platinumlist.net/event-tickets/106609/bassam-wehbe-one-way-ticket",
+   "city": "Dubai",
+   "start": "2026-11-19",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "Anuv Jain Live at Expo City Dubai",
+   "url": "https://dubai.platinumlist.net/event-tickets/104347/anuv-jain-live-in-expo-city-dubai",
+   "city": "Dubai",
+   "start": "2026-11-20",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "Atif Aslam 2026 in Dubai",
+   "url": "https://dubai.platinumlist.net/event-tickets/104859/atif-aslam",
+   "city": "Dubai",
+   "start": "2026-11-27",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "URJA - Divine Energy at Oud Mehta Theater in Dubai",
+   "url": "https://dubai.platinumlist.net/event-tickets/104970/urja-divine-energy-at-oud-mehta-theater-in-dubai",
+   "city": "Dubai",
+   "start": "2026-11-27",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  }
+ ]
+}
