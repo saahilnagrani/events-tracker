@@ -1,0 +1,31 @@
+{
+  "_comment": "Curated allowlist used to classify a scraped listing as Indian (English/Hindi) stand-up. Matching is case-insensitive substring against the event title and the artist field. Anything that matches keywords but no known artist goes to review_queue rather than being silently included or dropped.",
+  "indian_standup_artists": [
+    "Amit Tandon", "Angad Ranyal", "Anmol Garg", "Anubhav Singh Bassi", "Atul Khatri",
+    "Abbas Bukhari", "Biswa Kalyan Rath", "Gaurav Gupta", "Gaurav Kapoor", "Jamie Lever",
+    "Jaspreet Singh", "Kanan Gill", "Kenny Sebastian", "Kunal Kamra", "Munawar Faruqui",
+    "Onkar", "Pranav Sharma", "Rahul Subramanian", "Rajat Chauhan", "Sapan Verma",
+    "Shashi Dhiman", "Siddhartha Shetty", "Sorabh Pant", "Sumukhi Suresh", "Sunil Grover",
+    "Varun Grover", "Vir Das", "Zakir Khan", "Zarna Garg", "Aakash Gupta", "Samay Raina",
+    "Nishant Tanwar", "Abhishek Upmanyu", "Anirban Dasgupta", "Daniel Fernandes",
+    "Neeti Palta", "Aditi Mittal", "Rohan Joshi", "Azeem Banatwalla", "Sundeep Sharma",
+    "Russell Peters", "Akaash Singh", "Hasan Minhaj", "Aravind SA", "Alexander Babu",
+    "MOMic Amruta", "Amruta Bendre", "Praveen Kumar", "Karunesh Talwar", "Sapan Verma"
+  ],
+  "series_names": [
+    "Comedy Box Office", "Silly Papa", "Out Of Order", "Phulka Dots"
+  ],
+  "desi_keywords": [
+    "bollywood", "hindi", "hinglish", "urdu", "punjabi", "gujarati", "tamil", "marathi",
+    "telugu", "malayalam", "qawwali", "qawalli", "ghazal", "sufi", "bhajan", "baithak",
+    "mehfil", "navratri", "garba", "diwali", "carnatic", "classical indian", "desi"
+  ],
+  "exclude_keywords": [
+    "brunch", "quiz night", "open mic karaoke", "comic con"
+  ],
+  "notes": [
+    "Russell Peters, Zarna Garg, Hasan Minhaj and Akaash Singh are diaspora acts performing in English. They compete for the same audience, so they count as direct competition even though they are not Indian nationals.",
+    "Abbas Bukhari performs in Urdu and Munawar Faruqui in Hindi; both draw the same crowd and count as direct.",
+    "The seed list came from the Aug 2026 Platinumlist sweep plus well known touring acts likely to appear. Extend it when the review queue surfaces a new name."
+  ]
+}
