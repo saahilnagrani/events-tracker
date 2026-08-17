@@ -55,7 +55,7 @@ BACKOFF = [2, 4, 8, 16]
 
 # The cache stores parsed output, not raw HTML, so a change to parse_detail has to
 # invalidate it. Bump this whenever parse_detail's output shape or meaning changes.
-PARSER_VERSION = 2
+PARSER_VERSION = 4
 
 MONTHS = {m: i for i, m in enumerate(
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1)}
@@ -229,6 +229,16 @@ def parse_detail(html):
             value = float(m.group(1).replace(",", ""))
             out["price_from_aed"] = int(value) if value == int(value) else value
 
+    # When a show sells out the whole on-sale block is replaced, taking the price and
+    # the door/start times with it. That is real state, not a parse failure, and it has
+    # to be distinguished from one: see the time carry-forward in build().
+    # There are several .buy-block__section nodes; the date sits in the first one and
+    # the sold-out marker in a later one, so every section has to be checked.
+    sections = t.css(".buy-block__section")
+    out["sold_out"] = bool(
+        t.css_first(".buy-block__section--on-sale") is None
+        and any("sold out" in " ".join(s.text().split()).lower() for s in sections))
+
     stamp = webengage_iso(html)
     if stamp:
         out["iso_start"] = stamp[:10]
@@ -345,8 +355,21 @@ def build(session, cards, artists, cache, args, log=print):
         category = ("Comedy + Desi" if len(card["categories"]) > 1
                     else next(iter(card["categories"])))
 
+        # A sold-out page stops publishing the time, but the show still happens then, so
+        # the last known time is carried forward and labelled. This is deliberately
+        # limited to the sold-out case: if the selectors ever break site-wide, times go
+        # null and the breakage stays visible instead of being papered over with
+        # yesterday's data.
+        event_time = detail.get("time")
+        if not event_time and detail.get("sold_out") and old.get("time"):
+            event_time = old["time"]
+
         notes = old.get("notes", "")
         markers = []
+        if detail.get("sold_out"):
+            markers.append("Sold out on Platinumlist" + (
+                "; time carried over from when it was on sale"
+                if not detail.get("time") and event_time else ""))
         if is_recurring(url):
             markers.append("Recurring series; Platinumlist lists only the next occurrence")
         source = detail.get("time_source")
@@ -367,7 +390,7 @@ def build(session, cards, artists, cache, args, log=print):
             "artist": artist,
             "start": start,
             "end": end,
-            "time": detail.get("time"),
+            "time": event_time,
             "venue": detail.get("venue") or "",
             "price_from_aed": detail.get("price_from_aed"),
             "language": infer_language(f"{title} {detail.get('description', '')}"),
