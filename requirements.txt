@@ -1,0 +1,2 @@
+requests>=2.31
+selectolax>=0.3.21
