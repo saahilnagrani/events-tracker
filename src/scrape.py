@@ -384,6 +384,8 @@ def build(session, cards, artists, cache, args, log=print):
                 notes = f"{notes}; {marker}" if notes else marker
 
         events.append({
+            "listed": True,
+            "last_seen": date.today().isoformat(),
             "city": card["city"],
             "category": category,
             "event": title,
@@ -403,21 +405,42 @@ def build(session, cards, artists, cache, args, log=print):
             review.append({"event": title, "url": url, "city": card["city"],
                            "start": start, "why": "matches desi keywords but no known artist"})
 
+    # Keep everything ever seen. A show that has come off Platinumlist is still a fact
+    # about the market: it ran, or it was cancelled, and either way dropping it silently
+    # would rewrite history every time a listing expired. Delisted events keep their
+    # last known fields and the date they were last on sale.
+    live = {e["url"].rstrip("/") for e in events}
+    archived = 0
+    for url, old_event in previous.items():
+        if url in live:
+            continue
+        kept = dict(old_event)
+        kept["listed"] = False
+        kept.setdefault("last_seen", kept.get("start"))
+        events.append(kept)
+        archived += 1
+
     events.sort(key=lambda e: (e["start"], e["city"], e["event"]))
-    return events, review, fetched, reused
+    return events, review, fetched, reused, archived
 
 
 def check(events, cfg, log=print):
-    """Fail loudly. A quietly empty calendar is worse than a stale one."""
+    """Fail loudly. A quietly empty calendar is worse than a stale one.
+
+    Counts only what is currently listed. Once the dataset retains delisted events the
+    totals climb forever, and a threshold measured against them would stop detecting the
+    thing it exists to detect: a scrape that came back empty.
+    """
     limits = cfg.get("scrape", {})
     floor = limits.get("min_events", 60)
+    current = [e for e in events if e.get("listed", True)]
     problems = []
-    if len(events) < floor:
-        problems.append(f"only {len(events)} events, floor is {floor}")
+    if len(current) < floor:
+        problems.append(f"only {len(current)} events on sale, floor is {floor}")
     for city in limits.get("required_cities", ["Dubai", "Abu Dhabi"]):
-        n = sum(1 for e in events if e["city"] == city)
+        n = sum(1 for e in current if e["city"] == city)
         if n == 0:
-            problems.append(f"zero events for {city}")
+            problems.append(f"zero events on sale for {city}")
     undated = [e for e in events if not e["start"]]
     if undated:
         problems.append(f"{len(undated)} events with no start date")
@@ -456,8 +479,8 @@ def main():
     print(f"  {len(cards)} unique events across {len(LISTINGS)} listings")
 
     print("fetching detail pages")
-    events, review, fetched, reused = build(session, cards, artists, cache, args)
-    print(f"  {fetched} fetched, {reused} from cache")
+    events, review, fetched, reused, archived = build(session, cards, artists, cache, args)
+    print(f"  {fetched} fetched, {reused} from cache, {archived} retained after delisting")
 
     print("checks")
     problems = check(events, cfg)
@@ -465,10 +488,12 @@ def main():
         print(f"\nrefusing to write {args.out}; previous data left in place")
         return 1
 
+    current = [e for e in events if e.get("listed", True)]
     by_city = {}
-    for e in events:
+    for e in current:
         by_city[e["city"]] = by_city.get(e["city"], 0) + 1
-    print(f"  {len(events)} events {by_city}")
+    print(f"  {len(current)} on sale {by_city}, {len(events) - len(current)} delisted, "
+          f"{len(events)} total")
 
     if review:
         print(f"\nreview queue ({len(review)}): desi by keyword, no artist in artists.json")
