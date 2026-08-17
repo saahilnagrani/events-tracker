@@ -31,16 +31,43 @@ def parse(s):
 
 
 def classify(ev, artists):
-    """direct = competing Indian/desi stand-up; concert = major desi draw; other = any other comedy."""
+    """The kind of event this is, independent of which show you are staging.
+
+    standup      = Indian/desi stand-up, matched against artists.json
+    music        = a desi draw that is not stand-up: concerts, ghazal, qawwali, bhajan
+    comedy_other = any other comedy
+
+    These are the same three buckets the original model used under the names direct,
+    concert and other; only the names changed, so scoring is unaffected.
+    """
     hay = f"{ev.get('event','')} {ev.get('artist','')}".lower()
     names = artists["indian_standup_artists"] + artists["series_names"]
     if any(n.lower() in hay for n in names):
-        return "direct"
+        return "standup"
     if ev.get("category") in ("Desi", "Comedy + Desi"):
-        return "concert"
+        return "music"
     if ev.get("category") == "Comedy":
-        return "other"
+        return "comedy_other"
     return None
+
+
+def lens_config(cfg, lens):
+    """Which event kinds block a date, compete with it, or merely dilute it."""
+    default = {"label": "Indian stand-up", "blocks_on": ["standup"],
+               "competing": ["music"], "minor": ["comedy_other"],
+               "festival_penalty": True}
+    return (cfg.get("lenses") or {}).get(lens, default)
+
+
+def window(cfg):
+    """Rolling window when range_months is set, else the fixed tuned range."""
+    months = cfg.get("range_months")
+    if not months:
+        return parse(cfg["range"][0]), parse(cfg["range"][1])
+    start = date.today()
+    month = start.month - 1 + int(months)
+    end = date(start.year + month // 12, month % 12 + 1, 1) - timedelta(days=1)
+    return start, end
 
 
 def expand(ev):
@@ -54,7 +81,13 @@ def expand(ev):
         d += timedelta(days=1)
 
 
-def build(events, cfg, artists):
+def build(events, cfg, artists, lens=None):
+    """Score every date in the window for one lens.
+
+    lens defaults to config's default_lens, which reproduces the original tuned model,
+    so existing callers (src/changes.py) keep the behaviour they were written against.
+    """
+    lens = lens or cfg.get("default_lens", "standup")
     w = cfg["weights"]
     base = {int(k): v for k, v in cfg["base_by_weekday"].items()}
     fest_s, fest_e = parse(cfg["festival_window"][0]), parse(cfg["festival_window"][1])
@@ -63,6 +96,10 @@ def build(events, cfg, artists):
     holidays = {parse(k): v for k, v in cfg["holidays"].items()}
     peaks = [(parse(a), parse(b), v) for a, b, v in cfg["peak_windows"]]
     lows = [(parse(a), parse(b), v) for a, b, v in cfg["low_windows"]]
+
+    spec = lens_config(cfg, lens)
+    blocks_on, competing = set(spec["blocks_on"]), set(spec["competing"])
+    minor = set(spec["minor"])
 
     by_day = {}
     for ev in events:
@@ -73,12 +110,15 @@ def build(events, cfg, artists):
             by_day.setdefault(d, []).append((ev, kind))
 
     days = []
-    d, end = parse(cfg["range"][0]), parse(cfg["range"][1])
+    d, end = window(cfg)
     while d <= end:
         todays = by_day.get(d, [])
-        direct = sorted({e["event"] for e, k in todays if k == "direct"})
-        concert = sorted({e["event"] for e, k in todays if k == "concert"})
-        other = sorted({e["event"] for e, k in todays if k == "other"})
+        # `direct`, `concert` and `other` keep their original names in the output so
+        # docs/viability.json and src/changes.py read the same as before; what lands in
+        # each bucket is now decided by the lens.
+        direct = sorted({e["event"] for e, k in todays if k in blocks_on})
+        concert = sorted({e["event"] for e, k in todays if k in competing})
+        other = sorted({e["event"] for e, k in todays if k in minor})
         score, reasons, boosts = base[d.weekday()], [], []
 
         if ram_s <= d <= ram_e:
@@ -89,17 +129,17 @@ def build(events, cfg, artists):
             reasons.append("Direct clash: " + "; ".join(direct))
         else:
             near = sorted({e["event"] for dd in (d - timedelta(1), d + timedelta(1))
-                           for e, k in by_day.get(dd, []) if k == "direct"})
+                           for e, k in by_day.get(dd, []) if k in blocks_on})
             if near:
                 score += w["adjacent_direct"]
-                reasons.append("Indian stand-up the night before or after: " + "; ".join(near))
+                reasons.append("Competing act the night before or after: " + "; ".join(near))
             if concert:
                 score += w["desi_concert"]
                 reasons.append("Major desi draw competing for the same wallet: " + "; ".join(concert))
             if other:
                 score += w["other_comedy"]
                 reasons.append("Other comedy on the same night: " + "; ".join(other))
-            if fest_s <= d <= fest_e:
+            if spec.get("festival_penalty", True) and fest_s <= d <= fest_e:
                 score += w["festival_window"]
                 reasons.append(f"Inside Dubai Comedy Festival ({fest_s:%-d}-{fest_e:%-d %b}): market saturated, venues booked")
             for a, b, v in lows:
@@ -137,16 +177,33 @@ def build(events, cfg, artists):
 
 
 def main():
+    from collections import Counter
     events, cfg, artists = load()
-    days = build(events, cfg, artists)
+    default = cfg.get("default_lens", "standup")
+    names = list((cfg.get("lenses") or {default: {}}).keys())
+
+    lenses = {name: build(events, cfg, artists, name) for name in names}
+    days = lenses[default]
+
     out = ROOT / "docs" / "viability.json"
     out.parent.mkdir(exist_ok=True)
-    out.write_text(json.dumps({"generated": date.today().isoformat(), "days": days, "events": events},
-                              indent=1, ensure_ascii=False))
-    from collections import Counter
-    c = Counter(x["tier"] for x in days)
-    print(f"{len(days)} days scored -> {dict(c)}")
-    print(f"direct-clash nights: {len({x['date'] for x in days if x['direct']})}")
+    out.write_text(json.dumps({
+        "generated": date.today().isoformat(),
+        "default_lens": default,
+        "lens_meta": {n: {k: v for k, v in lens_config(cfg, n).items()
+                          if k in ("label", "blurb")} for n in names},
+        # `days` stays the default lens so every existing reader keeps working.
+        "days": days,
+        "lenses": lenses,
+        "events": events,
+    }, indent=1, ensure_ascii=False))
+
+    for name in names:
+        c = Counter(x["tier"] for x in lenses[name])
+        clash = len({x["date"] for x in lenses[name] if x["direct"]})
+        mark = " (default)" if name == default else ""
+        print(f"{len(lenses[name])} days scored, lens '{name}'{mark} -> {dict(c)}, "
+              f"clash nights {clash}")
     return 0
 
 

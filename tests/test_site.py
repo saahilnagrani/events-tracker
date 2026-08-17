@@ -68,6 +68,12 @@ def serve(directory):
     return f"http://127.0.0.1:{port}/", httpd.shutdown
 
 
+def open_calendar(page):
+    """The calendar lives behind a tab now, so panels must be shown before measuring."""
+    page.click("#tab-calendar")
+    page.wait_for_timeout(120)
+
+
 def count_of(page):
     """None means the page script never ran, which is the failure this test exists for."""
     raw = page.get_attribute("#count", "data-count")
@@ -98,6 +104,41 @@ def main():
             ctx.on("pageerror", lambda e: errors.append(str(e)))
             ctx.goto(url, wait_until="load")
 
+            print("\ntabs")
+            check("events is the landing tab", ctx.is_visible("#panel-events"))
+            for name in ("calendar", "checklist", "events"):
+                ctx.click(f"#tab-{name}")
+                ctx.wait_for_timeout(100)
+                check(f"{name} tab opens", ctx.is_visible(f"#panel-{name}")
+                      and ctx.get_attribute(f"#tab-{name}", "aria-pressed") == "true")
+
+            print("\nevent filters")
+            total = int(ctx.get_attribute("#ev-count", "data-count"))
+            check("every event listed by default", total > 0, f"{total} events")
+            ctx.click('details.ms[data-ms="category"] summary')
+            ctx.click('input[data-facet="category"][value="Desi"]')
+            ctx.wait_for_timeout(120)
+            desi = int(ctx.get_attribute("#ev-count", "data-count"))
+            check("a facet narrows the list", 0 < desi < total, f"{total} -> {desi}")
+            check("filtered rows all match the facet", ctx.eval_on_selector_all(
+                ".ev", "els => els.filter(e => !e.hidden)"
+                       ".every(e => e.dataset.category === 'Desi')"))
+            ctx.click('input[data-facet="category"][value="Comedy"]')
+            ctx.wait_for_timeout(120)
+            both = int(ctx.get_attribute("#ev-count", "data-count"))
+            check("facets are multi-select, not single", both > desi,
+                  f"{desi} -> {both}")
+            check("the facet shows how many are ticked",
+                  ctx.inner_text('.ms[data-ms="category"] .ms-badge') == "2")
+            ctx.click("#ev-clear")
+            ctx.wait_for_timeout(120)
+            check("clearing restores every event",
+                  int(ctx.get_attribute("#ev-count", "data-count")) == total)
+            for facet in ("month", "artist", "category", "language"):
+                check(f"{facet} facet is present", ctx.eval_on_selector_all(
+                    f'input[data-facet="{facet}"]', "els => els.length") > 1)
+
+            open_calendar(ctx)
             print("\nfilters")
             base = count_of(ctx)
             if not check("page script initialised", base is not None,
@@ -158,6 +199,7 @@ def main():
             # so the default has to flip with width.
             wide = browser.new_page(viewport={"width": 1280, "height": 900})
             wide.goto(url, wait_until="load")
+            open_calendar(wide)
             check("calendar is the default on a desktop viewport",
                   wide.get_attribute("#v-calendar", "aria-pressed") == "true")
             check("desktop shows several months side by side",
@@ -174,6 +216,7 @@ def main():
             for width in (320, 360, 390, 768, 1280, 1440):
                 pg = browser.new_page(viewport={"width": width, "height": 900})
                 pg.goto(url, wait_until="load")
+                open_calendar(pg)
                 pg.click("#v-calendar")
                 pg.wait_for_timeout(150)
                 over = pg.eval_on_selector_all(
@@ -195,6 +238,7 @@ def main():
             print("\nlaptop gets a laptop layout")
             desk = browser.new_page(viewport={"width": 1440, "height": 900})
             desk.goto(url, wait_until="load")
+            open_calendar(desk)
             check("months lay out two or more to a row",
                   desk.evaluate("""() => {
                       const mos = [...document.querySelectorAll('.mo')];
@@ -220,6 +264,78 @@ def main():
             check("detail opens as a centred panel, not a phone bottom sheet", box > 40,
                   f"top={round(box)}")
             desk.close()
+
+            print("\nviability lenses")
+            # The markup carries only the default lens; switching restyles every cell
+            # from the inlined payload, so a lens that does not change the tiers would
+            # mean the payload never reached the DOM.
+            def tier_counts(page):
+                return page.eval_on_selector_all(".day[data-tier]", """els => {
+                    const c = {};
+                    els.forEach(e => c[e.dataset.tier] = (c[e.dataset.tier] || 0) + 1);
+                    return c; }""")
+
+            open_calendar(ctx)
+            ctx.click('[data-lens-opt="standup"]')
+            ctx.wait_for_timeout(200)
+            standup = tier_counts(ctx)
+            ctx.click('[data-lens-opt="music"]')
+            ctx.wait_for_timeout(200)
+            music = tier_counts(ctx)
+            check("a lens exists for each kind of show", ctx.eval_on_selector_all(
+                "[data-lens-opt]", "els => els.length") >= 3)
+            check("switching lens re-tiers the calendar", standup != music,
+                  f"standup {standup.get('blocked')} blocked vs "
+                  f"music {music.get('blocked')} blocked")
+            check("the lens explains itself",
+                  len(ctx.inner_text("#lens-blurb").strip()) > 10)
+            ctx.click('[data-lens-opt="desi"]')
+            ctx.wait_for_timeout(200)
+            desi_counts = tier_counts(ctx)
+            check("any-desi blocks at least as much as either kind alone",
+                  desi_counts.get("blocked", 0) >= max(standup.get("blocked", 0),
+                                                       music.get("blocked", 0)),
+                  f"desi {desi_counts.get('blocked')}")
+            ctx.click('[data-lens-opt="standup"]')
+
+            print("\nchecklist")
+            ctx.click("#tab-checklist")
+            ctx.wait_for_timeout(150)
+            shown = ctx.eval_on_selector_all(".tk", "els => els.filter(e => !e.hidden).length")
+            check("checklist tasks render", shown > 0, f"{shown} tasks")
+            ctx.fill("#cl-date", "2027-01-30")
+            ctx.dispatch_event("#cl-date", "change")
+            ctx.wait_for_timeout(200)
+            # Task 1 is D-150; 150 days before 30 Jan 2027 is 2 Sep 2026.
+            check("due dates derive from the show date",
+                  "2026-09-02" in ctx.eval_on_selector(
+                      '.tk[data-n="1"] .tk-due', "e => e.textContent"),
+                  ctx.eval_on_selector('.tk[data-n="1"] .tk-due', "e => e.textContent"))
+            before = ctx.inner_text(".cl-cell")
+            ctx.select_option('.tk[data-n="1"] .tk-status', "Done")
+            ctx.wait_for_timeout(200)
+            check("marking a task done moves the progress figure",
+                  ctx.inner_text(".cl-cell") != before,
+                  f"{before.split(chr(10))[0]} -> {ctx.inner_text('.cl-cell').split(chr(10))[0]}")
+            ctx.check("#cl-blockers")
+            ctx.wait_for_timeout(150)
+            check("blockers-only filter narrows the list", ctx.eval_on_selector_all(
+                ".tk", "els => els.filter(e => !e.hidden)"
+                       ".every(e => e.dataset.blocking === '1')"))
+            ctx.uncheck("#cl-blockers")
+            ctx.wait_for_timeout(100)
+            # Reload this page rather than opening a new one: a new page from
+            # browser.new_page() gets its own browser context, and therefore its own
+            # localStorage, so it could never see state saved here.
+            ctx.reload(wait_until="load")
+            ctx.click("#tab-checklist")
+            ctx.wait_for_timeout(250)
+            check("checklist state survives a reload",
+                  ctx.input_value("#cl-date") == "2027-01-30"
+                  and ctx.eval_on_selector('.tk[data-n="1"] .tk-status',
+                                           "e => e.value") == "Done",
+                  f'date={ctx.input_value("#cl-date")}')
+            ctx.click("#tab-calendar")
 
             print("\ncolour is never the only signal")
             check("every scored day carries an icon and a text label",
@@ -291,6 +407,7 @@ def main():
             shutdown()
             ctx.context.set_offline(True)
             ctx.reload(wait_until="load")
+            open_calendar(ctx)
             check("page still renders with the network down",
                   ctx.eval_on_selector_all(".day[data-tier]", "els => els.length") > 0)
             check("filters still work offline", (ctx.click("#f-prime"),
