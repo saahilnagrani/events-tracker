@@ -1,6 +1,8 @@
 {
   "_comment": "Tuning for the viability model. Dates are ISO. Weights are added to the day-of-week base; negatives are penalties.",
   "range": ["2026-08-13", "2027-03-31"],
+  "_range_note": "range is the fixed window the model was originally tuned against and is kept for reference. When range_months is set the model scores a rolling window of that many months starting today instead, so the site always shows the next year rather than a window that shrinks as dates pass.",
+  "range_months": 12,
   "base_by_weekday": {
     "0": 1.5, "1": 1.5, "2": 2.0, "3": 3.0, "4": 4.5, "5": 5.0, "6": 3.0
   },
@@ -25,8 +27,15 @@
     "2027-01-01": "New Year's Day",
     "2027-03-10": "Eid Al Fitr (expected)",
     "2027-03-11": "Eid Al Fitr (expected)",
-    "2027-03-12": "Eid Al Fitr (expected)"
+    "2027-03-12": "Eid Al Fitr (expected)",
+    "2027-05-16": "Arafat Day (expected)",
+    "2027-05-17": "Eid Al Adha (expected)",
+    "2027-05-18": "Eid Al Adha (expected)",
+    "2027-05-19": "Eid Al Adha (expected)",
+    "2027-06-06": "Islamic New Year (expected)",
+    "2027-08-15": "Prophet Muhammad's Birthday (expected)"
   },
+  "_holiday_note": "Everything from Feb 2027 onward is a moon-sighting forecast, not a gazetted date. The 2027 Hijri holidays were added so the rolling 12-month window does not silently under-score its later months; check them against the official UAE calendar when it is published and correct them here.",
   "peak_windows": [
     ["2026-12-20", "2026-12-31", { "delta": 0.7, "label": "Dubai Shopping Festival and winter peak: visitor numbers high" }],
     ["2027-01-01", "2027-01-15", { "delta": 0.5, "label": "Winter peak season" }]
@@ -35,6 +44,34 @@
     ["2026-08-01", "2026-08-31", { "delta": -1.0, "label": "Late-August low season: a large share of residents are still away" }]
   ],
   "nye_dates": ["2026-12-31", "2027-01-01"],
+  "_lens_note": "A lens is the kind of show you are staging. Events are classified into three kinds: standup (matches artists.json), music (a desi draw that is not Indian stand-up) and comedy_other (any other comedy). blocks_on rules the date out entirely and drives the night-before/after penalty; competing takes the desi_concert weight; minor takes the other_comedy weight. The standup lens reproduces the original model exactly, so its numbers are the ones to compare against the tuned baseline.",
+  "default_lens": "standup",
+  "lenses": {
+    "standup": {
+      "label": "Indian stand-up",
+      "blurb": "a night you could stage an Indian stand-up show",
+      "blocks_on": ["standup"],
+      "competing": ["music"],
+      "minor": ["comedy_other"],
+      "festival_penalty": true
+    },
+    "music": {
+      "label": "Desi live music",
+      "blurb": "a night you could stage a ghazal, qawwali or desi concert",
+      "blocks_on": ["music"],
+      "competing": ["standup"],
+      "minor": ["comedy_other"],
+      "festival_penalty": false
+    },
+    "desi": {
+      "label": "Any desi event",
+      "blurb": "a night clear of every desi draw, music or comedy",
+      "blocks_on": ["standup", "music"],
+      "competing": [],
+      "minor": ["comedy_other"],
+      "festival_penalty": true
+    }
+  },
   "_scrape_note": "Fail-loud thresholds for src/scrape.py, not used by the model. The 17 Aug 2026 sweep saw 67 events (64 Dubai, 3 Abu Dhabi), so min_events has little headroom once a festival wave rolls off; raise it only with evidence.",
   "scrape": {
     "min_events": 60,

@@ -46,6 +46,9 @@ TIERS = {
     "blocked": {"icon": "✕", "label": "BLOCKED", "blurb": "direct clash or Ramadan"},
 }
 DOW_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+# Mirrors src/import_checklist.py. "Not needed" is excluded from progress totals, the
+# same way the source workbook's dashboard excludes it.
+STATUSES = ["Not started", "In progress", "Done", "Not needed"]
 MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July",
                "August", "September", "October", "November", "December"]
 
@@ -135,7 +138,8 @@ def write_png(path, size):
 def day_cell(day):
     # Whether a date is in the past is decided at runtime, not baked in here. Doing it
     # at build time would make the page differ every day even when no event changed,
-    # and would leave a cached offline copy dimming the wrong days.
+    # and would leave a cached offline copy dimming the wrong days. The tier classes are
+    # the default lens; switching lens restyles the cells from the inlined payload.
     tier = TIERS[day["tier"]]
     d = date.fromisoformat(day["date"])
     label = f"{d.strftime('%a %d %b %Y')}, {day['tier']}, score {day['score']}"
@@ -158,11 +162,10 @@ def months_html(days):
     panels = []
     for (year, month), items in sorted(groups.items()):
         first = date(year, month, 1)
-        pad = first.weekday()
-        cells = ['<div class="day pad" aria-hidden="true"></div>'] * pad
-        # A month at the edge of the model's range starts partway through.
-        lead = date.fromisoformat(items[0]["date"]).day - 1
-        cells += ['<div class="day pad" aria-hidden="true"></div>'] * lead
+        cells = ['<div class="day pad" aria-hidden="true"></div>'] * first.weekday()
+        # A month at the edge of the window starts partway through.
+        cells += (['<div class="day pad" aria-hidden="true"></div>']
+                  * (date.fromisoformat(items[0]["date"]).day - 1))
         cells += [day_cell(day) for day in items]
         heads = "".join(f'<div class="hd">{d}</div>' for d in DOW_ORDER)
         panels.append(
@@ -176,9 +179,9 @@ def months_html(days):
 def whats_on(day):
     bits = []
     if day["direct"]:
-        bits.append("Indian stand-up: " + "; ".join(day["direct"]))
+        bits.append("Blocking: " + "; ".join(day["direct"]))
     if day["concert"]:
-        bits.append("Desi draw: " + "; ".join(day["concert"]))
+        bits.append("Competing: " + "; ".join(day["concert"]))
     if day["other"]:
         bits.append("Other comedy: " + "; ".join(day["other"]))
     return bits
@@ -189,9 +192,6 @@ def agenda_html(days):
     for day in days:
         tier = TIERS[day["tier"]]
         d = date.fromisoformat(day["date"])
-        on = whats_on(day)
-        lines = "".join(f'<li>{esc(b)}</li>' for b in on) or \
-                '<li class="clear">Nothing scheduled against you</li>'
         holiday = (f'<span class="hol">{esc(day["holiday"])}</span>'
                    if day["holiday"] else "")
         cards.append(
@@ -202,14 +202,50 @@ def agenda_html(days):
             f'<span>{d.year}</span>{holiday}</div>'
             f'<div class="badge b-{day["tier"]}">'
             f'<span class="ic" aria-hidden="true">{tier["icon"]}</span>'
-            f'<span>{tier["label"]}</span></div>'
+            f'<span class="badge-lb">{tier["label"]}</span></div>'
             f'</div>'
             f'<div class="ag-score">{day["score"]}<span> score</span></div>'
-            f'<ul class="ag-on">{lines}</ul>'
+            f'<ul class="ag-on"></ul>'
             f'<button type="button" class="ag-more" data-open="{day["date"]}">'
             f'Why this score</button>'
             f'</article>')
     return "".join(cards)
+
+
+# ---------------------------------------------------------------- events tab
+
+def event_month(e):
+    return (e.get("start") or "")[:7]
+
+
+def filter_options(events):
+    """The four multi-select facets, each as (value, label, count)."""
+    def tally(key):
+        seen = {}
+        for e in events:
+            value = key(e)
+            if value:
+                seen[value] = seen.get(value, 0) + 1
+        return seen
+
+    months = tally(event_month)
+    month_opts = [(m, f"{MONTH_NAMES[int(m[5:7]) - 1][:3]} {m[:4]}", months[m])
+                  for m in sorted(months)]
+    def plain(key):
+        counts = tally(lambda e: e.get(key))
+        return [(v, v, counts[v]) for v in sorted(counts)]
+    return {"month": month_opts, "artist": plain("artist"),
+            "category": plain("category"), "language": plain("language")}
+
+
+def facet_html(name, label, options):
+    boxes = "".join(
+        f'<label class="ms-opt"><input type="checkbox" data-facet="{name}" '
+        f'value="{esc(value)}"><span>{esc(text)}</span>'
+        f'<i>{count}</i></label>' for value, text, count in options)
+    return (f'<details class="ms" data-ms="{name}">'
+            f'<summary>{esc(label)}<span class="ms-badge" hidden></span></summary>'
+            f'<div class="ms-menu">{boxes}</div></details>')
 
 
 def events_html(events):
@@ -228,35 +264,143 @@ def events_html(events):
             except ValueError:
                 pass
         price = f'from AED {e["price_from_aed"]}' if e.get("price_from_aed") else "price n/a"
+        language = e.get("language") or ""
         meta = " &middot; ".join(filter(None, [
             esc(e.get("city")), esc(e.get("category")),
-            esc(e.get("language")) if e.get("language") != "Not stated" else "",
-        ]))
+            esc(language) if language != "Not stated" else "", esc(price)]))
         note = f'<p class="ev-note">{esc(e["notes"])}</p>' if e.get("notes") else ""
         rows.append(
-            f'<article class="ev" data-city="{esc(e.get("city"))}" '
-            f'data-category="{esc(e.get("category"))}">'
+            f'<article class="ev" data-month="{esc(event_month(e))}" '
+            f'data-artist="{esc(e.get("artist"))}" '
+            f'data-category="{esc(e.get("category"))}" '
+            f'data-language="{esc(language)}">'
             f'<h4><a href="{esc(e.get("url"))}" rel="noopener noreferrer" '
             f'target="_blank">{esc(e.get("event"))}</a></h4>'
-            f'<p class="ev-when">{esc(when)}{" &middot; " + esc(e["time"]) if e.get("time") else ""}</p>'
+            f'<p class="ev-when">{esc(when)}'
+            f'{" &middot; " + esc(e["time"]) if e.get("time") else ""}</p>'
             f'<p class="ev-where">{esc(e.get("venue")) or "Venue not listed"}</p>'
-            f'<p class="ev-meta">{meta} &middot; {esc(price)}</p>{note}</article>')
+            f'<p class="ev-meta">{meta}</p>{note}</article>')
     return "".join(rows)
 
 
-def day_payload(days):
-    """Detail shown in the sheet. Kept separate so the markup stays small."""
-    out = {}
-    for day in days:
-        out[day["date"]] = {
-            "t": day["tier"], "s": day["score"], "d": day["dow"],
-            "h": day["holiday"], "r": day["reasons"], "b": day["boosts"],
-            "o": whats_on(day),
-        }
-    return out
+# ---------------------------------------------------------------- checklist tab
+
+def checklist_html(checklists):
+    if not checklists:
+        return ('<p class="muted">No checklists yet. Import one with '
+                '<code>python src/import_checklist.py &lt;workbook.xlsx&gt;</code>.</p>')
+    tasks = []
+    for cl in checklists:
+        for t in cl["tasks"]:
+            why = f'<p class="tk-why">{esc(t["why"])}</p>' if t.get("why") else ""
+            blocking = ('<span class="tk-flag">BLOCKING</span>' if t.get("blocking")
+                        else "")
+            d_minus = t.get("d_minus")  # used in the markup below and for due dates
+            offset = ("" if d_minus is None else
+                      (f"D-{d_minus}" if d_minus >= 0 else f"D+{abs(d_minus)}"))
+            tasks.append(
+                f'<article class="tk" data-cl="{esc(cl["id"])}" data-n="{t["n"]}" '
+                f'data-ws="{esc(t["workstream"])}" '
+                f'data-dminus="{"" if d_minus is None else d_minus}" '
+                f'data-blocking="{1 if t.get("blocking") else 0}" hidden>'
+                f'<div class="tk-head">'
+                f'<span class="tk-n">{t["n"]}</span>'
+                f'<div class="tk-body"><p class="tk-task">{esc(t["task"])}</p>{why}</div>'
+                f'<select class="tk-status" aria-label="Status for task {t["n"]}">'
+                + "".join(f'<option value="{esc(s)}"'
+                          f'{" selected" if s == t.get("status") else ""}>{esc(s)}</option>'
+                          for s in STATUSES)
+                + '</select></div>'
+                f'<div class="tk-meta"><span class="tk-ws">{esc(t["workstream"])}</span>'
+                f'<span>{esc(t.get("owner") or "Unassigned")}</span>'
+                f'<span class="tk-off">{offset}</span>'
+                f'<span class="tk-due"></span>{blocking}</div>'
+                f'</article>')
+
+    picker = "".join(f'<option value="{esc(c["id"])}">{esc(c["title"])}</option>'
+                     for c in checklists)
+    streams = []
+    for cl in checklists:
+        for t in cl["tasks"]:
+            if t["workstream"] not in streams:
+                streams.append(t["workstream"])
+    chips = "".join(
+        f'<label class="ms-opt"><input type="checkbox" data-ws-filter '
+        f'value="{esc(s)}"><span>{esc(s)}</span></label>' for s in streams)
+
+    # The workbook's Setup tab is meant to be filled in, so these are inputs rather
+    # than read-only text, saved alongside the task statuses.
+    setup = "".join(
+        f'<div class="cl-field" data-cl="{esc(c["id"])}" hidden>'
+        + "".join(f'<div class="cl-f"><b>{esc(f["label"])}</b>'
+                  f'<input type="text" data-field="{esc(f["label"])}" '
+                  f'value="{esc(f["value"])}" placeholder="Not set">'
+                  f'<i>{esc(f["note"])}</i></div>' for f in c.get("setup", []))
+        + '</div>' for c in checklists)
+
+    return f"""
+ <div class="cl-bar">
+  <select id="cl-pick" aria-label="Which checklist">{picker}</select>
+  <label class="cl-date">Show date
+   <input type="date" id="cl-date"></label>
+  <button type="button" id="cl-export" class="icon-btn">Copy JSON</button>
+ </div>
+ <p class="cl-hint muted">Saved in this browser only. This site is static, so nothing
+  is written back to the repository: use <b>Copy JSON</b> and paste into
+  <code>data/checklists.json</code> to keep or share a change.</p>
+ <div id="cl-progress" class="cl-progress"></div>
+ <details class="cl-more">
+  <summary>Progress by workstream</summary>
+  <div id="cl-streams" class="cl-progress"></div>
+ </details>
+ <details class="cl-more">
+  <summary>Show details and assumptions</summary>
+  {setup}
+ </details>
+ <div class="filters">
+  <details class="ms" data-ms="workstream">
+   <summary>Workstream<span class="ms-badge" hidden></span></summary>
+   <div class="ms-menu">{chips}</div>
+  </details>
+  <label class="cl-toggle"><input type="checkbox" id="cl-blockers"> Blockers only</label>
+  <label class="cl-toggle"><input type="checkbox" id="cl-open"> Hide done</label>
+ </div>
+ <div class="cl-tasks">{"".join(tasks)}</div>
+ <details class="cl-json"><summary>Checklist JSON</summary>
+  <textarea id="cl-out" readonly rows="8"></textarea></details>
+"""
 
 
-# ---------------------------------------------------------------- assets
+# ---------------------------------------------------------------- payload
+
+def encode(lenses):
+    """Inline payload for the page.
+
+    Three lenses over a year of dates repeats the same reason strings thousands of
+    times, so strings are pooled into a table and referenced by index. That is what
+    keeps the page a few hundred KB rather than well over a megabyte.
+    """
+    pool, index = [], {}
+
+    def sid(text):
+        if text not in index:
+            index[text] = len(pool)
+            pool.append(text)
+        return index[text]
+
+    days = {}
+    for name, scored in lenses.items():
+        for day in scored:
+            rec = days.setdefault(day["date"], {"d": day["dow"], "h": day["holiday"],
+                                                "L": {}})
+            rec["L"][name] = {
+                "t": day["tier"], "s": day["score"],
+                "o": [sid(x) for x in whats_on(day)],
+                "r": [sid(x) for x in day["reasons"]],
+                "b": [sid(x) for x in day["boosts"]],
+            }
+    return days, pool
+
 
 def manifest(stamp):
     return json.dumps({
@@ -498,6 +642,85 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .sheet .close{position:absolute;top:10px;right:12px}
 .sec-head{display:flex;align-items:baseline;gap:8px}
 
+/* ---- tabs ---- */
+.tabs{display:flex;gap:4px;background:var(--surface-1);border:1px solid var(--ring);
+ border-radius:10px;padding:3px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border:0;white-space:nowrap;min-height:34px;padding:7px 13px;flex:1}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--surface-1)}
+
+/* ---- multi-select facets ---- */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 4px}
+.ms{position:relative}
+.ms>summary{list-style:none;cursor:pointer;font-size:13px;padding:8px 12px;
+ border:1px solid var(--ring);border-radius:9px;background:var(--surface-1);
+ display:inline-flex;align-items:center;gap:6px;min-height:38px}
+.ms>summary::-webkit-details-marker{display:none}
+.ms>summary::after{content:"\\25BE";color:var(--muted);font-size:10px}
+.ms[open]>summary{border-color:var(--ink)}
+.ms-badge{background:var(--ink);color:var(--surface-1);border-radius:20px;
+ font-size:10.5px;font-weight:700;padding:1px 6px}
+.ms-menu{position:absolute;z-index:25;top:calc(100% + 4px);left:0;min-width:210px;
+ max-height:290px;overflow:auto;background:var(--surface-1);border:1px solid var(--ring);
+ border-radius:11px;padding:6px;box-shadow:0 12px 34px rgba(0,0,0,.16)}
+.ms-opt{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;
+ font-size:13px;cursor:pointer}
+.ms-opt:hover{background:var(--plane)}
+.ms-opt span{flex:1}
+.ms-opt i{color:var(--muted);font-style:normal;font-size:11.5px}
+.chip-clear{font-size:12.5px;color:var(--ink-2);text-decoration:underline;
+ background:none;border:0;padding:6px 2px}
+
+/* ---- checklist ---- */
+.cl-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 6px}
+.cl-bar select,.cl-bar input[type="date"]{font:inherit;font-size:13px;padding:7px 10px;
+ border-radius:9px;border:1px solid var(--ring);background:var(--surface-1);
+ color:var(--ink);min-height:38px}
+.cl-date{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
+.cl-hint{font-size:12px;margin:2px 0 10px}
+.cl-hint code{font-size:11.5px}
+.cl-progress{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+ gap:8px;margin-bottom:12px}
+.cl-cell{background:var(--surface-1);border:1px solid var(--ring);border-radius:11px;
+ padding:10px 12px}
+.cl-cell b{display:block;font-size:19px;letter-spacing:-.02em}
+.cl-cell span{font-size:11.5px;color:var(--ink-2)}
+.cl-bar-track{height:5px;border-radius:4px;background:var(--grid);margin-top:6px;
+ overflow:hidden}
+.cl-bar-fill{height:100%;background:var(--good);width:0}
+.cl-toggle{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;
+ color:var(--ink-2);margin-left:10px}
+.cl-field{display:grid;gap:8px;margin:10px 0 14px}
+.cl-f{background:var(--surface-1);border:1px solid var(--ring);border-radius:10px;
+ padding:9px 11px;font-size:12.5px}
+.cl-f b{display:block;font-size:13px;margin-bottom:4px}
+.cl-f input{font:inherit;font-size:13px;width:100%;padding:6px 8px;border-radius:8px;
+ border:1px solid var(--ring);background:var(--plane);color:var(--ink);min-height:34px}
+.cl-f i{display:block;color:var(--muted);font-style:normal;margin-top:4px}
+.cl-more{margin:4px 0 10px}
+.cl-more>summary{font-size:13px;font-weight:600;color:var(--ink-2);padding:7px 0}
+.cl-more[open]>summary{margin-bottom:6px}
+.cl-tasks{display:grid;gap:8px;margin-top:10px}
+.tk{background:var(--surface-1);border:1px solid var(--ring);border-left:3px solid
+ var(--grid);border-radius:11px;padding:10px 12px}
+.tk[data-blocking="1"]{border-left-color:var(--crit)}
+.tk.done{opacity:.55;border-left-color:var(--good)}
+.tk-head{display:flex;gap:10px;align-items:flex-start}
+.tk-n{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px;min-width:22px}
+.tk-body{flex:1;min-width:0}
+.tk-task{margin:0;font-size:13.5px;font-weight:600}
+.tk-why{margin:3px 0 0;font-size:12.5px;color:var(--ink-2)}
+.tk-status{font:inherit;font-size:12px;padding:5px 7px;border-radius:8px;
+ border:1px solid var(--ring);background:var(--plane);color:var(--ink)}
+.tk-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:7px;
+ font-size:11.5px;color:var(--muted)}
+.tk-ws{font-weight:700;color:var(--ink-2)}
+.tk-flag{color:var(--crit);font-weight:700;letter-spacing:.05em}
+.tk-due.over{color:var(--crit);font-weight:700}
+.cl-json textarea{width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+ font-size:11px;border-radius:9px;border:1px solid var(--ring);padding:8px;
+ background:var(--surface-1);color:var(--ink)}
+
 /* Very narrow phones (320px, an SE-sized screen) leave about 31px of cell for the
    label. Shrink it rather than let BLOCKED be ellipsised. */
 @media (max-width:359px){
@@ -569,6 +792,11 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
   width:min(520px,92vw);max-height:78vh;border-radius:16px;
   padding:18px 20px 20px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
  .sheet .grab{display:none}
+
+ .tabs{flex:0 0 auto}
+ .tabs button{flex:0 0 auto}
+ .cl-progress{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+ .tk-task{font-size:14px}
 }
 
 @media (min-width:1200px){
@@ -584,28 +812,102 @@ JS = """
  // not a valid JavaScript identifier and referencing it as one throws a ReferenceError
  // that kills every handler defined after it.
  var $ = function(id){ return document.getElementById(id); };
+ var all = function(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); };
  var DAYS = window.__DAYS__ || {};
+ var POOL = window.__POOL__ || [];
  var TIER = window.__TIERS__ || {};
+ var LENSES = window.__LENSES__ || {};
+ var CHECK = window.__CHECKLISTS__ || [];
+ var DEFAULT_LENS = window.__DEFAULT_LENS__ || 'standup';
+ var text = function(i){ return POOL[i] || ''; };
+ var store = {
+  get: function(k, d){ try { var v = localStorage.getItem(k);
+                             return v === null ? d : v; } catch (e) { return d; } },
+  set: function(k, v){ try { localStorage.setItem(k, v); } catch (e) {} }
+ };
 
- var filters = {all: $('f-all'), wknd: $('f-wknd'), prime: $('f-prime')};
- var views = {agenda: $('v-agenda'), calendar: $('v-calendar')};
- var countEl = $('count');
- var cells = Array.prototype.slice.call(document.querySelectorAll('.day[data-tier]'));
- var cards = Array.prototype.slice.call(document.querySelectorAll('.ag[data-tier]'));
- var mode = 'all';
-
- // Marked here rather than at build time, so the page is identical whichever day it is
- // built and a cached copy still marks the right days as gone.
  function localIso(d){
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
          '-' + String(d.getDate()).padStart(2, '0');
  }
  var TODAY = localIso(new Date());
+
+ // ================================================================ tabs
+ var TABS = ['events', 'calendar', 'checklist'];
+ function showTab(name){
+  if (TABS.indexOf(name) < 0) name = TABS[0];
+  TABS.forEach(function(t){
+   var btn = $('tab-' + t), panel = $('panel-' + t);
+   if (btn) btn.setAttribute('aria-pressed', String(t === name));
+   if (panel) panel.hidden = t !== name;
+  });
+  store.set('tab', name);
+ }
+ TABS.forEach(function(t){
+  var btn = $('tab-' + t);
+  if (btn) btn.addEventListener('click', function(){ showTab(t); });
+ });
+
+ // ================================================================ calendar
+ var cells = all('.day[data-tier]');
+ var cards = all('.ag[data-tier]');
+ var countEl = $('count');
+ var mode = 'all';
+ var lens = DEFAULT_LENS;
+
+ // Past dates are marked here rather than at build time, so the page is identical
+ // whichever day it was built and a cached copy still marks the right days as gone.
  cells.concat(cards).forEach(function(el){
   var past = el.dataset.date < TODAY;
   el.dataset.past = past ? '1' : '0';
   el.classList.toggle('past', past);
  });
+
+ function dayFor(iso){
+  var rec = DAYS[iso];
+  return rec && rec.L ? rec.L[lens] : null;
+ }
+
+ // Switching lens restyles every cell and card from the payload; the markup carries
+ // only the default lens.
+ function applyLens(next){
+  lens = next;
+  store.set('lens', next);
+  all('[data-lens-opt]').forEach(function(b){
+   b.setAttribute('aria-pressed', String(b.dataset.lensOpt === next));
+  });
+  var blurb = $('lens-blurb');
+  if (blurb && LENSES[next]) blurb.textContent = LENSES[next].blurb || '';
+
+  cells.forEach(function(el){
+   var d = dayFor(el.dataset.date);
+   if (!d) return;
+   var t = TIER[d.t] || {icon: '', label: d.t};
+   el.className = 'day t-' + d.t + (el.dataset.past === '1' ? ' past' : '');
+   el.dataset.tier = d.t;
+   el.querySelector('.ic').textContent = t.icon;
+   el.querySelector('.lb').textContent = t.label;
+   var label = el.getAttribute('aria-label') || '';
+   el.setAttribute('aria-label',
+     label.split(',')[0] + ', ' + d.t + ', score ' + d.s);
+  });
+  cards.forEach(function(el){
+   var d = dayFor(el.dataset.date);
+   if (!d) return;
+   var t = TIER[d.t] || {icon: '', label: d.t};
+   el.className = 'ag t-' + d.t + (el.dataset.past === '1' ? ' past' : '');
+   el.dataset.tier = d.t;
+   el.querySelector('.badge').className = 'badge b-' + d.t;
+   el.querySelector('.badge .ic').textContent = t.icon;
+   el.querySelector('.badge-lb').textContent = t.label;
+   el.querySelector('.ag-score').innerHTML = d.s + '<span> score</span>';
+   var ul = el.querySelector('.ag-on');
+   ul.innerHTML = d.o.length
+     ? d.o.map(function(i){ return '<li>' + text(i) + '</li>'; }).join('')
+     : '<li class="clear">Nothing scheduled against you</li>';
+  });
+  applyFilter(mode);
+ }
 
  function matches(el){
   if (el.dataset.past === '1') return false;
@@ -614,6 +916,7 @@ JS = """
   return true;
  }
 
+ var filters = {all: $('f-all'), wknd: $('f-wknd'), prime: $('f-prime')};
  function applyFilter(next){
   mode = next;
   for (var k in filters) {
@@ -626,24 +929,27 @@ JS = """
    if (on) shown++;
   });
   cards.forEach(function(el){ el.hidden = !matches(el); });
-  // Counted from the calendar, which holds every date in range, so the number is the
-  // same in either view.
+  // Counted from the calendar, which holds every date in the window, so the number is
+  // the same in either view.
   countEl.textContent = shown + (shown === 1 ? ' date shown' : ' dates shown');
   countEl.dataset.count = String(shown);
  }
+ Object.keys(filters).forEach(function(k){
+  if (filters[k]) filters[k].addEventListener('click', function(){ applyFilter(k); });
+ });
+ all('[data-lens-opt]').forEach(function(b){
+  b.addEventListener('click', function(){ applyLens(b.dataset.lensOpt); });
+ });
 
+ var views = {agenda: $('v-agenda'), calendar: $('v-calendar')};
  function applyView(next){
   for (var k in views) {
    if (views[k]) views[k].setAttribute('aria-pressed', String(k === next));
   }
   $('agenda-section').hidden = next !== 'agenda';
   $('calendar-section').hidden = next !== 'calendar';
-  try { localStorage.setItem('view', next); } catch (e) {}
+  store.set('view', next);
  }
-
- Object.keys(filters).forEach(function(k){
-  if (filters[k]) filters[k].addEventListener('click', function(){ applyFilter(k); });
- });
  Object.keys(views).forEach(function(k){
   if (views[k]) views[k].addEventListener('click', function(){ applyView(k); });
  });
@@ -651,25 +957,22 @@ JS = """
  // ---- detail sheet
  var sheet = $('sheet'), sheetBg = $('sheet-bg'), lastFocus = null;
  function openSheet(iso){
-  var d = DAYS[iso];
+  var d = dayFor(iso);
   if (!d) return;
-  var t = TIER[d.t] || {icon:'', label:d.t};
+  var t = TIER[d.t] || {icon: '', label: d.t};
   var parts = new Date(iso + 'T00:00:00').toDateString().split(' ');
   $('sheet-title').textContent = parts[0] + ' ' + parts[2] + ' ' + parts[1] + ' ' + parts[3];
   $('sheet-sub').innerHTML = '<span class="badge b-' + d.t + '"><span class="ic" ' +
     'aria-hidden="true">' + t.icon + '</span><span>' + t.label + '</span></span> ' +
-    'score ' + d.s + (d.h ? ' &middot; ' + d.h : '');
-  function list(title, items, cls){
-   if (!items || !items.length) return '';
-   return '<p class="sub" style="margin:10px 0 0"><b>' + title + '</b></p><ul class="' +
-     (cls || '') + '">' + items.map(function(x){
-       return '<li>' + String(x).replace(/[<>&]/g, '') + '</li>';
-     }).join('') + '</ul>';
+    'score ' + d.s + ' &middot; ' + ((LENSES[lens] || {}).label || lens) +
+    (DAYS[iso].h ? ' &middot; ' + DAYS[iso].h : '');
+  function list(title, ids){
+   if (!ids || !ids.length) return '';
+   return '<p class="sub" style="margin:10px 0 0"><b>' + title + '</b></p><ul>' +
+     ids.map(function(i){ return '<li>' + text(i) + '</li>'; }).join('') + '</ul>';
   }
   $('sheet-body').innerHTML =
-    list('On that night', d.o) +
-    list('Against it', d.r) +
-    list('In its favour', d.b) +
+    list('On that night', d.o) + list('Against it', d.r) + list('In its favour', d.b) +
     (!d.o.length && !d.r.length && !d.b.length
       ? '<p class="sub">Nothing scheduled against this date.</p>' : '');
   lastFocus = document.activeElement;
@@ -683,22 +986,27 @@ JS = """
  cells.forEach(function(el){
   el.addEventListener('click', function(){ openSheet(el.dataset.date); });
  });
+ all('.ag-more').forEach(function(el){
+  el.addEventListener('click', function(){ openSheet(el.dataset.open); });
+ });
+ sheetBg.addEventListener('click', closeSheet);
+ $('sheet-close').addEventListener('click', closeSheet);
+ document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && !sheet.hidden) closeSheet();
+ });
 
  // ---- hover summary, pointer devices only
- // A laptop should not need a click per date just to see what is competing. Touch
- // devices never match this query and keep the tap-to-open panel.
  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
   var tip = $('tip');
   var showTip = function(el){
-   var d = DAYS[el.dataset.date];
+   var d = dayFor(el.dataset.date);
    if (!d) return;
    var t = TIER[d.t] || {icon: '', label: d.t};
-   var lines = d.o.concat(d.r.length ? d.r : []).slice(0, 3);
-   tip.innerHTML = '<b>' + el.getAttribute('aria-label').split(',')[0] + ' &middot; ' +
-     t.label + ' ' + d.s + '</b>' +
-     (lines.length ? lines.map(function(x){
-        return '<div>' + String(x).replace(/[<>&]/g, '') + '</div>';
-      }).join('') : '<div>Nothing scheduled against you.</div>');
+   var lines = d.o.concat(d.r).slice(0, 3);
+   tip.innerHTML = '<b>' + (el.getAttribute('aria-label') || '').split(',')[0] +
+     ' &middot; ' + t.label + ' ' + d.s + '</b>' +
+     (lines.length ? lines.map(function(i){ return '<div>' + text(i) + '</div>'; }).join('')
+                   : '<div>Nothing scheduled against you.</div>');
    tip.classList.add('on');
    var r = el.getBoundingClientRect();
    var w = tip.offsetWidth, h = tip.offsetHeight;
@@ -716,27 +1024,223 @@ JS = """
    el.addEventListener('blur', hideTip);
   });
  }
- document.querySelectorAll('.ag-more').forEach(function(el){
-  el.addEventListener('click', function(){ openSheet(el.dataset.open); });
- });
- sheetBg.addEventListener('click', closeSheet);
- $('sheet-close').addEventListener('click', closeSheet);
- document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape' && !sheet.hidden) closeSheet();
- });
 
- // ---- month paging for the swipe carousel
  var months = $('months');
  function page(dir){
   var panels = months.querySelectorAll('.mo');
   if (!panels.length) return;
-  var w = panels[0].getBoundingClientRect().width + 12;
-  months.scrollBy({left: dir * w, behavior: 'smooth'});
+  months.scrollBy({left: dir * (panels[0].getBoundingClientRect().width + 12),
+                   behavior: 'smooth'});
  }
  if ($('mo-prev')) $('mo-prev').addEventListener('click', function(){ page(-1); });
  if ($('mo-next')) $('mo-next').addEventListener('click', function(){ page(1); });
 
- // ---- theme: the explicit choice must beat the OS setting in both directions
+ // ================================================================ events tab
+ var evs = all('.ev');
+ var evCount = $('ev-count');
+ // Nothing checked in a facet means that facet is not constraining. Within a facet the
+ // checks are OR; across facets they are AND.
+ function evFilter(){
+  var want = {};
+  all('input[data-facet]').forEach(function(box){
+   if (!box.checked) return;
+   (want[box.dataset.facet] = want[box.dataset.facet] || []).push(box.value);
+  });
+  var shown = 0;
+  evs.forEach(function(el){
+   var ok = true;
+   for (var facet in want) {
+    if (want[facet].indexOf(el.dataset[facet] || '') < 0) { ok = false; break; }
+   }
+   el.hidden = !ok;
+   if (ok) shown++;
+  });
+  all('.ms[data-ms]').forEach(function(ms){
+   var name = ms.dataset.ms;
+   var n = (want[name] || []).length;
+   var badge = ms.querySelector('.ms-badge');
+   if (badge) { badge.textContent = n; badge.hidden = n === 0; }
+  });
+  if (evCount) {
+   evCount.textContent = shown + (shown === 1 ? ' event' : ' events');
+   evCount.dataset.count = String(shown);
+  }
+ }
+ all('input[data-facet]').forEach(function(box){
+  box.addEventListener('change', evFilter);
+ });
+ if ($('ev-clear')) $('ev-clear').addEventListener('click', function(){
+  all('input[data-facet]').forEach(function(b){ b.checked = false; });
+  evFilter();
+ });
+ // A click outside an open facet menu closes it.
+ document.addEventListener('click', function(e){
+  all('details.ms[open]').forEach(function(d){
+   if (!d.contains(e.target)) d.open = false;
+  });
+ });
+
+ // ================================================================ checklist tab
+ var clTasks = all('.tk');
+ var current = CHECK.length ? CHECK[0].id : null;
+
+ function clKey(id){ return 'checklist:' + id; }
+ function clState(id){
+  try { return JSON.parse(store.get(clKey(id), '{}')) || {}; } catch (e) { return {}; }
+ }
+ function clSave(id, state){ store.set(clKey(id), JSON.stringify(state)); }
+
+ function dueDate(showDate, dMinus){
+  if (!showDate || dMinus === null || dMinus === undefined) return '';
+  var d = new Date(showDate + 'T00:00:00');
+  d.setDate(d.getDate() - dMinus);
+  return localIso(d);
+ }
+
+ function renderChecklist(){
+  if (!current) return;
+  var meta = CHECK.filter(function(c){ return c.id === current; })[0];
+  var state = clState(current);
+  var showDate = state.show_date || meta.show_date || '';
+  if ($('cl-date')) $('cl-date').value = showDate;
+  all('.cl-field').forEach(function(f){ f.hidden = f.dataset.cl !== current; });
+  var fields = state.fields || {};
+  all('.cl-field[data-cl="' + current + '"] input[data-field]').forEach(function(inp){
+   var saved = fields[inp.dataset.field];
+   if (saved !== undefined && inp.value !== saved) inp.value = saved;
+  });
+
+  var wsWanted = [];
+  all('input[data-ws-filter]').forEach(function(b){
+   if (b.checked) wsWanted.push(b.value);
+  });
+  var blockersOnly = $('cl-blockers') && $('cl-blockers').checked;
+  var hideDone = $('cl-open') && $('cl-open').checked;
+
+  var totals = {total: 0, done: 0, prog: 0, todo: 0, blockers: 0, overdue: 0};
+  var byWs = {};
+  clTasks.forEach(function(el){
+   var mine = el.dataset.cl === current;
+   var n = el.dataset.n;
+   var status = state.statuses && state.statuses[n] ? state.statuses[n]
+                                                    : el.querySelector('.tk-status').value;
+   var sel = el.querySelector('.tk-status');
+   if (sel.value !== status) sel.value = status;
+   el.classList.toggle('done', status === 'Done');
+
+   var due = dueDate(showDate, Number(el.dataset.dminus));
+   var dueEl = el.querySelector('.tk-due');
+   var overdue = due && due < TODAY && status !== 'Done' && status !== 'Not needed';
+   dueEl.textContent = due ? (overdue ? 'due ' + due + ' · overdue' : 'due ' + due) : '';
+   dueEl.classList.toggle('over', !!overdue);
+
+   if (mine && status !== 'Not needed') {
+    totals.total++;
+    if (status === 'Done') totals.done++;
+    else if (status === 'In progress') totals.prog++;
+    else totals.todo++;
+    if (el.dataset.blocking === '1' && status !== 'Done') totals.blockers++;
+    if (overdue) totals.overdue++;
+    var ws = el.dataset.ws;
+    byWs[ws] = byWs[ws] || {t: 0, d: 0};
+    byWs[ws].t++;
+    if (status === 'Done') byWs[ws].d++;
+   }
+
+   var visible = mine
+     && (!wsWanted.length || wsWanted.indexOf(el.dataset.ws) >= 0)
+     && (!blockersOnly || el.dataset.blocking === '1')
+     && (!hideDone || status !== 'Done');
+   el.hidden = !visible;
+  });
+
+  var pct = totals.total ? Math.round(100 * totals.done / totals.total) : 0;
+  var tiles = [
+   ['Complete', pct + '%', pct],
+   ['Done', totals.done + ' of ' + totals.total, null],
+   ['In progress', totals.prog, null],
+   ['Open blockers', totals.blockers, null],
+   ['Overdue', totals.overdue, null]
+  ];
+  $('cl-progress').innerHTML = tiles.map(function(c){
+   return '<div class="cl-cell"><b>' + c[1] + '</b><span>' + c[0] + '</span>' +
+     (c[2] === null ? '' : '<div class="cl-bar-track"><div class="cl-bar-fill" ' +
+      'style="width:' + c[2] + '%"></div></div>') + '</div>';
+  }).join('');
+  // Kept behind a disclosure: eight more tiles pushed the tasks themselves two
+  // screens down on a phone.
+  if ($('cl-streams')) {
+   $('cl-streams').innerHTML = Object.keys(byWs).map(function(ws){
+    var w = byWs[ws];
+    return '<div class="cl-cell"><b>' + w.d + '/' + w.t + '</b><span>' + ws +
+      '</span><div class="cl-bar-track"><div class="cl-bar-fill" style="width:' +
+      Math.round(100 * w.d / w.t) + '%"></div></div></div>';
+   }).join('');
+  }
+
+  var out = $('cl-out');
+  if (out) {
+   var dump = JSON.parse(JSON.stringify(meta));
+   dump.show_date = showDate || null;
+   dump.tasks.forEach(function(t){
+    if (state.statuses && state.statuses[String(t.n)]) t.status = state.statuses[String(t.n)];
+   });
+   (dump.setup || []).forEach(function(f){
+    if (fields[f.label] !== undefined) f.value = fields[f.label];
+   });
+   out.value = JSON.stringify(dump, null, 1);
+  }
+  var badge = document.querySelector('.ms[data-ms="workstream"] .ms-badge');
+  if (badge) { badge.textContent = wsWanted.length; badge.hidden = !wsWanted.length; }
+ }
+
+ clTasks.forEach(function(el){
+  el.querySelector('.tk-status').addEventListener('change', function(e){
+   var state = clState(el.dataset.cl);
+   state.statuses = state.statuses || {};
+   state.statuses[el.dataset.n] = e.target.value;
+   clSave(el.dataset.cl, state);
+   renderChecklist();
+  });
+ });
+ if ($('cl-pick')) $('cl-pick').addEventListener('change', function(e){
+  current = e.target.value; renderChecklist();
+ });
+ if ($('cl-date')) $('cl-date').addEventListener('change', function(e){
+  var state = clState(current);
+  state.show_date = e.target.value;
+  clSave(current, state);
+  renderChecklist();
+ });
+ all('.cl-field input[data-field]').forEach(function(inp){
+  inp.addEventListener('change', function(){
+   var owner = inp.closest('.cl-field').dataset.cl;
+   var state = clState(owner);
+   state.fields = state.fields || {};
+   state.fields[inp.dataset.field] = inp.value;
+   clSave(owner, state);
+   renderChecklist();
+  });
+ });
+ ['cl-blockers', 'cl-open'].forEach(function(id){
+  if ($(id)) $(id).addEventListener('change', renderChecklist);
+ });
+ all('input[data-ws-filter]').forEach(function(b){
+  b.addEventListener('change', renderChecklist);
+ });
+ if ($('cl-export')) $('cl-export').addEventListener('click', function(){
+  var out = $('cl-out');
+  if (!out) return;
+  out.select();
+  var done = false;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+   navigator.clipboard.writeText(out.value); done = true;
+  }
+  $('cl-export').textContent = done ? 'Copied' : 'Select and copy';
+  setTimeout(function(){ $('cl-export').textContent = 'Copy JSON'; }, 1800);
+ });
+
+ // ================================================================ theme
  $('theme').addEventListener('click', function(){
   var root = document.documentElement;
   var cur = root.getAttribute('data-theme');
@@ -744,22 +1248,21 @@ JS = """
                  : matchMedia('(prefers-color-scheme: dark)').matches;
   var next = dark ? 'light' : 'dark';
   root.setAttribute('data-theme', next);
-  try { localStorage.setItem('theme', next); } catch (e) {}
-  $('theme').setAttribute('aria-label', 'Switch to ' + (next === 'dark' ? 'light' : 'dark') + ' theme');
+  store.set('theme', next);
  });
 
- // ---- initial state
- var startView = 'calendar';
- try { startView = localStorage.getItem('view') || ''; } catch (e) { startView = ''; }
+ // ================================================================ initial state
+ var startView = store.get('view', '');
  if (startView !== 'agenda' && startView !== 'calendar') {
   startView = matchMedia('(max-width: 699px)').matches ? 'agenda' : 'calendar';
  }
  applyView(startView);
- applyFilter('all');
+ applyLens(LENSES[store.get('lens', '')] ? store.get('lens', '') : DEFAULT_LENS);
+ evFilter();
+ renderChecklist();
+ showTab(store.get('tab', TABS[0]));
 
- // Scroll the carousel to the current month rather than the start of the range.
- var current = new Date().toISOString().slice(0, 7);
- var panel = months.querySelector('[data-month="' + current + '"]');
+ var panel = months.querySelector('[data-month="' + TODAY.slice(0, 7) + '"]');
  if (panel) months.scrollLeft = panel.offsetLeft - months.offsetLeft;
 
  if ('serviceWorker' in navigator) {
@@ -773,10 +1276,14 @@ JS = """
 
 # ---------------------------------------------------------------- page
 
-def render(viab, cfg, stamp):
+def render(viab, cfg, stamp, checklists):
     days = viab["days"]
     events = viab.get("events", [])
-    # Counted over the whole modelled range, not from today, so the headline numbers
+    lenses = viab.get("lenses") or {viab.get("default_lens", "standup"): days}
+    lens_meta = viab.get("lens_meta") or {}
+    default_lens = viab.get("default_lens", "standup")
+
+    # Counted over the whole window rather than from today, so the headline numbers
     # match what viability.py reports and do not drift as dates roll past.
     counts = {}
     for day in days:
@@ -791,14 +1298,13 @@ def render(viab, cfg, stamp):
 
     stats = [
         (counts.get("prime", 0), "prime dates to shortlist"),
-        (clash, "nights taken by a competing Indian act"),
+        (clash, "nights taken by a competing act"),
         (counts.get("blocked", 0), "dates ruled out in total"),
         (ram_days, f'days lost to Ramadan ({date.fromisoformat(ram_s):%-d %b} to '
                    f'{date.fromisoformat(ram_e):%-d %b %Y})'),
     ]
-    stat_html = "".join(
-        f'<div class="stat"><b>{n}</b><span>{esc(t)}</span></div>'
-        for n, t in stats)
+    stat_html = "".join(f'<div class="stat"><b>{n}</b><span>{esc(t)}</span></div>'
+                        for n, t in stats)
 
     legend = "".join(
         f'<span><i style="background:{bg};border-color:{bc}"></i>'
@@ -810,7 +1316,22 @@ def render(viab, cfg, stamp):
             ("blocked", "var(--crit-bg)", "var(--crit)"),
         ])
 
+    lens_buttons = "".join(
+        f'<button type="button" data-lens-opt="{esc(name)}" '
+        f'aria-pressed="{"true" if name == default_lens else "false"}">'
+        f'{esc(lens_meta.get(name, {}).get("label", name))}</button>'
+        for name in lenses)
+
+    facets = filter_options(events)
+    facet_bar = "".join(facet_html(name, label, facets[name]) for name, label in [
+        ("month", "Month"), ("artist", "Artist"),
+        ("category", "Category"), ("language", "Language")])
+
+    payload, pool = encode(lenses)
     tier_js = {k: {"icon": v["icon"], "label": v["label"]} for k, v in TIERS.items()}
+    checklist_js = [{"id": c["id"], "title": c["title"], "subtitle": c.get("subtitle", ""),
+                     "show_date": c.get("show_date"), "setup": c.get("setup", []),
+                     "tasks": c["tasks"]} for c in checklists]
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -838,8 +1359,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
  <div class="top-in">
   <div style="flex:1">
    <h1>Viable dates for an Indian stand-up show</h1>
-   <p>Dubai and Abu Dhabi, {esc(span)}. Checked daily; data as of
-    {esc(stamp)}.</p>
+   <p>Dubai and Abu Dhabi, {esc(span)}. Checked daily; data as of {esc(stamp)}.</p>
   </div>
   <button type="button" id="theme" class="icon-btn"
    aria-label="Switch theme">&#9681;</button>
@@ -848,75 +1368,105 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 
 <div class="controls">
  <div class="controls-in">
-  <div class="seg" role="group" aria-label="View">
-   <button type="button" id="v-agenda" aria-pressed="false">Agenda</button>
-   <button type="button" id="v-calendar" aria-pressed="false">Calendar</button>
+  <div class="tabs" role="group" aria-label="Sections">
+   <button type="button" id="tab-events" aria-pressed="true">Events</button>
+   <button type="button" id="tab-calendar" aria-pressed="false">Calendar</button>
+   <button type="button" id="tab-checklist" aria-pressed="false">Checklist</button>
   </div>
-  <div class="seg" role="group" aria-label="Filter dates">
-   <button type="button" id="f-all" aria-pressed="true">All</button>
-   <button type="button" id="f-wknd" aria-pressed="false">Fri+Sat</button>
-   <button type="button" id="f-prime" aria-pressed="false">Prime</button>
-  </div>
-  <span class="count" id="count" role="status" aria-live="polite"></span>
  </div>
 </div>
 
 <div class="wrap">
- <p class="scope"><b>The calendar shows every comedy and desi event on sale.</b>
- The colour answers a narrower question: could <em>you</em> stage an Indian stand-up
- show that night. A busy night for Arabic comedy is not a blocked night for you.</p>
 
- <section id="agenda-section" hidden>
-  <h2>Upcoming dates <small>nearest first</small></h2>
-  <div class="agenda">{agenda_html(days)}</div>
- </section>
-
- <section id="calendar-section" hidden>
-  <h2>Month by month <small class="only-mob">swipe between months</small><small class="only-desk">hover a date for a summary, click for the full detail</small></h2>
-  <div class="mo-nav">
-   <button type="button" id="mo-prev" class="icon-btn"
-    aria-label="Previous month">&#8592;</button>
-   <span class="now">Tap any date for detail</span>
-   <button type="button" id="mo-next" class="icon-btn"
-    aria-label="Next month">&#8594;</button>
+ <!-- ------------------------------------------------------------- events -->
+ <section id="panel-events" hidden>
+  <h2>Everything on sale <small>{len(events)} events, filter to narrow it</small></h2>
+  <div class="filters">
+   {facet_bar}
+   <button type="button" id="ev-clear" class="chip-clear">Clear filters</button>
+   <span class="count" id="ev-count" role="status" aria-live="polite"></span>
   </div>
-  <div class="months" id="months">{months_html(days)}</div>
-  <div class="legend">{legend}</div>
+  <div class="events">{events_html(events)}</div>
  </section>
 
- <h2>At a glance</h2>
- <div class="stats">{stat_html}</div>
+ <!-- ----------------------------------------------------------- calendar -->
+ <section id="panel-calendar" hidden>
+  <p class="scope"><b>The calendar shows every comedy and desi event on sale.</b>
+  The colour answers a narrower question, set by the lens below: could <em>you</em>
+  stage that kind of show that night. A busy night for Arabic comedy is not a blocked
+  night for you.</p>
 
- <h2>Everything on sale <small>{len(events)} events</small></h2>
- <div class="events">{events_html(events)}</div>
+  <div class="filters">
+   <div class="seg" role="group" aria-label="Filter dates">
+    <button type="button" id="f-all" aria-pressed="true">All</button>
+    <button type="button" id="f-wknd" aria-pressed="false">Fri+Sat</button>
+    <button type="button" id="f-prime" aria-pressed="false">Prime</button>
+   </div>
+   <div class="seg" role="group" aria-label="What are you staging">{lens_buttons}</div>
+   <div class="seg" role="group" aria-label="View">
+    <button type="button" id="v-agenda" aria-pressed="false">Agenda</button>
+    <button type="button" id="v-calendar" aria-pressed="false">Grid</button>
+   </div>
+   <span class="count" id="count" role="status" aria-live="polite"></span>
+  </div>
+  <p class="muted" style="font-size:12.5px;margin:2px 0 0" id="lens-blurb"></p>
 
- <section class="limits">
-  <h2>What this does not know</h2>
-  <ul>
-   <li><b>Venue availability is not modelled.</b> Emirates Theatre, the Sheikh Rashid
-    Auditorium at the Indian High School and Live@Play in Al Quoz carry most of this
-    circuit and book out early. A prime date is only prime if the room is free.</li>
-   <li><b>Ramadan and Eid are forecasts.</b> Expected
-    {date.fromisoformat(ram_s):%-d %b} and
-    {date.fromisoformat(cfg["eid_window"][0]):%-d %b %Y}, both subject to moon
-    sighting. Anything from February 2027 onward is provisional.</li>
-   <li><b>One source.</b> Platinumlist only. Shows sold anywhere else are invisible
-    to this.</li>
-   <li><b>Some listings carry quirks</b> from the source data, noted on the event
-    itself where they apply.</li>
-  </ul>
-  <details>
-   <summary>How the score works</summary>
-   <p>Every date starts from its day of the week, because Saturday is where this
-   circuit already books: Saturday 5.0, Friday 4.5, Thursday and Sunday 3.0, midweek
-   1.5 to 2.0. It then loses points for a major desi concert the same night (-2.5),
-   for sitting inside the Dubai Comedy Festival window (-2.5), for another Indian act
-   the night before or after (-1.0), for late August (-1.0) and for any other comedy
-   the same night (-0.8). It gains points for the Eid Al Fitr window (+1.5), a public
-   holiday (+1.0) and the December to mid-January peak (+0.5 to +0.7). A direct clash
-   with an Indian stand-up act, or any date inside Ramadan, blocks the date outright.
-   Prime is 4.0 and above, good 2.5, low below that.</p>
-  </details>
+  <section id="agenda-section" hidden>
+   <h2>Upcoming dates <small>nearest first</small></h2>
+   <div class="agenda">{agenda_html(days)}</div>
+  </section>
+
+  <section id="calendar-section" hidden>
+   <h2>Month by month <small class="only-mob">swipe between months</small>
+    <small class="only-desk">hover a date for a summary, click for the full
+    detail</small></h2>
+   <div class="mo-nav">
+    <button type="button" id="mo-prev" class="icon-btn"
+     aria-label="Previous month">&#8592;</button>
+    <span class="now">Tap any date for detail</span>
+    <button type="button" id="mo-next" class="icon-btn"
+     aria-label="Next month">&#8594;</button>
+   </div>
+   <div class="months" id="months">{months_html(days)}</div>
+   <div class="legend">{legend}</div>
+  </section>
+
+  <h2>At a glance <small>over the whole window, for the default lens</small></h2>
+  <div class="stats">{stat_html}</div>
+
+  <section class="limits">
+   <h2>What this does not know</h2>
+   <ul>
+    <li><b>Venue availability is not modelled.</b> Emirates Theatre, the Sheikh Rashid
+     Auditorium at the Indian High School and Live@Play in Al Quoz carry most of this
+     circuit and book out early. A prime date is only prime if the room is free.</li>
+    <li><b>Ramadan, Eid and the 2027 Hijri holidays are forecasts.</b> Ramadan is
+     expected from {date.fromisoformat(ram_s):%-d %b %Y} and moves with the moon
+     sighting, so anything from February 2027 onward is provisional.</li>
+    <li><b>One source.</b> Platinumlist only. Shows sold anywhere else are invisible
+     to this.</li>
+    <li><b>Some listings carry quirks</b> from the source data, noted on the event
+     itself where they apply.</li>
+   </ul>
+   <details>
+    <summary>How the score works</summary>
+    <p>Every date starts from its day of the week, because Saturday is where this
+    circuit already books: Saturday 5.0, Friday 4.5, Thursday and Sunday 3.0, midweek
+    1.5 to 2.0. It then loses points for a major desi concert the same night (-2.5),
+    for sitting inside the Dubai Comedy Festival window (-2.5), for a competing act
+    the night before or after (-1.0), for late August (-1.0) and for any other comedy
+    the same night (-0.8). It gains points for the Eid Al Fitr window (+1.5), a public
+    holiday (+1.0) and the December to mid-January peak (+0.5 to +0.7). A direct clash
+    with the kind of act your lens blocks on, or any date inside Ramadan, rules the
+    date out entirely. Prime is 4.0 and above, good 2.5, low below that.</p>
+   </details>
+  </section>
+ </section>
+
+ <!-- ---------------------------------------------------------- checklist -->
+ <section id="panel-checklist" hidden>
+  <h2>Event checklist <small>for shows you are organising</small></h2>
+  {checklist_html(checklists)}
  </section>
 </div>
 
@@ -933,8 +1483,13 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 </div>
 
 <script>
-window.__DAYS__ = {json.dumps(day_payload(days), ensure_ascii=False)};
+window.__DAYS__ = {json.dumps(payload, ensure_ascii=False, separators=(",", ":"))};
+window.__POOL__ = {json.dumps(pool, ensure_ascii=False, separators=(",", ":"))};
 window.__TIERS__ = {json.dumps(tier_js, ensure_ascii=False)};
+window.__LENSES__ = {json.dumps(lens_meta, ensure_ascii=False)};
+window.__DEFAULT_LENS__ = {json.dumps(default_lens)};
+window.__CHECKLISTS__ = {json.dumps(checklist_js, ensure_ascii=False,
+                                    separators=(",", ":"))};
 </script>
 <script>{JS}</script>
 </body>
@@ -945,6 +1500,7 @@ window.__TIERS__ = {json.dumps(tier_js, ensure_ascii=False)};
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--viability", default=str(ROOT / "docs" / "viability.json"))
+    ap.add_argument("--checklists", default=str(ROOT / "data" / "checklists.json"))
     ap.add_argument("--out-dir", default=str(ROOT / "docs"))
     ap.add_argument("--force-icons", action="store_true",
                     help="re-rasterise the app icons even if they already exist")
@@ -960,11 +1516,16 @@ def main():
         print("viability.json has no days; refusing to build an empty calendar")
         return 1
 
+    checklists = []
+    cl_path = Path(args.checklists)
+    if cl_path.exists():
+        checklists = json.loads(cl_path.read_text()).get("checklists", [])
+
     stamp = viab.get("generated", date.today().isoformat())
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
-    (out / "index.html").write_text(render(viab, cfg, stamp), encoding="utf-8")
+    (out / "index.html").write_text(render(viab, cfg, stamp, checklists), encoding="utf-8")
     (out / "manifest.webmanifest").write_text(manifest(stamp))
     (out / "sw.js").write_text(service_worker(stamp))
     # The icons are a fixed mark, independent of the data, and rasterising them in pure
@@ -978,8 +1539,10 @@ def main():
     (out / ".nojekyll").write_text("")
 
     page = (out / "index.html").stat().st_size
-    print(f"built {out/'index.html'} ({page // 1024} KB), "
-          f"{len(viab['days'])} days, {len(viab.get('events', []))} events")
+    tasks = sum(len(c["tasks"]) for c in checklists)
+    print(f"built {out/'index.html'} ({page // 1024} KB), {len(viab['days'])} days, "
+          f"{len(viab.get('events', []))} events, {len(viab.get('lenses') or {})} lenses, "
+          f"{len(checklists)} checklists ({tasks} tasks)")
     print(f"  manifest, service worker and icons written; cache stamp {stamp}")
 
     absolute = re.findall(r'(?:href|src)="(/[^/][^"]*)"', (out / "index.html").read_text())

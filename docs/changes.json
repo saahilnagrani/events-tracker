@@ -1,10 +1,10 @@
 {
  "generated": "2026-08-17",
- "has_changes": true,
+ "has_changes": false,
  "summary": {
   "added": 0,
   "removed": 0,
-  "changed": 1,
+  "changed": 0,
   "dates_lost": 0,
   "dates_gained": 0,
   "review_queue": 13,
@@ -12,19 +12,7 @@
  },
  "added": [],
  "removed": [],
- "changed": [
-  {
-   "event": "Jimmy Carr 'Laughs Funny' Live at Dubai Opera",
-   "url": "https://dubai.platinumlist.net/event-tickets/107320/jimmy-carr-laughs-funny-live-at-dubai-opera",
-   "start": "2026-08-29",
-   "fields": {
-    "price_from_aed": {
-     "from": 250,
-     "to": null
-    }
-   }
-  }
- ],
+ "changed": [],
  "dates_lost": [],
  "dates_gained": [],
  "review_queue": [
