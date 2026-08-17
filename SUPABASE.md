@@ -72,7 +72,11 @@ sign-in.
 ### 5. Point the app at the project
 
 1. Open **Project Settings -> API**.
-2. Copy the **Project URL** and the **anon public** key.
+2. Copy the **Project URL** and the public client key. Newer projects call this the
+   **Publishable key** and it starts `sb_publishable_`; older ones call it **anon
+   public** and it is a long JWT starting `ey`. Either works. Do **not** use the
+   secret or service_role key: that one bypasses every policy below and must never
+   ship in a page.
 3. Put them in `data/backend.json`:
 
 ```json

@@ -1283,11 +1283,15 @@ JS = """
  function api(path, opts){
   opts = opts || {};
   var s = session();
+  // Both key formats are accepted: the legacy anon JWT and the newer
+  // sb_publishable_... key. When there is no session the key itself goes in
+  // Authorization, which is what the official client does and what GoTrue expects
+  // for the sign-in call.
   var headers = {
    'apikey': BACKEND.supabase_anon_key,
+   'Authorization': 'Bearer ' + ((s && s.access_token) || BACKEND.supabase_anon_key),
    'Content-Type': 'application/json'
   };
-  if (s && s.access_token) headers.Authorization = 'Bearer ' + s.access_token;
   Object.keys(opts.headers || {}).forEach(function(k){ headers[k] = opts.headers[k]; });
   return fetch(BACKEND.supabase_url.replace(/\/$/, '') + path, {
    method: opts.method || 'GET', headers: headers,
