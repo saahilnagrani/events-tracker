@@ -219,9 +219,13 @@ def main():
                     ".mo .grid",
                     "gs => gs.filter(g => g.scrollWidth > g.clientWidth + 1)"
                     ".map(g => g.closest('.mo').dataset.month)")
+                # Only labels that are actually rendered can be truncated; where a
+                # panel is too narrow the label is hidden outright and the icon and
+                # hatch carry the tier instead.
                 clipped = pg.eval_on_selector_all(
                     ".day:not(.pad) .lb",
-                    "els => els.filter(e => e.scrollWidth > e.clientWidth + 1).length")
+                    "els => els.filter(e => getComputedStyle(e).display !== 'none'"
+                    " && e.scrollWidth > e.clientWidth + 1).length")
                 hscroll = pg.evaluate(
                     "document.body.scrollWidth > document.body.clientWidth + 1")
                 check(f"{width}px: no month grid overflows its panel", not over,
@@ -291,16 +295,54 @@ def main():
             desk = browser.new_page(viewport={"width": 1440, "height": 900})
             desk.goto(url, wait_until="load")
             open_calendar(desk)
+            check("twelve months land as three rows of four on a wide laptop",
+                  desk.evaluate("""() => {
+                      const mos = [...document.querySelectorAll('.mo')];
+                      const top = mos[0].getBoundingClientRect().top;
+                      const perRow = mos.filter(
+                          m => m.getBoundingClientRect().top === top).length;
+                      const rows = new Set(mos.map(
+                          m => Math.round(m.getBoundingClientRect().top))).size;
+                      return perRow === 4 && rows === 3; }"""))
+            # Where the label is dropped for want of room, the icon has to grow, or
+            # the cell would be carrying colour and a hatch alone.
+            check("a cell without a visible label still shows its icon",
+                  desk.evaluate("""() => {
+                      const lb = document.querySelector('.day:not(.pad) .lb');
+                      const ic = document.querySelector('.day:not(.pad) .ic');
+                      if (getComputedStyle(lb).display !== 'none') return true;
+                      return ic.textContent.trim().length > 0 &&
+                             parseFloat(getComputedStyle(ic).fontSize) >= 14; }"""))
             check("months lay out two or more to a row",
                   desk.evaluate("""() => {
                       const mos = [...document.querySelectorAll('.mo')];
                       const top = mos[0].getBoundingClientRect().top;
                       return mos.filter(m => m.getBoundingClientRect().top === top).length;
                   }""") >= 2)
-            check("day cells are bigger than on a phone",
-                  desk.eval_on_selector(
-                      ".day:not(.pad)",
-                      "el => el.getBoundingClientRect().width") >= 70)
+            # Four months to a row makes the cells narrow by design, so the old
+            # "wider than a phone" assertion no longer applies. What still has to hold
+            # is that every date remains a usable click target.
+            check("day cells stay a usable target at four months a row",
+                  desk.evaluate("""() => [...document.querySelectorAll('.day:not(.pad)')]
+                      .every(e => { const r = e.getBoundingClientRect();
+                                    return r.width >= 28 && r.height >= 40; })"""))
+            # Restores the calendar tab afterwards: later checks hover a date, and a
+            # hidden panel has nothing to hover.
+            check("the checklist picker matches the other dropdowns",
+                  desk.evaluate("""() => {
+                      document.getElementById('tab-checklist').click();
+                      const sel = getComputedStyle(document.getElementById('cl-pick'));
+                      const ms = getComputedStyle(
+                          document.querySelector('.ms > summary'));
+                      const native = sel.appearance === 'none' ||
+                                     sel.webkitAppearance === 'none';
+                      const same = native &&
+                             sel.borderRadius === ms.borderRadius &&
+                             sel.backgroundColor === ms.backgroundColor &&
+                             sel.fontSize === ms.fontSize &&
+                             sel.borderColor === ms.borderColor;
+                      document.getElementById('tab-calendar').click();
+                      return same; }"""))
             check("events list becomes a table, not a card wall",
                   desk.eval_on_selector(".ev", "el => getComputedStyle(el).display")
                   == "grid")
@@ -394,6 +436,9 @@ def main():
                   ctx.eval_on_selector_all(".day[data-tier]", """els => els.every(e =>
                        e.querySelector('.ic') && e.querySelector('.lb') &&
                        e.querySelector('.lb').textContent.trim().length > 0)"""))
+            check("every scored day names its tier to a screen reader",
+                  ctx.eval_on_selector_all(".day[data-tier]", """els => els.every(e =>
+                       (e.getAttribute('aria-label') || '').includes(e.dataset.tier))"""))
             check("blocked days carry a hatch as well as colour",
                   ctx.eval_on_selector_all(".day.t-blocked", """els => els.length === 0 ||
                        els.every(e => getComputedStyle(e).backgroundImage.includes('gradient'))"""))
