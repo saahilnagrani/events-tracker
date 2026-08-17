@@ -420,6 +420,50 @@ def main():
             check("marking a task done moves the progress figure",
                   ctx.inner_text(".cl-cell") != before,
                   f"{before.split(chr(10))[0]} -> {ctx.inner_text('.cl-cell').split(chr(10))[0]}")
+            print("\nadding checklist items")
+            before = ctx.eval_on_selector_all(".tk", "els => els.length")
+            ctx.click(".cl-add summary")
+            ctx.fill("#add-task", "Confirm generator backup for the ballroom")
+            ctx.fill("#add-owner", "Saahil")
+            ctx.fill("#add-dminus", "20")
+            ctx.fill("#add-ws-new", "Contingency")
+            ctx.check("#add-blocking")
+            ctx.click("#add-save")
+            ctx.wait_for_timeout(300)
+            check("adding a task puts it in the list",
+                  ctx.eval_on_selector_all(".tk", "els => els.length") == before + 1,
+                  f"{before} -> {ctx.eval_on_selector_all('.tk', 'els => els.length')}")
+            check("the added task keeps what was typed", ctx.evaluate("""() => {
+                const el = document.querySelector('.tk[data-added="1"]');
+                const meta = el.querySelector('.tk-meta').textContent;
+                return el.querySelector('.tk-task').textContent.includes('generator')
+                    && meta.includes('Contingency') && meta.includes('Saahil')
+                    && meta.includes('D-20') && meta.includes('BLOCKING'); }"""))
+            check("a new workstream joins the filter", ctx.eval_on_selector_all(
+                "#cl-ws-menu input", "els => els.some(e => e.value === 'Contingency')"))
+            check("an added task counts toward the totals",
+                  "of " + str(before + 1) in ctx.inner_text(".cl-progress"),
+                  " ".join(ctx.inner_text(".cl-progress").split())[:60])
+            check("an added task reaches the exported JSON",
+                  "Contingency" in ctx.input_value("#cl-out"))
+            # Numbering has to continue past the imported tasks, or an added task would
+            # share a key with one of them and they would toggle together.
+            check("added tasks do not reuse an imported task's number",
+                  ctx.evaluate("""() => {
+                      const ns = [...document.querySelectorAll('.tk')]
+                          .map(e => e.dataset.n);
+                      return new Set(ns).size === ns.length; }"""))
+            ctx.reload(wait_until="load")
+            ctx.click("#tab-checklist")
+            ctx.wait_for_timeout(300)
+            check("an added task survives a reload",
+                  ctx.eval_on_selector_all('.tk[data-added="1"]', "els => els.length") == 1)
+            ctx.click('.tk[data-added="1"] .tk-del')
+            ctx.wait_for_timeout(250)
+            check("an added task can be removed again",
+                  ctx.eval_on_selector_all('.tk[data-added="1"]', "els => els.length") == 0
+                  and ctx.eval_on_selector_all(".tk", "els => els.length") == before)
+
             ctx.check("#cl-blockers")
             ctx.wait_for_timeout(150)
             check("blockers-only filter narrows the list", ctx.eval_on_selector_all(

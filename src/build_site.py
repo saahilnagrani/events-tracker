@@ -325,47 +325,19 @@ def choice(name, group, options, current, label=None):
 
 
 def checklist_html(checklists):
+    """The checklist shell only.
+
+    The tasks themselves are rendered in the browser from the inlined payload plus
+    whatever has been added locally. Rendering them here as well would mean two
+    code paths building the same row, and only one of them able to grow.
+    """
     if not checklists:
         return ('<p class="muted">No checklists yet. Import one with '
                 '<code>python src/import_checklist.py &lt;workbook.xlsx&gt;</code>.</p>')
-    tasks = []
-    for cl in checklists:
-        for t in cl["tasks"]:
-            why = f'<p class="tk-why">{esc(t["why"])}</p>' if t.get("why") else ""
-            blocking = ('<span class="tk-flag">BLOCKING</span>' if t.get("blocking")
-                        else "")
-            d_minus = t.get("d_minus")  # used in the markup below and for due dates
-            offset = ("" if d_minus is None else
-                      (f"D-{d_minus}" if d_minus >= 0 else f"D+{abs(d_minus)}"))
-            tasks.append(
-                f'<article class="tk" data-cl="{esc(cl["id"])}" data-n="{t["n"]}" '
-                f'data-ws="{esc(t["workstream"])}" '
-                f'data-dminus="{"" if d_minus is None else d_minus}" '
-                f'data-blocking="{1 if t.get("blocking") else 0}" hidden>'
-                f'<div class="tk-head">'
-                f'<span class="tk-n">{t["n"]}</span>'
-                f'<div class="tk-body"><p class="tk-task">{esc(t["task"])}</p>{why}</div>'
-                + choice("status", f'st-{cl["id"]}-{t["n"]}',
-                         [(s, s) for s in STATUSES], t.get("status") or STATUSES[0],
-                         f'Status for task {t["n"]}')
-                + '</div>'
-                f'<div class="tk-meta"><span class="tk-ws">{esc(t["workstream"])}</span>'
-                f'<span>{esc(t.get("owner") or "Unassigned")}</span>'
-                f'<span class="tk-off">{offset}</span>'
-                f'<span class="tk-due"></span>{blocking}</div>'
-                f'</article>')
 
     picker = choice("checklist", "cl-which",
                     [(c["id"], c["title"]) for c in checklists],
                     checklists[0]["title"], "Which checklist")
-    streams = []
-    for cl in checklists:
-        for t in cl["tasks"]:
-            if t["workstream"] not in streams:
-                streams.append(t["workstream"])
-    chips = "".join(
-        f'<label class="ms-opt"><input type="checkbox" data-ws-filter '
-        f'value="{esc(s)}"><span>{esc(s)}</span></label>' for s in streams)
 
     # The workbook's Setup tab is meant to be filled in, so these are inputs rather
     # than read-only text, saved alongside the task statuses.
@@ -396,16 +368,43 @@ def checklist_html(checklists):
   <summary>Show details and assumptions</summary>
   {setup}
  </details>
+
+ <details class="cl-more cl-add">
+  <summary>Add a task</summary>
+  <div class="cl-add-form">
+   <label class="cl-lab">Task
+    <input type="text" id="add-task" placeholder="What needs doing"></label>
+   <label class="cl-lab">Why it matters <span>optional</span>
+    <input type="text" id="add-why" placeholder="What goes wrong if it slips"></label>
+   <div class="cl-add-row">
+    <label class="cl-lab">Workstream<span id="add-ws-holder"></span></label>
+    <label class="cl-lab">or a new one
+     <input type="text" id="add-ws-new" placeholder="New workstream"></label>
+    <label class="cl-lab">Owner
+     <input type="text" id="add-owner" placeholder="Who owns it"></label>
+    <label class="cl-lab">Days before the show
+     <input type="number" id="add-dminus" placeholder="e.g. 45" inputmode="numeric">
+    </label>
+   </div>
+   <label class="cl-toggle"><input type="checkbox" id="add-blocking"> This one blocks
+    the show</label>
+   <div class="cl-add-actions">
+    <button type="button" id="add-save" class="btn-primary">Add task</button>
+    <span class="muted" id="add-msg"></span>
+   </div>
+  </div>
+ </details>
+
  <div class="filters">
   <details class="ms" data-ms="workstream">
-   <summary>Workstream<span class="ms-badge" hidden></span>
-   {icon("down", "ic ms-caret")}</summary>
-   <div class="ms-menu">{chips}</div>
+   <summary>Workstream<span class="ms-badge" hidden></span>{icon("down", "ic ms-caret")}
+   </summary>
+   <div class="ms-menu" id="cl-ws-menu"></div>
   </details>
   <label class="cl-toggle"><input type="checkbox" id="cl-blockers"> Blockers only</label>
   <label class="cl-toggle"><input type="checkbox" id="cl-open"> Hide done</label>
  </div>
- <div class="cl-tasks">{"".join(tasks)}</div>
+ <div class="cl-tasks" id="cl-tasks"></div>
  <details class="cl-json"><summary>Checklist JSON</summary>
   <textarea id="cl-out" readonly rows="8"></textarea></details>
 """
@@ -827,6 +826,25 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .tk-ws{font-weight:700;color:var(--ink-2)}
 .tk-flag{color:var(--crit);font-weight:700;letter-spacing:.05em}
 .tk-due.over{color:var(--crit);font-weight:700}
+/* add-a-task form */
+.cl-add-form{display:grid;gap:10px;background:var(--surface-1);border:1px solid var(--ring);
+ border-radius:12px;padding:12px 13px;margin-top:4px}
+.cl-lab{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-2)}
+.cl-lab span{color:var(--muted)}
+.cl-lab input[type="text"],.cl-lab input[type="number"]{font:inherit;font-size:13px;
+ padding:8px 10px;border-radius:9px;border:1px solid var(--ring);background:var(--plane);
+ color:var(--ink);min-height:38px;width:100%}
+.cl-add-row{display:grid;gap:10px;grid-template-columns:1fr}
+.cl-add-actions{display:flex;align-items:center;gap:10px}
+.btn-primary{background:var(--ink);color:var(--surface-1);border:0;border-radius:9px;
+ padding:9px 15px;font-weight:600;min-height:38px}
+.tk-del{font-size:11px;color:var(--crit);background:none;border:0;padding:2px 4px;
+ text-decoration:underline;min-height:auto}
+.tk[data-added="1"] .tk-n::after{content:" new";color:var(--good);font-weight:700}
+@media (min-width:700px){
+ .cl-add-row{grid-template-columns:repeat(4,1fr)}
+}
+
 .cl-json textarea{width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
  font-size:11px;border-radius:9px;border:1px solid var(--ring);padding:8px;
  background:var(--surface-1);color:var(--ink)}
@@ -968,6 +986,7 @@ JS = """
  var TIER = window.__TIERS__ || {};
  var LENSES = window.__LENSES__ || {};
  var CHECK = window.__CHECKLISTS__ || [];
+ var STATUS_LIST = window.__STATUSES__ || ['Not started'];
  var DEFAULT_LENS = window.__DEFAULT_LENS__ || 'standup';
  var text = function(i){ return POOL[i] || ''; };
  var svgIcon = function(name){
@@ -1229,7 +1248,8 @@ JS = """
  });
 
  // ================================================================ checklist tab
- var clTasks = all('.tk');
+ // Tasks are rendered here rather than in the page source, so an imported task and
+ // one added in the browser travel the same path and look the same.
  var current = CHECK.length ? CHECK[0].id : null;
 
  function clKey(id){ return 'checklist:' + id; }
@@ -1237,22 +1257,66 @@ JS = """
   try { return JSON.parse(store.get(clKey(id), '{}')) || {}; } catch (e) { return {}; }
  }
  function clSave(id, state){ store.set(clKey(id), JSON.stringify(state)); }
+ function meta(id){
+  return CHECK.filter(function(c){ return c.id === id; })[0] || {tasks: []};
+ }
+ // Imported tasks first, then anything added locally.
+ function tasksFor(id){
+  return meta(id).tasks.concat(clState(id).added || []);
+ }
+ function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+ }
+ function choiceHtml(name, group, options, currentValue){
+  var rows = options.map(function(o){
+   return '<label class="ms-opt"><input type="radio" name="' + esc(group) + '" value="' +
+     esc(o) + '"' + (o === currentValue ? ' checked' : '') + '><span>' + esc(o) +
+     '</span></label>';
+  }).join('');
+  return '<details class="ms ms-choice" data-choice="' + esc(name) + '">' +
+    '<summary><span class="ms-value">' + esc(currentValue) + '</span>' +
+    '<svg class="ic ms-caret" aria-hidden="true"><use href="#i-down"></use></svg>' +
+    '</summary><div class="ms-menu">' + rows + '</div></details>';
+ }
 
  function dueDate(showDate, dMinus){
-  if (!showDate || dMinus === null || dMinus === undefined) return '';
+  if (!showDate || dMinus === null || dMinus === undefined || dMinus === '') return '';
   var d = new Date(showDate + 'T00:00:00');
-  d.setDate(d.getDate() - dMinus);
+  d.setDate(d.getDate() - Number(dMinus));
   return localIso(d);
+ }
+
+ function taskHtml(id, t, status){
+  var off = (t.d_minus === null || t.d_minus === undefined || t.d_minus === '')
+    ? '' : (Number(t.d_minus) >= 0 ? 'D-' + t.d_minus : 'D+' + Math.abs(t.d_minus));
+  return '<article class="tk" data-cl="' + esc(id) + '" data-n="' + esc(t.n) +
+   '" data-ws="' + esc(t.workstream) + '" data-dminus="' +
+   esc(t.d_minus === null || t.d_minus === undefined ? '' : t.d_minus) +
+   '" data-blocking="' + (t.blocking ? 1 : 0) + '" data-added="' +
+   (t.added ? 1 : 0) + '">' +
+   '<div class="tk-head"><span class="tk-n">' + esc(t.n) + '</span>' +
+   '<div class="tk-body"><p class="tk-task">' + esc(t.task) + '</p>' +
+   (t.why ? '<p class="tk-why">' + esc(t.why) + '</p>' : '') + '</div>' +
+   choiceHtml('status', 'st-' + id + '-' + t.n, STATUS_LIST, status) +
+   '</div><div class="tk-meta"><span class="tk-ws">' + esc(t.workstream) + '</span>' +
+   '<span>' + esc(t.owner || 'Unassigned') + '</span>' +
+   '<span class="tk-off">' + esc(off) + '</span><span class="tk-due"></span>' +
+   (t.blocking ? '<span class="tk-flag">BLOCKING</span>' : '') +
+   (t.added ? '<button type="button" class="tk-del" data-del="' + esc(t.n) +
+              '">Remove</button>' : '') +
+   '</div></article>';
  }
 
  function renderChecklist(){
   if (!current) return;
-  var meta = CHECK.filter(function(c){ return c.id === current; })[0];
+  var m = meta(current);
   var state = clState(current);
-  var showDate = state.show_date || meta.show_date || '';
+  var showDate = state.show_date || m.show_date || '';
   if ($('cl-date')) $('cl-date').value = showDate;
-  var pick = document.querySelector('.ms-choice[data-choice="checklist"]');
-  if (pick && choiceValue(pick) !== current) setChoice(pick, current, meta.title);
+  var pick = document.querySelector('.ms-choice[data-choice="checklist"] .ms-value');
+  if (pick) pick.textContent = m.title;
   all('.cl-field').forEach(function(f){ f.hidden = f.dataset.cl !== current; });
   var fields = state.fields || {};
   all('.cl-field[data-cl="' + current + '"] input[data-field]').forEach(function(inp){
@@ -1260,35 +1324,50 @@ JS = """
    if (saved !== undefined && inp.value !== saved) inp.value = saved;
   });
 
-  var wsWanted = [];
-  all('input[data-ws-filter]').forEach(function(b){
-   if (b.checked) wsWanted.push(b.value);
+  var list = tasksFor(current);
+  var statuses = state.statuses || {};
+
+  // workstream filter, rebuilt because an added task can introduce a new one
+  var streams = [];
+  list.forEach(function(t){
+   if (streams.indexOf(t.workstream) < 0) streams.push(t.workstream);
   });
+  var wanted = [];
+  all('#cl-ws-menu input').forEach(function(b){ if (b.checked) wanted.push(b.value); });
+  $('cl-ws-menu').innerHTML = streams.map(function(s){
+   return '<label class="ms-opt"><input type="checkbox" data-ws-filter value="' +
+     esc(s) + '"' + (wanted.indexOf(s) >= 0 ? ' checked' : '') + '><span>' + esc(s) +
+     '</span></label>';
+  }).join('');
+  var wsHolder = $('add-ws-holder');
+  if (wsHolder && !wsHolder.dataset.built) {
+   wsHolder.innerHTML = choiceHtml('add-ws', 'add-ws', streams, streams[0] || '');
+   wsHolder.dataset.built = '1';
+  }
+
   var blockersOnly = $('cl-blockers') && $('cl-blockers').checked;
   var hideDone = $('cl-open') && $('cl-open').checked;
+  $('cl-tasks').innerHTML = list.map(function(t){
+   return taskHtml(current, t, statuses[String(t.n)] || t.status || STATUS_LIST[0]);
+  }).join('');
 
-  var totals = {total: 0, done: 0, prog: 0, todo: 0, blockers: 0, overdue: 0};
+  var totals = {total: 0, done: 0, prog: 0, blockers: 0, overdue: 0};
   var byWs = {};
-  clTasks.forEach(function(el){
-   var mine = el.dataset.cl === current;
+  all('.tk').forEach(function(el){
    var n = el.dataset.n;
-   var box = el.querySelector('.ms-choice');
-   var status = state.statuses && state.statuses[n] ? state.statuses[n]
-                                                    : choiceValue(box);
-   if (choiceValue(box) !== status) setChoice(box, status);
+   var status = statuses[n] || el.querySelector('input[type="radio"]:checked').value;
    el.classList.toggle('done', status === 'Done');
 
-   var due = dueDate(showDate, Number(el.dataset.dminus));
+   var due = dueDate(showDate, el.dataset.dminus);
    var dueEl = el.querySelector('.tk-due');
    var overdue = due && due < TODAY && status !== 'Done' && status !== 'Not needed';
-   dueEl.textContent = due ? (overdue ? 'due ' + due + ' · overdue' : 'due ' + due) : '';
+   dueEl.textContent = due ? (overdue ? 'due ' + due + ' \u00b7 overdue' : 'due ' + due) : '';
    dueEl.classList.toggle('over', !!overdue);
 
-   if (mine && status !== 'Not needed') {
+   if (status !== 'Not needed') {
     totals.total++;
     if (status === 'Done') totals.done++;
     else if (status === 'In progress') totals.prog++;
-    else totals.todo++;
     if (el.dataset.blocking === '1' && status !== 'Done') totals.blockers++;
     if (overdue) totals.overdue++;
     var ws = el.dataset.ws;
@@ -1296,12 +1375,9 @@ JS = """
     byWs[ws].t++;
     if (status === 'Done') byWs[ws].d++;
    }
-
-   var visible = mine
-     && (!wsWanted.length || wsWanted.indexOf(el.dataset.ws) >= 0)
-     && (!blockersOnly || el.dataset.blocking === '1')
-     && (!hideDone || status !== 'Done');
-   el.hidden = !visible;
+   el.hidden = (wanted.length && wanted.indexOf(el.dataset.ws) < 0)
+     || (blockersOnly && el.dataset.blocking !== '1')
+     || (hideDone && status === 'Done');
   });
 
   var pct = totals.total ? Math.round(100 * totals.done / totals.total) : 0;
@@ -1317,12 +1393,10 @@ JS = """
      (c[2] === null ? '' : '<div class="cl-bar-track"><div class="cl-bar-fill" ' +
       'style="width:' + c[2] + '%"></div></div>') + '</div>';
   }).join('');
-  // Kept behind a disclosure: eight more tiles pushed the tasks themselves two
-  // screens down on a phone.
   if ($('cl-streams')) {
    $('cl-streams').innerHTML = Object.keys(byWs).map(function(ws){
     var w = byWs[ws];
-    return '<div class="cl-cell"><b>' + w.d + '/' + w.t + '</b><span>' + ws +
+    return '<div class="cl-cell"><b>' + w.d + '/' + w.t + '</b><span>' + esc(ws) +
       '</span><div class="cl-bar-track"><div class="cl-bar-fill" style="width:' +
       Math.round(100 * w.d / w.t) + '%"></div></div></div>';
    }).join('');
@@ -1330,10 +1404,12 @@ JS = """
 
   var out = $('cl-out');
   if (out) {
-   var dump = JSON.parse(JSON.stringify(meta));
+   var dump = JSON.parse(JSON.stringify(m));
    dump.show_date = showDate || null;
-   dump.tasks.forEach(function(t){
-    if (state.statuses && state.statuses[String(t.n)]) t.status = state.statuses[String(t.n)];
+   dump.tasks = list.map(function(t){
+    var copy = JSON.parse(JSON.stringify(t));
+    copy.status = statuses[String(t.n)] || copy.status || STATUS_LIST[0];
+    return copy;
    });
    (dump.setup || []).forEach(function(f){
     if (fields[f.label] !== undefined) f.value = fields[f.label];
@@ -1341,46 +1417,74 @@ JS = """
    out.value = JSON.stringify(dump, null, 1);
   }
   var badge = document.querySelector('.ms[data-ms="workstream"] .ms-badge');
-  if (badge) { badge.textContent = wsWanted.length; badge.hidden = !wsWanted.length; }
+  if (badge) { badge.textContent = wanted.length; badge.hidden = !wanted.length; }
  }
 
- // Every single-choice control is a disclosure holding radios. Picking one updates
- // the summary label and closes the menu; the radio is still the source of truth.
- function choiceValue(box){
-  var picked = box.querySelector('input[type="radio"]:checked');
-  return picked ? picked.value : '';
- }
- function setChoice(box, value, label){
-  box.querySelectorAll('input[type="radio"]').forEach(function(r){
-   r.checked = r.value === value;
-  });
-  var out = box.querySelector('.ms-value');
-  if (out) out.textContent = label === undefined ? value : label;
- }
- all('.ms-choice').forEach(function(box){
-  box.addEventListener('change', function(e){
-   if (!e.target || e.target.type !== 'radio') return;
-   var text = e.target.parentNode.querySelector('span');
-   var out = box.querySelector('.ms-value');
-   if (out) out.textContent = text ? text.textContent : e.target.value;
-   box.open = false;
-   var task = box.closest('.tk');
-   if (task) {
-    var state = clState(task.dataset.cl);
-    state.statuses = state.statuses || {};
-    state.statuses[task.dataset.n] = e.target.value;
-    clSave(task.dataset.cl, state);
-   } else if (box.dataset.choice === 'checklist') {
-    current = e.target.value;
-   }
-   renderChecklist();
-  });
+ // Delegated, because the rows are replaced on every render.
+ $('cl-tasks').addEventListener('change', function(e){
+  if (!e.target || e.target.type !== 'radio') return;
+  var task = e.target.closest('.tk');
+  var box = e.target.closest('.ms-choice');
+  if (!task) return;
+  var state = clState(task.dataset.cl);
+  state.statuses = state.statuses || {};
+  state.statuses[task.dataset.n] = e.target.value;
+  clSave(task.dataset.cl, state);
+  if (box) box.open = false;
+  renderChecklist();
  });
+ $('cl-tasks').addEventListener('click', function(e){
+  var del = e.target.closest('.tk-del');
+  if (!del) return;
+  var state = clState(current);
+  state.added = (state.added || []).filter(function(t){
+   return String(t.n) !== String(del.dataset.del);
+  });
+  if (state.statuses) delete state.statuses[del.dataset.del];
+  clSave(current, state);
+  renderChecklist();
+ });
+ $('cl-ws-menu').addEventListener('change', renderChecklist);
+
+ if ($('add-save')) $('add-save').addEventListener('click', function(){
+  var text = ($('add-task').value || '').trim();
+  var msg = $('add-msg');
+  if (!text) { msg.textContent = 'Give the task a name first.'; return; }
+  var picked = document.querySelector('#add-ws-holder input[type="radio"]:checked');
+  var ws = ($('add-ws-new').value || '').trim() ||
+           (picked ? picked.value : '') || 'General';
+  var raw = ($('add-dminus').value || '').trim();
+  var state = clState(current);
+  state.added = state.added || [];
+  // Numbering continues past everything already in the list, so an added task never
+  // collides with an imported one, and removing one does not renumber the rest.
+  var highest = 0;
+  tasksFor(current).forEach(function(t){ highest = Math.max(highest, Number(t.n) || 0); });
+  state.added.push({
+   n: highest + 1, workstream: ws, task: text,
+   why: ($('add-why').value || '').trim(), owner: ($('add-owner').value || '').trim(),
+   blocking: !!$('add-blocking').checked,
+   d_minus: raw === '' ? null : Number(raw),
+   status: STATUS_LIST[0], added: true
+  });
+  clSave(current, state);
+  ['add-task', 'add-why', 'add-owner', 'add-dminus', 'add-ws-new'].forEach(function(id){
+   if ($(id)) $(id).value = '';
+  });
+  $('add-blocking').checked = false;
+  msg.textContent = 'Added to ' + ws + '.';
+  setTimeout(function(){ msg.textContent = ''; }, 2500);
+  renderChecklist();
+ });
+
  if ($('cl-date')) $('cl-date').addEventListener('change', function(e){
   var state = clState(current);
   state.show_date = e.target.value;
   clSave(current, state);
   renderChecklist();
+ });
+ ['cl-blockers', 'cl-open'].forEach(function(id){
+  if ($(id)) $(id).addEventListener('change', renderChecklist);
  });
  all('.cl-field input[data-field]').forEach(function(inp){
   inp.addEventListener('change', function(){
@@ -1392,11 +1496,13 @@ JS = """
    renderChecklist();
   });
  });
- ['cl-blockers', 'cl-open'].forEach(function(id){
-  if ($(id)) $(id).addEventListener('change', renderChecklist);
- });
- all('input[data-ws-filter]').forEach(function(b){
-  b.addEventListener('change', renderChecklist);
+ // The checklist picker lives outside #cl-tasks, so it binds separately.
+ var pickBox = document.querySelector('.ms-choice[data-choice="checklist"]');
+ if (pickBox) pickBox.addEventListener('change', function(e){
+  if (!e.target || e.target.type !== 'radio') return;
+  current = e.target.value;
+  pickBox.open = false;
+  renderChecklist();
  });
  if ($('cl-export')) $('cl-export').addEventListener('click', function(){
   var out = $('cl-out');
@@ -1648,6 +1754,7 @@ window.__LENSES__ = {json.dumps(lens_meta, ensure_ascii=False)};
 window.__DEFAULT_LENS__ = {json.dumps(default_lens)};
 window.__CHECKLISTS__ = {json.dumps(checklist_js, ensure_ascii=False,
                                     separators=(",", ":"))};
+window.__STATUSES__ = {json.dumps(STATUSES, ensure_ascii=False)};
 </script>
 <script>{JS}</script>
 </body>
