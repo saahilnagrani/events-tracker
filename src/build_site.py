@@ -419,18 +419,26 @@ h2 small{font-weight:400;color:var(--ink-2);font-size:12.5px;margin-left:6px}
  scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px}
 .months::-webkit-scrollbar{display:none}
 .mo{flex:0 0 100%;scroll-snap-align:center;background:var(--surface-1);
- border:1px solid var(--ring);border-radius:14px;padding:12px}
+ border:1px solid var(--ring);border-radius:14px;padding:10px}
 .mo h3{margin:0 0 8px;font-size:14.5px}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
 .hd{font-size:10.5px;color:var(--muted);text-align:center;padding-bottom:3px;
  letter-spacing:.04em}
-.day{position:relative;min-height:54px;border-radius:8px;border:1px solid var(--grid);
- padding:3px 4px;background:var(--surface-1);display:flex;flex-direction:column;gap:1px;
- align-items:flex-start;text-align:left}
+/* min-width:0 matters. A 1fr track is minmax(auto,1fr) and will not shrink below its
+   content, so without this the "BLOCKED" label sets a floor of about 55px per column.
+   In a month that is entirely Ramadan-blocked all seven columns hit that floor at once
+   and the grid overflows its panel. The ellipsis is a belt-and-braces guard; at the
+   sizes below the label fits. */
+.day{position:relative;min-height:54px;min-width:0;border-radius:8px;
+ border:1px solid var(--grid);padding:3px;background:var(--surface-1);display:flex;
+ flex-direction:column;gap:1px;align-items:flex-start;text-align:left;overflow:hidden}
 .day.pad{border:0;background:none;pointer-events:none;min-height:0}
 .dn{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .ic{font-size:12px;line-height:1}
-.lb{font-size:8px;letter-spacing:.05em;color:var(--muted);margin-top:auto;font-weight:600}
+/* Sized so BLOCKED, the longest label, fits a phone cell without being
+   ellipsised. Clipping it would leave colour doing the work on its own. */
+.lb{font-size:6.5px;letter-spacing:0;color:var(--muted);margin-top:auto;font-weight:700;
+ max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .t-prime{background:var(--good-bg);border-color:var(--good)}
 .t-prime .ic,.t-prime .lb{color:var(--good);font-weight:700}
 .t-prime .dn{color:var(--ink);font-weight:700}
@@ -450,6 +458,13 @@ h2 small{font-weight:400;color:var(--ink-2);font-size:12.5px;margin-left:6px}
  color:var(--ink-2)}
 .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;
  vertical-align:-1px;border:1px solid var(--ring)}
+
+/* ---- at a glance ---- */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:var(--surface-1);border:1px solid var(--ring);border-radius:12px;
+ padding:13px 15px}
+.stat b{display:block;font-size:26px;line-height:1.1;letter-spacing:-.02em}
+.stat span{color:var(--ink-2);font-size:12.5px}
 
 /* ---- events list ---- */
 .events{display:grid;gap:9px}
@@ -483,17 +498,81 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .sheet .close{position:absolute;top:10px;right:12px}
 .sec-head{display:flex;align-items:baseline;gap:8px}
 
+/* Very narrow phones (320px, an SE-sized screen) leave about 31px of cell for the
+   label. Shrink it rather than let BLOCKED be ellipsised. */
+@media (max-width:359px){
+ .day{padding:2px}
+ .lb{font-size:5.8px}
+}
+
+/* Hover summary. Pointer devices get the prototype's tooltip back; touch devices never
+   see it and use the detail panel instead. */
+#tip{position:fixed;z-index:60;max-width:330px;background:var(--ink);color:var(--plane);
+ font-size:12.5px;line-height:1.45;padding:9px 11px;border-radius:9px;
+ pointer-events:none;opacity:0;transition:opacity .1s;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+#tip b{display:block;margin-bottom:3px}
+#tip div{margin-top:3px}
+#tip.on{opacity:1}
+
+.only-desk{display:none}
+
 @media (min-width:700px){
  .top h1{font-size:22px}
  .wrap{padding:0 20px 72px}
  .agenda{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
  .events{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+ .stats{grid-template-columns:repeat(4,1fr)}
 }
+
+/* ---- laptop: not the phone layout stretched wide ---- */
 @media (min-width:900px){
- .months{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-  overflow:visible;margin:0;padding:0}
- .mo{flex:none}
+ .only-desk{display:inline}
+ .only-mob{display:none}
+
+ /* Seven columns each have to fit the word BLOCKED without truncating. Measured, that
+    needs a cell of about 66px, so a panel of about 520px. Three months to a row forces
+    a 55px cell and clips the label, which would break the never-colour-only rule, so
+    two roomy months beat three cramped ones. */
+ .months{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));
+  gap:16px;overflow:visible;margin:0;padding:0}
+ .mo{flex:none;padding:16px}
+ .mo h3{font-size:16px;margin-bottom:10px}
  .mo-nav{display:none}
+ .grid{gap:4px}
+ .day{min-height:66px;padding:5px 7px}
+ .dn{font-size:14px}
+ .ic{font-size:13px}
+ .lb{font-size:9px;letter-spacing:.05em}
+ .hd{font-size:11.5px;padding-bottom:6px}
+
+ /* Controls are sized for thumbs on a phone; on a laptop that reads as oversized. */
+ button{font-size:13px;min-height:32px;padding:6px 11px}
+ .seg button{min-height:30px}
+ .icon-btn{min-width:34px}
+ .top{padding:12px 20px 10px}
+ .controls{padding:7px 20px}
+
+ /* The events list becomes a dense scannable table rather than a wall of cards. */
+ .events{display:block;border:1px solid var(--ring);border-radius:12px;
+  background:var(--surface-1);overflow:hidden}
+ .ev{display:grid;grid-template-columns:2.3fr 1.2fr 1.7fr 1.1fr;gap:14px;
+  align-items:baseline;border:0;border-bottom:1px solid var(--grid);border-radius:0;
+  padding:10px 14px}
+ .ev:last-child{border-bottom:0}
+ .ev:hover{background:var(--plane)}
+ .ev h4{margin:0;font-size:13.5px}
+ .ev p{margin:0}
+ .ev-note{grid-column:1/-1;margin-top:2px !important}
+
+ /* A bar pinned to the bottom of a 1440px screen is a phone idiom. Centre it. */
+ .sheet{left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);
+  width:min(520px,92vw);max-height:78vh;border-radius:16px;
+  padding:18px 20px 20px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+ .sheet .grab{display:none}
+}
+
+@media (min-width:1200px){
+ .wrap,.top-in,.controls-in{max-width:1400px}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto !important}}
 """
@@ -604,6 +683,39 @@ JS = """
  cells.forEach(function(el){
   el.addEventListener('click', function(){ openSheet(el.dataset.date); });
  });
+
+ // ---- hover summary, pointer devices only
+ // A laptop should not need a click per date just to see what is competing. Touch
+ // devices never match this query and keep the tap-to-open panel.
+ if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  var tip = $('tip');
+  var showTip = function(el){
+   var d = DAYS[el.dataset.date];
+   if (!d) return;
+   var t = TIER[d.t] || {icon: '', label: d.t};
+   var lines = d.o.concat(d.r.length ? d.r : []).slice(0, 3);
+   tip.innerHTML = '<b>' + el.getAttribute('aria-label').split(',')[0] + ' &middot; ' +
+     t.label + ' ' + d.s + '</b>' +
+     (lines.length ? lines.map(function(x){
+        return '<div>' + String(x).replace(/[<>&]/g, '') + '</div>';
+      }).join('') : '<div>Nothing scheduled against you.</div>');
+   tip.classList.add('on');
+   var r = el.getBoundingClientRect();
+   var w = tip.offsetWidth, h = tip.offsetHeight;
+   var x = r.left + r.width / 2 - w / 2;
+   var y = r.top - h - 8;
+   if (y < 8) y = r.bottom + 8;
+   tip.style.left = Math.max(8, Math.min(x, innerWidth - w - 8)) + 'px';
+   tip.style.top = y + 'px';
+  };
+  var hideTip = function(){ tip.classList.remove('on'); };
+  cells.forEach(function(el){
+   el.addEventListener('mouseenter', function(){ showTip(el); });
+   el.addEventListener('focus', function(){ showTip(el); });
+   el.addEventListener('mouseleave', hideTip);
+   el.addEventListener('blur', hideTip);
+  });
+ }
  document.querySelectorAll('.ag-more').forEach(function(el){
   el.addEventListener('click', function(){ openSheet(el.dataset.open); });
  });
@@ -685,9 +797,7 @@ def render(viab, cfg, stamp):
                    f'{date.fromisoformat(ram_e):%-d %b %Y})'),
     ]
     stat_html = "".join(
-        f'<div class="ag" style="border-left-color:var(--ring)">'
-        f'<div class="ag-score">{n}<span></span></div>'
-        f'<div class="muted" style="font-size:12.5px">{esc(t)}</div></div>'
+        f'<div class="stat"><b>{n}</b><span>{esc(t)}</span></div>'
         for n, t in stats)
 
     legend = "".join(
@@ -762,7 +872,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
  </section>
 
  <section id="calendar-section" hidden>
-  <h2>Month by month <small>swipe or use the arrows</small></h2>
+  <h2>Month by month <small class="only-mob">swipe between months</small><small class="only-desk">hover a date for a summary, click for the full detail</small></h2>
   <div class="mo-nav">
    <button type="button" id="mo-prev" class="icon-btn"
     aria-label="Previous month">&#8592;</button>
@@ -775,7 +885,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
  </section>
 
  <h2>At a glance</h2>
- <div class="agenda">{stat_html}</div>
+ <div class="stats">{stat_html}</div>
 
  <h2>Everything on sale <small>{len(events)} events</small></h2>
  <div class="events">{events_html(events)}</div>
@@ -810,6 +920,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
  </section>
 </div>
 
+<div id="tip" role="tooltip" aria-hidden="true"></div>
 <button type="button" class="sheet-bg" id="sheet-bg" hidden aria-label="Close"></button>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"
  aria-labelledby="sheet-title" hidden>

@@ -165,6 +165,62 @@ def main():
                                         "el => getComputedStyle(el).display === 'grid'"))
             wide.close()
 
+            print("\nlayout holds at every width")
+            # A 1fr grid track will not shrink below its content, so the BLOCKED label
+            # used to set a ~55px floor per column. February 2027 is entirely Ramadan
+            # blocked, so all seven columns hit that floor at once and the month grid
+            # burst out of its panel. Check every month at every width, both that the
+            # grid fits and that the label is not being clipped to make it fit.
+            for width in (320, 360, 390, 768, 1280, 1440):
+                pg = browser.new_page(viewport={"width": width, "height": 900})
+                pg.goto(url, wait_until="load")
+                pg.click("#v-calendar")
+                pg.wait_for_timeout(150)
+                over = pg.eval_on_selector_all(
+                    ".mo .grid",
+                    "gs => gs.filter(g => g.scrollWidth > g.clientWidth + 1)"
+                    ".map(g => g.closest('.mo').dataset.month)")
+                clipped = pg.eval_on_selector_all(
+                    ".day:not(.pad) .lb",
+                    "els => els.filter(e => e.scrollWidth > e.clientWidth + 1).length")
+                hscroll = pg.evaluate(
+                    "document.body.scrollWidth > document.body.clientWidth + 1")
+                check(f"{width}px: no month grid overflows its panel", not over,
+                      ", ".join(over))
+                check(f"{width}px: no tier label is truncated", clipped == 0,
+                      f"{clipped} clipped")
+                check(f"{width}px: page does not scroll sideways", not hscroll)
+                pg.close()
+
+            print("\nlaptop gets a laptop layout")
+            desk = browser.new_page(viewport={"width": 1440, "height": 900})
+            desk.goto(url, wait_until="load")
+            check("months lay out two or more to a row",
+                  desk.evaluate("""() => {
+                      const mos = [...document.querySelectorAll('.mo')];
+                      const top = mos[0].getBoundingClientRect().top;
+                      return mos.filter(m => m.getBoundingClientRect().top === top).length;
+                  }""") >= 2)
+            check("day cells are bigger than on a phone",
+                  desk.eval_on_selector(
+                      ".day:not(.pad)",
+                      "el => el.getBoundingClientRect().width") >= 70)
+            check("events list becomes a table, not a card wall",
+                  desk.eval_on_selector(".ev", "el => getComputedStyle(el).display")
+                  == "grid")
+            desk.hover(".day.t-blocked")
+            desk.wait_for_timeout(250)
+            check("hovering a date shows a summary without clicking",
+                  desk.eval_on_selector("#tip", "el => el.classList.contains('on')"))
+            check("hover summary names the competing event",
+                  "Sunil Grover" in desk.inner_text("#tip")
+                  or len(desk.inner_text("#tip").strip()) > 20)
+            desk.click(".day[data-tier]")
+            box = desk.eval_on_selector("#sheet", "el => el.getBoundingClientRect().top")
+            check("detail opens as a centred panel, not a phone bottom sheet", box > 40,
+                  f"top={round(box)}")
+            desk.close()
+
             print("\ncolour is never the only signal")
             check("every scored day carries an icon and a text label",
                   ctx.eval_on_selector_all(".day[data-tier]", """els => els.every(e =>
