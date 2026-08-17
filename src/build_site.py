@@ -281,9 +281,16 @@ def events_html(events):
             esc(e.get("city")), esc(e.get("category")),
             esc(language) if language != "Not stated" else "", esc(price)]))
         note = f'<p class="ev-note">{esc(e["notes"])}</p>' if e.get("notes") else ""
+        # Retained after coming off Platinumlist. For a date still ahead that is news:
+        # the show was pulled, sold out or cancelled.
+        if not e.get("listed", True):
+            seen = e.get("last_seen")
+            note = (f'<p class="ev-gone">No longer listed on Platinumlist'
+                    f'{" &middot; last seen " + esc(seen) if seen else ""}</p>') + note
         rows.append(
             f'<article class="ev" data-month="{esc(event_month(e))}" '
             f'data-start="{esc(e.get("start"))}" data-end="{esc(e.get("end") or "")}" '
+            f'data-listed="{1 if e.get("listed", True) else 0}" '
             f'data-artist="{esc(e.get("artist"))}" '
             f'data-category="{esc(e.get("category"))}" '
             f'data-language="{esc(language)}">'
@@ -297,6 +304,25 @@ def events_html(events):
 
 
 # ---------------------------------------------------------------- checklist tab
+
+def choice(name, group, options, current, label=None):
+    """A single-choice dropdown built from the same parts as the multi-select facets.
+
+    A native <select> was the last control on the page rendering the operating system's
+    own menu, which is why it looked foreign beside everything else. Radio inputs are
+    kept, so this is still a real form control for keyboard and screen readers; only
+    the presentation is ours.
+    """
+    rows = "".join(
+        f'<label class="ms-opt"><input type="radio" name="{esc(group)}" '
+        f'value="{esc(value)}"{" checked" if text == current or value == current else ""}>'
+        f'<span>{esc(text)}</span></label>' for value, text in options)
+    aria = f' aria-label="{esc(label)}"' if label else ""
+    return (f'<details class="ms ms-choice" data-choice="{esc(name)}">'
+            f'<summary{aria}><span class="ms-value">{esc(current)}</span>'
+            f'{icon("down", "ic ms-caret")}</summary>'
+            f'<div class="ms-menu">{rows}</div></details>')
+
 
 def checklist_html(checklists):
     if not checklists:
@@ -319,19 +345,19 @@ def checklist_html(checklists):
                 f'<div class="tk-head">'
                 f'<span class="tk-n">{t["n"]}</span>'
                 f'<div class="tk-body"><p class="tk-task">{esc(t["task"])}</p>{why}</div>'
-                f'<select class="tk-status" aria-label="Status for task {t["n"]}">'
-                + "".join(f'<option value="{esc(s)}"'
-                          f'{" selected" if s == t.get("status") else ""}>{esc(s)}</option>'
-                          for s in STATUSES)
-                + '</select></div>'
+                + choice("status", f'st-{cl["id"]}-{t["n"]}',
+                         [(s, s) for s in STATUSES], t.get("status") or STATUSES[0],
+                         f'Status for task {t["n"]}')
+                + '</div>'
                 f'<div class="tk-meta"><span class="tk-ws">{esc(t["workstream"])}</span>'
                 f'<span>{esc(t.get("owner") or "Unassigned")}</span>'
                 f'<span class="tk-off">{offset}</span>'
                 f'<span class="tk-due"></span>{blocking}</div>'
                 f'</article>')
 
-    picker = "".join(f'<option value="{esc(c["id"])}">{esc(c["title"])}</option>'
-                     for c in checklists)
+    picker = choice("checklist", "cl-which",
+                    [(c["id"], c["title"]) for c in checklists],
+                    checklists[0]["title"], "Which checklist")
     streams = []
     for cl in checklists:
         for t in cl["tasks"]:
@@ -353,8 +379,7 @@ def checklist_html(checklists):
 
     return f"""
  <div class="cl-bar">
-  <span class="sel"><select id="cl-pick"
-   aria-label="Which checklist">{picker}</select></span>
+  {picker}
   <label class="cl-date">Show date
    <input type="date" id="cl-date"></label>
   <button type="button" id="cl-export" class="icon-btn">Copy JSON</button>
@@ -373,7 +398,8 @@ def checklist_html(checklists):
  </details>
  <div class="filters">
   <details class="ms" data-ms="workstream">
-   <summary>Workstream<span class="ms-badge" hidden></span></summary>
+   <summary>Workstream<span class="ms-badge" hidden></span>
+   {icon("down", "ic ms-caret")}</summary>
    <div class="ms-menu">{chips}</div>
   </details>
   <label class="cl-toggle"><input type="checkbox" id="cl-blockers"> Blockers only</label>
@@ -672,6 +698,8 @@ h2 small{font-weight:400;color:var(--ink-2);font-size:12.5px;margin-left:6px}
 .ev p{margin:1px 0;font-size:12.5px;color:var(--ink-2)}
 .ev-when{color:var(--ink) !important;font-weight:600}
 .ev-note{color:var(--muted) !important;font-style:italic}
+.ev-gone{color:var(--crit) !important;font-weight:600}
+.ev[data-listed="0"]{border-left:3px solid var(--crit)}
 
 /* ---- limits, kept on the page rather than behind a click ---- */
 .limits{margin-top:26px;padding:13px 15px;border-radius:12px;background:var(--surface-1);
@@ -723,7 +751,8 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
  border:1px solid var(--ring);border-radius:9px;background:var(--surface-1);
  display:inline-flex;align-items:center;gap:6px;min-height:38px}
 .ms>summary::-webkit-details-marker{display:none}
-.ms>summary::after{content:"\\25BE";color:var(--muted);font-size:10px}
+.ms>summary .ms-caret{color:var(--muted);font-size:13px;flex:none}
+.ms[open]>summary .ms-caret{transform:rotate(180deg)}
 .ms[open]>summary{border-color:var(--ink)}
 .ms-badge{background:var(--ink);color:var(--surface-1);border-radius:20px;
  font-size:10.5px;font-weight:700;padding:1px 6px}
@@ -731,29 +760,34 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
  bottom:calc(72px + env(safe-area-inset-bottom));max-height:52vh;overflow:auto;
  background:var(--surface-1);border:1px solid var(--ring);border-radius:12px;padding:6px;
  box-shadow:0 -8px 34px rgba(0,0,0,.24)}
-.ms-opt{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;
+.ms-opt{display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:8px;
  font-size:13px;cursor:pointer}
 .ms-opt:hover{background:var(--plane)}
 .ms-opt span{flex:1}
 .ms-opt i{color:var(--muted);font-style:normal;font-size:11.5px}
+/* accent-color themes the native box and tick in both palettes without rebuilding the
+   control, which keeps the real checkbox and radio semantics intact. */
+.ms-opt input{accent-color:var(--ink);width:16px;height:16px;margin:0;flex:none}
+.ms-opt:has(input:checked){background:var(--plane)}
+.ms-opt:has(input:checked) span{font-weight:600}
+
+/* single-choice control: shows the current value and swaps it on pick */
+.ms-choice>summary{justify-content:space-between;gap:10px;min-width:150px}
+.ms-value{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk .ms-choice>summary{min-width:118px;font-size:12px;padding:6px 10px;min-height:34px}
+.tk .ms-choice .ms-menu{min-width:170px}
+.cl-bar .ms-choice>summary{min-width:min(260px,60vw)}
 .chip-clear{font-size:12.5px;color:var(--ink-2);text-decoration:underline;
  background:none;border:0;padding:6px 2px}
 
 /* ---- checklist ---- */
 .cl-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 6px}
-/* These sit alongside the .ms facet dropdowns, so they take the same shape. The
-   checklist picker is a native select because it is a single choice, but it was the
-   only control on the page still wearing the browser's own styling. */
-.cl-bar select,.cl-bar input[type="date"]{font:inherit;font-size:13px;padding:8px 12px;
+/* The date field is the one native control left, so it takes the same shape as the
+   dropdowns beside it. */
+.cl-bar input[type="date"]{font:inherit;font-size:13px;padding:8px 12px;
  border-radius:9px;border:1px solid var(--ring);background:var(--surface-1);
  color:var(--ink);min-height:38px}
-.sel{position:relative;display:inline-flex;max-width:100%;min-width:min(280px,100%)}
-.sel select{appearance:none;-webkit-appearance:none;padding-right:28px;width:100%;
- text-overflow:ellipsis}
-.sel::after{content:"▾";position:absolute;right:11px;top:50%;
- transform:translateY(-50%);color:var(--muted);font-size:10px;pointer-events:none}
-.cl-bar select:focus-visible,.cl-bar input[type="date"]:focus-visible{
- outline:2px solid var(--ink);outline-offset:2px}
+.cl-bar input[type="date"]:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .cl-date{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
 .cl-hint{font-size:12px;margin:2px 0 10px}
 .cl-hint code{font-size:11.5px}
@@ -788,8 +822,6 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .tk-body{flex:1;min-width:0}
 .tk-task{margin:0;font-size:13.5px;font-weight:600}
 .tk-why{margin:3px 0 0;font-size:12.5px;color:var(--ink-2)}
-.tk-status{font:inherit;font-size:12px;padding:5px 7px;border-radius:8px;
- border:1px solid var(--ring);background:var(--plane);color:var(--ink)}
 .tk-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:7px;
  font-size:11.5px;color:var(--muted)}
 .tk-ws{font-weight:700;color:var(--ink-2)}
@@ -867,7 +899,7 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
  .ev:hover{background:var(--plane)}
  .ev h4{margin:0;font-size:13.5px}
  .ev p{margin:0}
- .ev-note{grid-column:1/-1;margin-top:2px !important}
+ .ev-note,.ev-gone{grid-column:1/-1;margin-top:2px !important}
 
  /* A bar pinned to the bottom of a 1440px screen is a phone idiom. Centre it. */
  .sheet{left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);
@@ -1219,6 +1251,8 @@ JS = """
   var state = clState(current);
   var showDate = state.show_date || meta.show_date || '';
   if ($('cl-date')) $('cl-date').value = showDate;
+  var pick = document.querySelector('.ms-choice[data-choice="checklist"]');
+  if (pick && choiceValue(pick) !== current) setChoice(pick, current, meta.title);
   all('.cl-field').forEach(function(f){ f.hidden = f.dataset.cl !== current; });
   var fields = state.fields || {};
   all('.cl-field[data-cl="' + current + '"] input[data-field]').forEach(function(inp){
@@ -1238,10 +1272,10 @@ JS = """
   clTasks.forEach(function(el){
    var mine = el.dataset.cl === current;
    var n = el.dataset.n;
+   var box = el.querySelector('.ms-choice');
    var status = state.statuses && state.statuses[n] ? state.statuses[n]
-                                                    : el.querySelector('.tk-status').value;
-   var sel = el.querySelector('.tk-status');
-   if (sel.value !== status) sel.value = status;
+                                                    : choiceValue(box);
+   if (choiceValue(box) !== status) setChoice(box, status);
    el.classList.toggle('done', status === 'Done');
 
    var due = dueDate(showDate, Number(el.dataset.dminus));
@@ -1310,17 +1344,37 @@ JS = """
   if (badge) { badge.textContent = wsWanted.length; badge.hidden = !wsWanted.length; }
  }
 
- clTasks.forEach(function(el){
-  el.querySelector('.tk-status').addEventListener('change', function(e){
-   var state = clState(el.dataset.cl);
-   state.statuses = state.statuses || {};
-   state.statuses[el.dataset.n] = e.target.value;
-   clSave(el.dataset.cl, state);
+ // Every single-choice control is a disclosure holding radios. Picking one updates
+ // the summary label and closes the menu; the radio is still the source of truth.
+ function choiceValue(box){
+  var picked = box.querySelector('input[type="radio"]:checked');
+  return picked ? picked.value : '';
+ }
+ function setChoice(box, value, label){
+  box.querySelectorAll('input[type="radio"]').forEach(function(r){
+   r.checked = r.value === value;
+  });
+  var out = box.querySelector('.ms-value');
+  if (out) out.textContent = label === undefined ? value : label;
+ }
+ all('.ms-choice').forEach(function(box){
+  box.addEventListener('change', function(e){
+   if (!e.target || e.target.type !== 'radio') return;
+   var text = e.target.parentNode.querySelector('span');
+   var out = box.querySelector('.ms-value');
+   if (out) out.textContent = text ? text.textContent : e.target.value;
+   box.open = false;
+   var task = box.closest('.tk');
+   if (task) {
+    var state = clState(task.dataset.cl);
+    state.statuses = state.statuses || {};
+    state.statuses[task.dataset.n] = e.target.value;
+    clSave(task.dataset.cl, state);
+   } else if (box.dataset.choice === 'checklist') {
+    current = e.target.value;
+   }
    renderChecklist();
   });
- });
- if ($('cl-pick')) $('cl-pick').addEventListener('change', function(e){
-  current = e.target.value; renderChecklist();
  });
  if ($('cl-date')) $('cl-date').addEventListener('change', function(e){
   var state = clState(current);

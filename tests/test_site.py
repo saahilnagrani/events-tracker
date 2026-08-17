@@ -327,21 +327,28 @@ def main():
                   desk.evaluate("""() => [...document.querySelectorAll('.day:not(.pad)')]
                       .every(e => { const r = e.getBoundingClientRect();
                                     return r.width >= 28 && r.height >= 40; })"""))
+            # Every dropdown in the app is the same component. A native <select> renders
+            # the operating system's menu, which is what looked foreign here before.
             # Restores the calendar tab afterwards: later checks hover a date, and a
             # hidden panel has nothing to hover.
-            check("the checklist picker matches the other dropdowns",
+            check("no control anywhere falls back to a native select",
+                  desk.eval_on_selector_all("select", "els => els.length") == 0)
+            check("the checklist and status dropdowns are the shared component",
                   desk.evaluate("""() => {
                       document.getElementById('tab-checklist').click();
-                      const sel = getComputedStyle(document.getElementById('cl-pick'));
-                      const ms = getComputedStyle(
-                          document.querySelector('.ms > summary'));
-                      const native = sel.appearance === 'none' ||
-                                     sel.webkitAppearance === 'none';
-                      const same = native &&
-                             sel.borderRadius === ms.borderRadius &&
-                             sel.backgroundColor === ms.backgroundColor &&
-                             sel.fontSize === ms.fontSize &&
-                             sel.borderColor === ms.borderColor;
+                      const picker = document.querySelector(
+                          '.cl-bar .ms-choice > summary');
+                      const status = document.querySelector('.tk .ms-choice > summary');
+                      const facet = document.querySelector('.ms:not(.ms-choice) > summary');
+                      const a = getComputedStyle(picker), b = getComputedStyle(status),
+                            c = getComputedStyle(facet);
+                      const same = a.borderRadius === c.borderRadius &&
+                             a.backgroundColor === c.backgroundColor &&
+                             a.borderColor === c.borderColor &&
+                             b.borderRadius === c.borderRadius &&
+                             b.backgroundColor === c.backgroundColor &&
+                             picker.querySelector('.ms-caret') !== null &&
+                             status.querySelector('.ms-caret') !== null;
                       document.getElementById('tab-calendar').click();
                       return same; }"""))
             check("events list becomes a table, not a card wall",
@@ -407,8 +414,9 @@ def main():
                       '.tk[data-n="1"] .tk-due', "e => e.textContent"),
                   ctx.eval_on_selector('.tk[data-n="1"] .tk-due', "e => e.textContent"))
             before = ctx.inner_text(".cl-cell")
-            ctx.select_option('.tk[data-n="1"] .tk-status', "Done")
-            ctx.wait_for_timeout(200)
+            ctx.click('.tk[data-n="1"] .ms-choice summary')
+            ctx.click('.tk[data-n="1"] .ms-choice input[value="Done"]')
+            ctx.wait_for_timeout(250)
             check("marking a task done moves the progress figure",
                   ctx.inner_text(".cl-cell") != before,
                   f"{before.split(chr(10))[0]} -> {ctx.inner_text('.cl-cell').split(chr(10))[0]}")
@@ -427,7 +435,7 @@ def main():
             ctx.wait_for_timeout(250)
             check("checklist state survives a reload",
                   ctx.input_value("#cl-date") == "2027-01-30"
-                  and ctx.eval_on_selector('.tk[data-n="1"] .tk-status',
+                  and ctx.eval_on_selector('.tk[data-n="1"] .ms-choice input:checked',
                                            "e => e.value") == "Done",
                   f'date={ctx.input_value("#cl-date")}')
             ctx.click("#tab-calendar")
@@ -475,6 +483,9 @@ def main():
 
             ctx.click("#tab-events")
             ctx.wait_for_timeout(150)
+            check("every event row records whether it is still listed",
+                  ctx.eval_on_selector_all(
+                      ".ev", "els => els.every(e => e.dataset.listed !== undefined)"))
             check("the events list can show past events on request",
                   ctx.eval_on_selector_all("#ev-past", "els => els.length") == 1)
             shown_now = int(ctx.get_attribute("#ev-count", "data-count"))

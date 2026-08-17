@@ -36,6 +36,8 @@ import viability  # noqa: E402  (path set above so a fresh clone works)
 # across, so diffing them reports our own bookkeeping as if it were news.
 TRACKED = ["event", "city", "category", "start", "end", "time", "venue",
            "price_from_aed", "language"]
+# `listed` is deliberately absent: a flip to false is already reported as a removal,
+# and tracking it here would report the same fact twice.
 
 # blocked is not merely the bottom of the scale, it is a different statement: the date
 # is unusable rather than merely poor. It ranks below poor so any slide into it counts.
@@ -76,10 +78,20 @@ def summarise(event):
              "price_from_aed", "url")}
 
 
+def listed(event):
+    return event.get("listed", True)
+
+
 def diff_events(old, new):
     old_by, new_by = by_url(old), by_url(new)
-    added = [summarise(new_by[u]) for u in new_by if u not in old_by]
-    removed = [summarise(old_by[u]) for u in old_by if u not in new_by]
+    # The dataset retains delisted events now, so "removed" cannot mean "no longer in
+    # the file". It means it stopped being on sale: either it vanished outright, or its
+    # listed flag went true to false.
+    added = [summarise(new_by[u]) for u in new_by
+             if u not in old_by and listed(new_by[u])]
+    removed = [summarise(old_by[u]) for u in old_by
+               if u not in new_by
+               or (listed(old_by[u]) and not listed(new_by[u]))]
 
     changed = []
     for url in sorted(set(old_by) & set(new_by)):
