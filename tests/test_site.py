@@ -105,6 +105,12 @@ def main():
             ctx.goto(url, wait_until="load")
 
             print("\ntabs")
+            check("page is titled just the product name", ctx.title() == "Viable dates",
+                  ctx.title())
+            check("header carries the title and nothing else",
+                  ctx.inner_text("h1").strip() == "Viable dates"
+                  and ctx.eval_on_selector_all(".top p", "els => els.length") == 0
+                  and ctx.eval_on_selector_all(".scope", "els => els.length") == 0)
             check("events is the landing tab", ctx.is_visible("#panel-events"))
             for name in ("calendar", "checklist", "events"):
                 ctx.click(f"#tab-{name}")
@@ -175,33 +181,20 @@ def main():
             check("every filter produced a distinct count",
                   len({base, wknd, prime}) == 3, f"{base}/{wknd}/{prime}")
 
-            print("\nagenda and calendar")
-            check("agenda is the default on a phone viewport",
-                  ctx.get_attribute("#v-agenda", "aria-pressed") == "true")
-            check("agenda cards are visible",
-                  ctx.eval_on_selector_all(".ag[data-tier]",
-                                           "els => els.filter(e => !e.hidden).length") > 0)
-            ctx.click("#f-prime")
-            check("filter hides agenda cards too", ctx.eval_on_selector_all(
-                ".ag[data-tier]",
-                "els => els.filter(e => !e.hidden).every(e => e.dataset.tier === 'prime')"))
-            ctx.click("#f-all")
-
-            ctx.click("#v-calendar")
-            check("calendar view switches on", ctx.is_visible("#calendar-section"))
+            print("\ncalendar")
+            check("the grid is the only view", ctx.is_visible("#calendar-section")
+                  and ctx.eval_on_selector_all("#v-agenda, .ag[data-tier]",
+                                               "els => els.length") == 0)
             check("month panels rendered",
-                  ctx.eval_on_selector_all(".mo", "els => els.length") >= 7)
-            check("months scroll horizontally on a phone, not stacked eight deep",
+                  ctx.eval_on_selector_all(".mo", "els => els.length") >= 12,
+                  f'{ctx.eval_on_selector_all(".mo", "els => els.length")} months')
+            check("months scroll horizontally on a phone, not stacked twelve deep",
                   ctx.eval_on_selector("#months",
                                        "el => el.scrollWidth > el.clientWidth + 50"))
 
-            # The brief makes the agenda primary on small screens and the grid secondary,
-            # so the default has to flip with width.
             wide = browser.new_page(viewport={"width": 1280, "height": 900})
             wide.goto(url, wait_until="load")
             open_calendar(wide)
-            check("calendar is the default on a desktop viewport",
-                  wide.get_attribute("#v-calendar", "aria-pressed") == "true")
             check("desktop shows several months side by side",
                   wide.eval_on_selector("#months",
                                         "el => getComputedStyle(el).display === 'grid'"))
@@ -217,8 +210,6 @@ def main():
                 pg = browser.new_page(viewport={"width": width, "height": 900})
                 pg.goto(url, wait_until="load")
                 open_calendar(pg)
-                pg.click("#v-calendar")
-                pg.wait_for_timeout(150)
                 over = pg.eval_on_selector_all(
                     ".mo .grid",
                     "gs => gs.filter(g => g.scrollWidth > g.clientWidth + 1)"
@@ -243,18 +234,19 @@ def main():
             rail = nav.evaluate("""() => {
                 const s = document.querySelector('.side').getBoundingClientRect();
                 const col = document.querySelector('.col').getBoundingClientRect();
-                const brand = getComputedStyle(document.querySelector('.side-brand'));
+                const foot = document.querySelector('.side-foot');
                 const btns = [...document.querySelectorAll('.side-nav button')]
                   .map(b => Math.round(b.getBoundingClientRect().top));
                 return {w: Math.round(s.width), h: Math.round(s.height),
-                        colLeft: Math.round(col.left), brand: brand.display,
+                        colLeft: Math.round(col.left),
+                        foot: foot ? getComputedStyle(foot).display : 'none',
                         stacked: new Set(btns).size === btns.length}; }""")
             check("laptop shows a left rail, not a top bar",
                   rail["h"] > 400 and rail["w"] < 320, f"{rail['w']}x{rail['h']}")
             check("content sits to the right of the rail",
                   rail["colLeft"] >= rail["w"] - 1, f"col at {rail['colLeft']}")
             check("rail stacks its items vertically", rail["stacked"])
-            check("rail shows the brand", rail["brand"] != "none")
+            check("rail shows the data stamp", rail["foot"] != "none")
             nav.close()
 
             phone = browser.new_page(viewport={"width": 390, "height": 800})
@@ -271,8 +263,8 @@ def main():
                         fixed: getComputedStyle(el).position,
                         sameRow: new Set(btns).size === 1,
                         pad: parseFloat(getComputedStyle(document.body).paddingBottom),
-                        brand: getComputedStyle(
-                          document.querySelector('.side-brand')).display}; }""")
+                        foot: getComputedStyle(
+                          document.querySelector('.side-foot')).display}; }""")
             check("phone nav is pinned to the bottom of the viewport",
                   bar["fixed"] == "fixed" and abs(bar["bottom"] - 800) <= 1,
                   f"position={bar['fixed']} bottom={bar['bottom']}")
@@ -282,7 +274,7 @@ def main():
             check("content clears the bottom nav", bar["pad"] >= bar["h"] - 4,
                   f"padding {bar['pad']} vs bar {bar['h']}")
             check("phone keeps the sections on one row", bar["sameRow"])
-            check("phone hides the rail brand", bar["brand"] == "none")
+            check("phone nav carries sections only", bar["foot"] == "none")
             check("theme toggle stays reachable on a phone",
                   phone.is_visible("#theme"))
             check("phone does not wrap the lens buttons", phone.eval_on_selector_all(
