@@ -497,7 +497,8 @@ CSS = """
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--plane);color:var(--ink);
  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.5;
- padding-bottom:env(safe-area-inset-bottom)}
+ /* clears the fixed bottom nav */
+ padding-bottom:calc(66px + env(safe-area-inset-bottom))}
 a{color:inherit}
 .muted{color:var(--ink-2)}
 .wrap{max-width:1180px;margin:0 auto;padding:0 14px 72px}
@@ -513,7 +514,10 @@ a{color:inherit}
 .controls-in{max-width:1180px;margin:0 auto;display:flex;gap:8px;align-items:center;
  flex-wrap:wrap}
 .seg{display:flex;gap:4px;background:var(--surface-1);border:1px solid var(--ring);
- border-radius:10px;padding:3px}
+ border-radius:10px;padding:3px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+/* Without nowrap the longer lens labels wrap to two lines on a phone. */
+.seg button{white-space:nowrap}
 button{font:inherit;font-size:13px;padding:8px 12px;border-radius:8px;cursor:pointer;
  border:1px solid transparent;background:transparent;color:var(--ink);min-height:38px}
 .seg button{border:0;padding:7px 11px;min-height:34px}
@@ -642,12 +646,21 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .sheet .close{position:absolute;top:10px;right:12px}
 .sec-head{display:flex;align-items:baseline;gap:8px}
 
-/* ---- tabs ---- */
-.tabs{display:flex;gap:4px;background:var(--surface-1);border:1px solid var(--ring);
- border-radius:10px;padding:3px;overflow-x:auto;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tabs button{border:0;white-space:nowrap;min-height:34px;padding:7px 13px;flex:1}
-.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--surface-1)}
+/* ---- navigation ----
+   One set of nav buttons, laid out two ways: a fixed bottom bar on a phone, a left rail
+   on a laptop. Duplicating the markup per breakpoint would mean duplicate ids, so the
+   switch is entirely in CSS. */
+.side{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
+ background:var(--surface-1);border-top:1px solid var(--ring);
+ padding:5px 8px calc(5px + env(safe-area-inset-bottom))}
+.side-brand,.side-foot{display:none}
+.side-nav{display:flex;gap:4px;flex:1}
+.side-nav button{flex:1;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;gap:3px;min-height:48px;padding:5px 4px;border-radius:11px;
+ font-size:11px;letter-spacing:.01em;color:var(--muted);white-space:nowrap}
+.side-nav button[aria-pressed="true"]{color:var(--ink);background:var(--plane);
+ font-weight:650}
+.nv-ic{font-size:16px;line-height:1}
 
 /* ---- multi-select facets ---- */
 .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 4px}
@@ -793,15 +806,36 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
   padding:18px 20px 20px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
  .sheet .grab{display:none}
 
- .tabs{flex:0 0 auto}
- .tabs button{flex:0 0 auto}
  .cl-progress{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
  .tk-task{font-size:14px}
+
+ /* ---- the bottom bar becomes a left rail ---- */
+ body{padding-bottom:0}
+ .shell{display:grid;grid-template-columns:232px minmax(0,1fr);align-items:start}
+ .side{position:sticky;top:0;left:auto;right:auto;bottom:auto;height:100vh;
+  flex-direction:column;align-items:stretch;gap:14px;background:var(--plane);
+  border-top:0;border-right:1px solid var(--ring);padding:20px 14px}
+ .side-brand{display:block;padding:0 8px}
+ .side-brand b{display:block;font-size:15px;letter-spacing:-.01em}
+ .side-brand span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+ .side-nav{flex:0 0 auto;flex-direction:column;gap:2px}
+ .side-nav button{flex:0 0 auto;width:100%;flex-direction:row;justify-content:flex-start;
+  gap:10px;text-align:left;min-height:36px;border-radius:9px;font-size:13.5px;
+  color:var(--ink-2);font-weight:400}
+ .side-nav button[aria-pressed="true"]{background:var(--ink);color:var(--surface-1);
+  font-weight:600}
+ .side-nav button:hover:not([aria-pressed="true"]){background:var(--surface-1)}
+ .nv-ic{font-size:14px}
+ .side-foot{display:flex;margin-top:auto;align-items:center;gap:8px;padding:0 6px}
+ .side-stamp{font-size:11px;color:var(--muted);line-height:1.35}
+ .top{position:static;border-bottom:0;padding:22px 24px 0}
+ .wrap{padding:0 24px 72px}
+ .top-in,.wrap{max-width:1180px;margin-left:0}
+}
+@media (min-width:1400px){
+ .top-in,.wrap{max-width:1320px}
 }
 
-@media (min-width:1200px){
- .wrap,.top-in,.controls-in{max-width:1400px}
-}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto !important}}
 """
 
@@ -1355,6 +1389,23 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 <style>{CSS}</style>
 </head>
 <body>
+<div class="shell">
+<aside class="side">
+ <div class="side-brand"><b>Viable dates</b><span>Indian stand-up, UAE</span></div>
+ <nav class="side-nav" aria-label="Sections">
+  <button type="button" id="tab-events" aria-pressed="true">
+   <span class="nv-ic" aria-hidden="true">&#9776;</span><span>Events</span></button>
+  <button type="button" id="tab-calendar" aria-pressed="false">
+   <span class="nv-ic" aria-hidden="true">&#9638;</span><span>Calendar</span></button>
+  <button type="button" id="tab-checklist" aria-pressed="false">
+   <span class="nv-ic" aria-hidden="true">&#10003;</span><span>Checklist</span></button>
+ </nav>
+ <div class="side-foot">
+  <span class="side-stamp">Checked daily<br>data as of {esc(stamp)}</span>
+ </div>
+</aside>
+
+<main class="col">
 <header class="top">
  <div class="top-in">
   <div style="flex:1">
@@ -1365,16 +1416,6 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
    aria-label="Switch theme">&#9681;</button>
  </div>
 </header>
-
-<div class="controls">
- <div class="controls-in">
-  <div class="tabs" role="group" aria-label="Sections">
-   <button type="button" id="tab-events" aria-pressed="true">Events</button>
-   <button type="button" id="tab-calendar" aria-pressed="false">Calendar</button>
-   <button type="button" id="tab-checklist" aria-pressed="false">Checklist</button>
-  </div>
- </div>
-</div>
 
 <div class="wrap">
 
@@ -1468,6 +1509,8 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
   <h2>Event checklist <small>for shows you are organising</small></h2>
   {checklist_html(checklists)}
  </section>
+</div>
+</main>
 </div>
 
 <div id="tip" role="tooltip" aria-hidden="true"></div>
