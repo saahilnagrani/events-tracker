@@ -411,6 +411,8 @@ def main():
                     help="refetch a detail page older than this many days")
     ap.add_argument("--no-cache", action="store_true")
     ap.add_argument("--out", default=str(ROOT / "data" / "events.json"))
+    ap.add_argument("--review-out", default=str(ROOT / "data" / "review_queue.json"),
+                    help="where to persist the review queue for src/changes.py to diff")
     ap.add_argument("--dry-run", action="store_true", help="do not write events.json")
     args = ap.parse_args()
 
@@ -459,7 +461,12 @@ def main():
         print(f"\ndry run, {args.out} left alone")
         return 0
     Path(args.out).write_text(json.dumps(events, indent=1, ensure_ascii=False) + "\n")
-    print(f"\nwrote {args.out}")
+    # Persisted because it is derived from the detail-page description text, which
+    # events.json does not carry: src/changes.py cannot recompute it from the dataset
+    # alone, and diffing this file against its committed version is what separates a
+    # newly surfaced listing from the standing backlog.
+    Path(args.review_out).write_text(json.dumps(review, indent=1, ensure_ascii=False) + "\n")
+    print(f"\nwrote {args.out} and {args.review_out}")
     return 0
 
 
