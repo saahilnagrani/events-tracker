@@ -333,6 +333,17 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .tk-ws{font-weight:700;color:var(--ink-2)}
 .tk-flag{color:var(--crit);font-weight:700;letter-spacing:.05em}
 .tk-due.over{color:var(--crit);font-weight:700}
+/* account and sync status */
+.cl-account{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;
+ color:var(--ink-2);background:var(--surface-1);border:1px solid var(--ring);
+ border-radius:11px;padding:10px 12px;margin:12px 0 4px}
+.cl-account b{color:var(--ink)}
+.cl-account input[type="email"]{font:inherit;font-size:13px;padding:7px 10px;
+ border-radius:9px;border:1px solid var(--ring);background:var(--plane);color:var(--ink);
+ min-height:36px;flex:1;min-width:180px}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.sync-dot.on{background:var(--good)}
+
 /* add-a-task form */
 .cl-add-form{display:grid;gap:10px;background:var(--surface-1);border:1px solid var(--ring);
  border-radius:12px;padding:12px 13px;margin-top:4px}
@@ -583,6 +594,7 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
  <!-- ---------------------------------------------------------- checklist -->
  <section id="panel-checklist" hidden>
   
+ <div class="cl-account" id="cl-account" hidden></div>
  <div class="cl-bar">
   <details class="ms ms-choice" data-choice="checklist"><summary aria-label="Which checklist"><span class="ms-value">Ghazal Night - Ranjit Rajwada</span><svg class="ic ms-caret" aria-hidden="true" focusable="false"><use href="#i-down"></use></svg></summary><div class="ms-menu"><label class="ms-opt"><input type="radio" name="cl-which" value="ghazal-night-ranjit-rajwada" checked><span>Ghazal Night - Ranjit Rajwada</span></label></div></details>
   <label class="cl-date">Show date
@@ -666,6 +678,7 @@ window.__LENSES__ = {"standup": {"label": "Indian stand-up", "blurb": "a night y
 window.__DEFAULT_LENS__ = "standup";
 window.__CHECKLISTS__ = [{"id":"ghazal-night-ranjit-rajwada","title":"Ghazal Night - Ranjit Rajwada","subtitle":"Mic Drop Events FZE · Dubai · January 2027 · Tripartite structure · Project checklist","show_date":null,"setup":[{"label":"Show date","value":"","note":"Fill this in. Every due date on the Checklist tab is driven off this cell."},{"label":"Longstop date for venue + date","value":"","note":"Clause 3.1 of the term sheet. If unconfirmed by this date, either party can walk."},{"label":"Venue","value":"","note":"Ramee Dream ballroom is the current candidate. Unconfirmed."},{"label":"Ballroom capacity (your layout)","value":"","note":"Theatre or cabaret seating, NOT the F&B round-table number the hotel will quote."},{"label":"Target ticket price (AED, net)","value":"","note":"Net of Platinumlist fees."},{"label":"Artist fee (AED, all-in)","value":"","note":"INR 200,000 equivalent. Confirm the peg rate with Sifat."}],"tasks":[{"n":1,"workstream":"Contract","task":"Send the tripartite agreement to Sifat and Ranjit","why":"You draft first, you set the anchor. Send to both, not via Sifat alone.","owner":"Saahil","blocking":true,"d_minus":150,"status":"Not started"},{"n":2,"workstream":"Contract","task":"Get Ranjit's own contact details and deal with him directly","why":"He is a party now. Never let Sifat be the only channel to your artist.","owner":"Saahil","blocking":true,"d_minus":150,"status":"Not started"},{"n":3,"workstream":"Contract","task":"Obtain Annexe A: signed NOC on Sifat letterhead","why":"Irrevocable consent. If they will not sign it, the project stops.","owner":"Sifat","blocking":true,"d_minus":140,"status":"Not started"},{"n":4,"workstream":"Contract","task":"Obtain clause 3.3 disclosure of the Sifat-Ranjit arrangement","why":"Written or oral? What term? Any exclusivity? Due 7 days after signing.","owner":"Sifat","blocking":true,"d_minus":143,"status":"Not started"},{"n":5,"workstream":"Contract","task":"Split the INR 200,000 into Artist Fee and Facilitation Fee","why":"Clause 6.1. Unsplit, you risk paying Ranjit's fee twice.","owner":"Saahil","blocking":true,"d_minus":145,"status":"Not started"},{"n":6,"workstream":"Contract","task":"Confirm the total is INR 200,000 all-in, not Sifat's slice","why":"Get this in writing before anything else in this workstream.","owner":"Saahil","blocking":true,"d_minus":150,"status":"Not started"},{"n":7,"workstream":"Contract","task":"Peg the AED rate and state it in clause 6.1","why":"Fix in AED so FX movement sits with them.","owner":"Saahil","blocking":false,"d_minus":145,"status":"Not started"},{"n":8,"workstream":"Contract","task":"Confirm clause 10.2 protects the dastangoi script","why":"The commissioned story is yours. This clause survives indefinitely.","owner":"Saahil","blocking":true,"d_minus":140,"status":"Not started"},{"n":9,"workstream":"Contract","task":"DIFC-qualified lawyer reviews clauses 2, 3, 7.4 and 11","why":"Consent irrevocability and liquidated damages are where drafting shows.","owner":"External","blocking":false,"d_minus":130,"status":"Not started"},{"n":10,"workstream":"Contract","task":"All three parties execute; store the signed copy","why":"Ranjit signs in his personal capacity, not through Sifat.","owner":"Saahil","blocking":true,"d_minus":120,"status":"Not started"},{"n":11,"workstream":"Contract","task":"Sign the project charter with Sunny","why":"Kill criteria and budget ceiling agreed before money is committed.","owner":"Saahil","blocking":true,"d_minus":170,"status":"Not started"},{"n":12,"workstream":"Contract","task":"Define Sunny's role: sales or operations, not both","why":"Charter section 4. Shared ownership means nobody owns it.","owner":"Saahil","blocking":false,"d_minus":170,"status":"Not started"},{"n":13,"workstream":"Talent","task":"Commission the dastangoi script","why":"Currently unfunded. Writer fee plus performer fee are not in the budget.","owner":"Saahil","blocking":true,"d_minus":180,"status":"Not started"},{"n":14,"workstream":"Talent","task":"Contract the storyteller / dastango","why":"Co-billed, not support. Separate fee, flights and visa if from India.","owner":"Saahil","blocking":true,"d_minus":150,"status":"Not started"},{"n":15,"workstream":"Talent","task":"Schedule the two remote run-throughs with the Narrator","why":"Clause 5.4(a). A scripted show cannot be assembled on the day.","owner":"Saahil","blocking":false,"d_minus":45,"status":"Not started"},{"n":16,"workstream":"Talent","task":"Confirm Ranjit arrives 48 hours out, not 24","why":"Clause 5.5. The dastangoi format needs the extra rehearsal day.","owner":"Sifat","blocking":false,"d_minus":40,"status":"Not started"},{"n":17,"workstream":"Talent","task":"Agree instrumentation with Ranjit in writing","why":"Annexe B. Tabla, harmonium or keys, sarangi or not.","owner":"Ranjit","blocking":false,"d_minus":90,"status":"Not started"},{"n":18,"workstream":"Talent","task":"Shortlist Dubai musicians and send for artist approval","why":"Clause 8.2. Silence for 14 days counts as approval. Send it early.","owner":"Saahil","blocking":true,"d_minus":60,"status":"Not started"},{"n":19,"workstream":"Talent","task":"Receive the technical rider and stage plot","why":"Clause 8.4. Anything notified after this is at the Artist's cost.","owner":"Ranjit","blocking":false,"d_minus":60,"status":"Not started"},{"n":20,"workstream":"Talent","task":"Book the joint rehearsal (narrator + singer + musicians)","why":"A scripted show cannot be assembled at soundcheck.","owner":"Saahil","blocking":false,"d_minus":30,"status":"Not started"},{"n":21,"workstream":"Talent","task":"Lock the final running order and setlist","why":"Chapter by chapter, so lighting and LED cues can be built.","owner":"Saahil","blocking":false,"d_minus":21,"status":"Not started"},{"n":22,"workstream":"Venue","task":"Ramee: is the AED 30,000 an F&B minimum or a hire fee?","why":"Ask in writing. Changes the entire cost model.","owner":"Saahil","blocking":true,"d_minus":160,"status":"Not started"},{"n":23,"workstream":"Venue","task":"Ramee: is the AV inventory included or charged separately?","why":"The banquet list is a wedding rig. Assume add-ons are extra.","owner":"Saahil","blocking":true,"d_minus":160,"status":"Not started"},{"n":24,"workstream":"Venue","task":"Ramee: can you bring an external AV supplier?","why":"If in-house is mandatory, price every add-on before signing anything.","owner":"Saahil","blocking":true,"d_minus":160,"status":"Not started"},{"n":25,"workstream":"Venue","task":"Get capacity for theatre or cabaret layout","why":"Not the round-table number. Costs you 20 to 30 per cent of seats.","owner":"Saahil","blocking":false,"d_minus":150,"status":"Not started"},{"n":26,"workstream":"Venue","task":"Confirm show date and venue before the longstop","why":"Clause 3.1. Miss it and either party can walk away.","owner":"Saahil","blocking":true,"d_minus":120,"status":"Not started"},{"n":27,"workstream":"Venue","task":"Sign the venue contract and pay the deposit","why":"","owner":"Saahil","blocking":true,"d_minus":110,"status":"Not started"},{"n":28,"workstream":"Venue","task":"Confirm load-in, soundcheck and curfew times","why":"Hotels have hard curfews. A 90-minute show plus interval needs headroom.","owner":"Saahil","blocking":false,"d_minus":60,"status":"Not started"},{"n":29,"workstream":"Venue","task":"Walk the room: sightlines, acoustics, pillars","why":"Ballrooms are reverberant. Narration intelligibility is the risk.","owner":"Saahil","blocking":false,"d_minus":60,"status":"Not started"},{"n":30,"workstream":"Production","task":"Add 4 to 6 monitor wedges on 3 aux mixes","why":"Not on the hotel list. He cannot pitch off a front-facing array.","owner":"Saahil","blocking":true,"d_minus":45,"status":"Not started"},{"n":31,"workstream":"Production","task":"Add tabla and harmonium mics, DI boxes, stands","why":"Hotel has two handhelds and a podium mic. That is all.","owner":"Saahil","blocking":true,"d_minus":45,"status":"Not started"},{"n":32,"workstream":"Production","task":"Add warm front wash plus two profile specials","why":"Rig has zero face light. Beams and RGB pars cannot render skin tone.","owner":"Saahil","blocking":true,"d_minus":45,"status":"Not started"},{"n":33,"workstream":"Production","task":"Swap the analogue MGP32 for a digital desk","why":"Scene recall per chapter and proper monitor sends.","owner":"Saahil","blocking":false,"d_minus":45,"status":"Not started"},{"n":34,"workstream":"Production","task":"Add spare wireless handhelds or lavs","why":"Two lead voices, currently zero redundancy.","owner":"Saahil","blocking":false,"d_minus":40,"status":"Not started"},{"n":35,"workstream":"Production","task":"Design LED wall content (7.0m x 2.9m, P2.5)","why":"Static couplets and translation. No video behind a seated singer.","owner":"Saahil","blocking":false,"d_minus":30,"status":"Not started"},{"n":36,"workstream":"Production","task":"Book two-camera capture and a board feed","why":"Clause 8.3 gives you 3 minutes of promo excerpts. Use it.","owner":"Saahil","blocking":false,"d_minus":30,"status":"Not started"},{"n":37,"workstream":"Production","task":"Programme lighting cues chapter by chapter","why":"Avolites Tiger Touch can hold a cue stack. Build it in advance.","owner":"External","blocking":false,"d_minus":14,"status":"Not started"},{"n":38,"workstream":"Production","task":"Confirm no smoke machine; light haze in interval only","why":"Throat risk for two singers, plus banquet smoke detectors.","owner":"Saahil","blocking":false,"d_minus":14,"status":"Not started"},{"n":39,"workstream":"Permits","task":"Collect artist visa documentation from Ranjit","why":"Clause 7.3. Due 60 days out. Late submission is an artist default.","owner":"Ranjit","blocking":true,"d_minus":60,"status":"Not started"},{"n":40,"workstream":"Permits","task":"Apply for the artist performance permit","why":"","owner":"Saahil","blocking":true,"d_minus":50,"status":"Not started"},{"n":41,"workstream":"Permits","task":"Apply for the DET event permit","why":"Roughly AED 2,000 to 3,000 on your estimate.","owner":"Saahil","blocking":true,"d_minus":45,"status":"Not started"},{"n":42,"workstream":"Permits","task":"Book flights and hotel for one traveller, 3 nights","why":"Clause 7.1. Anyone additional travels at their own cost.","owner":"Saahil","blocking":false,"d_minus":40,"status":"Not started"},{"n":43,"workstream":"Permits","task":"Arrange public liability insurance","why":"Clause 13.1 puts this squarely on you as promoter.","owner":"Saahil","blocking":true,"d_minus":30,"status":"Not started"},{"n":44,"workstream":"Permits","task":"Confirm venue security and crowd management plan","why":"","owner":"Saahil","blocking":false,"d_minus":21,"status":"Not started"},{"n":45,"workstream":"Sales","task":"Finish the show economics model","why":"Must now include script commission and Narrator fee. Both unfunded.","owner":"Saahil","blocking":true,"d_minus":160,"status":"Not started"},{"n":46,"workstream":"Sales","task":"Decide the paid marketing budget honestly","why":"AED 3,000 on Meta yields 20 to 30 tickets for an unknown artist.","owner":"Saahil","blocking":true,"d_minus":90,"status":"Not started"},{"n":47,"workstream":"Sales","task":"Approach a title sponsor to cover the venue cost","why":"Highest-value single lever available to you.","owner":"Saahil","blocking":false,"d_minus":120,"status":"Not started"},{"n":48,"workstream":"Sales","task":"Work the community channels","why":"Rajasthani and Marwari associations, Urdu poetry circles, majlis groups.","owner":"Saahil","blocking":false,"d_minus":80,"status":"Not started"},{"n":49,"workstream":"Sales","task":"Corporate and bulk table outreach","why":"Table sales de-risk the fixed cost faster than retail tickets.","owner":"Saahil","blocking":false,"d_minus":60,"status":"Not started"},{"n":50,"workstream":"Sales","task":"List on Platinumlist and go on sale","why":"","owner":"Saahil","blocking":true,"d_minus":70,"status":"Not started"},{"n":51,"workstream":"Sales","task":"Lock the artist promo schedule","why":"Clause 9.1. Starts 6 weeks out. AED 1,000 deduction per miss.","owner":"Ranjit","blocking":false,"d_minus":42,"status":"Not started"},{"n":52,"workstream":"Sales","task":"Brief press, radio and podcast interviews","why":"Clause 9.1 gives you up to 3 hours of artist time.","owner":"Saahil","blocking":false,"d_minus":35,"status":"Not started"},{"n":53,"workstream":"Sales","task":"Review sales; decide whether to paper the room","why":"A visibly full room matters more than the last 40 tickets of revenue.","owner":"Saahil","blocking":false,"d_minus":14,"status":"Not started"},{"n":54,"workstream":"Show week","task":"Final settlement schedule agreed with Sifat","why":"Clause 4.3. Final 50 per cent is payable on the day, after the show.","owner":"Saahil","blocking":false,"d_minus":7,"status":"Not started"},{"n":55,"workstream":"Show week","task":"Print run sheet, cue sheet and contact list","why":"","owner":"Saahil","blocking":false,"d_minus":3,"status":"Not started"},{"n":56,"workstream":"Show week","task":"Artist arrives in Dubai","why":"Clause 5.5. Not later than 48 hours before the show.","owner":"Ranjit","blocking":true,"d_minus":2,"status":"Not started"},{"n":57,"workstream":"Show week","task":"Full rehearsal: Narrator, Artist, musicians","why":"Clause 5.4(b). Included in the fee.","owner":"Saahil","blocking":true,"d_minus":1,"status":"Not started"},{"n":58,"workstream":"Show week","task":"Soundcheck, minimum 2 hours","why":"Clause 5.4(c). Do not let the hotel compress this.","owner":"Saahil","blocking":true,"d_minus":0,"status":"Not started"},{"n":59,"workstream":"Show week","task":"Pay the final 50 per cent, split per clause 6.1","why":"After the performance, not before. Two separate transfers.","owner":"Saahil","blocking":false,"d_minus":0,"status":"Not started"},{"n":60,"workstream":"Wrap","task":"Reconcile the final P&L against the model","why":"","owner":"Saahil","blocking":false,"d_minus":-7,"status":"Not started"},{"n":61,"workstream":"Wrap","task":"Collect footage and cut the promo reel","why":"Clause 8.3. This is the asset that sells show two.","owner":"Saahil","blocking":false,"d_minus":-14,"status":"Not started"},{"n":62,"workstream":"Wrap","task":"Decide whether to exercise the option on future shows","why":"Clause 10.7. Sifat waives commission on option shows.","owner":"Saahil","blocking":false,"d_minus":-30,"status":"Not started"},{"n":63,"workstream":"Wrap","task":"Review the charter kill criteria against actual outcome","why":"Did you continue past a trigger? Record why, for next time.","owner":"Saahil","blocking":false,"d_minus":-14,"status":"Not started"}]}];
 window.__STATUSES__ = ["Not started", "In progress", "Done", "Not needed"];
+window.__BACKEND__ = {"supabase_url": "", "supabase_anon_key": ""};
 </script>
 <script>
 (function(){
@@ -941,6 +954,189 @@ window.__STATUSES__ = ["Not started", "In progress", "Done", "Not needed"];
   });
  });
 
+ // ================================================================ sync
+ // Talks to Supabase over plain REST rather than pulling in supabase-js from a CDN,
+ // because the page must render and keep working from cache with no network, and a
+ // script tag pointed at another origin breaks that promise.
+ //
+ // localStorage stays the working store: every edit lands there first and the app is
+ // fully usable signed out or offline. The server is a sync target, not the source of
+ // truth for the current session.
+ var BACKEND = window.__BACKEND__ || {};
+ var SYNC_ON = !!(BACKEND.supabase_url && BACKEND.supabase_anon_key);
+ var SESSION_KEY = 'sync:session';
+ var syncNote = '';
+
+ function session(){
+  try { return JSON.parse(store.get(SESSION_KEY, 'null')); } catch (e) { return null; }
+ }
+ function setSession(s){
+  if (s) store.set(SESSION_KEY, JSON.stringify(s));
+  else { try { localStorage.removeItem(SESSION_KEY); } catch (e) {} }
+ }
+
+ function api(path, opts){
+  opts = opts || {};
+  var s = session();
+  var headers = {
+   'apikey': BACKEND.supabase_anon_key,
+   'Content-Type': 'application/json'
+  };
+  if (s && s.access_token) headers.Authorization = 'Bearer ' + s.access_token;
+  Object.keys(opts.headers || {}).forEach(function(k){ headers[k] = opts.headers[k]; });
+  return fetch(BACKEND.supabase_url.replace(/\/$/, '') + path, {
+   method: opts.method || 'GET', headers: headers,
+   body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+ }
+
+ // A magic link comes back with the tokens in the URL fragment. Take them, then strip
+ // them from the address bar so they are not left sitting in history.
+ function adoptRedirect(){
+  if (!location.hash || location.hash.indexOf('access_token') < 0) return false;
+  var parts = {};
+  location.hash.replace(/^#/, '').split('&').forEach(function(pair){
+   var kv = pair.split('=');
+   parts[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
+  });
+  if (!parts.access_token) return false;
+  setSession({access_token: parts.access_token, refresh_token: parts.refresh_token,
+              expires_at: Date.now() + (Number(parts.expires_in || 3600) * 1000),
+              email: ''});
+  history.replaceState(null, '', location.pathname + location.search);
+  return true;
+ }
+
+ function refreshIfStale(){
+  var s = session();
+  if (!s || !s.refresh_token) return Promise.resolve(false);
+  if (s.expires_at && s.expires_at - Date.now() > 60000) return Promise.resolve(true);
+  return api('/auth/v1/token?grant_type=refresh_token',
+             {method: 'POST', body: {refresh_token: s.refresh_token}})
+   .then(function(r){ return r.ok ? r.json() : null; })
+   .then(function(j){
+    if (!j || !j.access_token) { setSession(null); return false; }
+    setSession({access_token: j.access_token, refresh_token: j.refresh_token,
+                expires_at: Date.now() + (Number(j.expires_in || 3600) * 1000),
+                email: (j.user && j.user.email) || (session() || {}).email || ''});
+    return true;
+   })
+   .catch(function(){ return false; });
+ }
+
+ function whoAmI(){
+  return api('/auth/v1/user').then(function(r){ return r.ok ? r.json() : null; })
+   .then(function(j){
+    if (!j || !j.email) return null;
+    var s = session() || {};
+    s.email = j.email;
+    setSession(s);
+    return j.email;
+   }).catch(function(){ return null; });
+ }
+
+ function signIn(email){
+  var back = location.origin + location.pathname;
+  return api('/auth/v1/otp', {method: 'POST',
+    body: {email: email, create_user: true, options: {email_redirect_to: back}}})
+   .then(function(r){
+    syncNote = r.ok ? 'Check ' + email + ' for a sign-in link.'
+                    : 'Could not send the link (' + r.status + ').';
+    renderAccount();
+   })
+   .catch(function(){ syncNote = 'Could not reach the server.'; renderAccount(); });
+ }
+
+ function pull(id){
+  return refreshIfStale().then(function(ok){
+   if (!ok) return null;
+   return api('/rest/v1/checklist_state?select=data,updated_at&id=eq.' +
+              encodeURIComponent(id))
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(rows){ return rows && rows.length ? rows[0] : null; });
+  }).catch(function(){ return null; });
+ }
+
+ function push(id){
+  if (!SYNC_ON || !session()) return Promise.resolve(false);
+  var state = clState(id);
+  state.updated_at = new Date().toISOString();
+  clSave(id, state, true);
+  return refreshIfStale().then(function(ok){
+   if (!ok) return false;
+   return api('/rest/v1/checklist_state',
+     {method: 'POST',
+      headers: {'Prefer': 'resolution=merge-duplicates,return=minimal'},
+      body: [{id: id, data: state, updated_by: (session() || {}).email || ''}]})
+    .then(function(r){
+     syncNote = r.ok ? 'Synced just now'
+                     : (r.status === 401 || r.status === 403
+                        ? 'Signed in, but this address is not on the allowlist.'
+                        : 'Could not save to the server (' + r.status + '); kept on this device.');
+     renderAccount();
+     return r.ok;
+    });
+  }).catch(function(){
+   syncNote = 'Offline; kept on this device.';
+   renderAccount();
+   return false;
+  });
+ }
+
+ // Whole-document last-write-wins per checklist. Two people editing different tasks in
+ // the same checklist within the same moment will have one write win; with a handful of
+ // editors that is a rare, visible loss rather than a silent corruption, and the note
+ // says who wrote last.
+ function pullAll(){
+  if (!SYNC_ON || !session()) return Promise.resolve();
+  return Promise.all(CHECK.map(function(c){
+   return pull(c.id).then(function(row){
+    if (!row) return;
+    var localState = clState(c.id);
+    var mine = localState.updated_at || '';
+    var theirs = row.updated_at || '';
+    if (theirs > mine) {
+     clSave(c.id, Object.assign({}, row.data, {updated_at: theirs}), true);
+     syncNote = 'Updated from the server';
+    } else if (mine && mine > theirs) {
+     return push(c.id);
+    }
+   });
+  })).then(function(){ renderAccount(); renderChecklist(); });
+ }
+
+ function renderAccount(){
+  var box = $('cl-account');
+  if (!box) return;
+  if (!SYNC_ON) { box.hidden = true; return; }
+  box.hidden = false;
+  var s = session();
+  if (s) {
+   box.innerHTML = '<span class="sync-dot on"></span><span>Syncing across your ' +
+     'devices as <b>' + esc(s.email || 'this account') + '</b></span>' +
+     (syncNote ? '<span class="muted">' + esc(syncNote) + '</span>' : '') +
+     '<button type="button" id="sync-out" class="chip-clear">Sign out</button>';
+   var out = $('sync-out');
+   if (out) out.addEventListener('click', function(){
+    setSession(null); syncNote = ''; renderAccount();
+   });
+  } else {
+   box.innerHTML = '<span class="sync-dot"></span><span>Saved on this device only. ' +
+     'Sign in to use the same checklists on your phone and laptop.</span>' +
+     '<input type="email" id="sync-email" placeholder="you@example.com" ' +
+     'autocomplete="email"><button type="button" id="sync-in" class="btn-primary">' +
+     'Email me a link</button>' +
+     (syncNote ? '<span class="muted">' + esc(syncNote) + '</span>' : '');
+   var go = $('sync-in');
+   if (go) go.addEventListener('click', function(){
+    var email = ($('sync-email').value || '').trim();
+    if (!email) { syncNote = 'Enter an email address first.'; renderAccount(); return; }
+    syncNote = 'Sending...'; renderAccount();
+    signIn(email);
+   });
+  }
+ }
+
  // ================================================================ checklist tab
  // Tasks are rendered here rather than in the page source, so an imported task and
  // one added in the browser travel the same path and look the same.
@@ -950,7 +1146,14 @@ window.__STATUSES__ = ["Not started", "In progress", "Done", "Not needed"];
  function clState(id){
   try { return JSON.parse(store.get(clKey(id), '{}')) || {}; } catch (e) { return {}; }
  }
- function clSave(id, state){ store.set(clKey(id), JSON.stringify(state)); }
+ var pushTimer = null;
+ // quiet=true means the write came from sync itself; pushing it back would loop.
+ function clSave(id, state, quiet){
+  store.set(clKey(id), JSON.stringify(state));
+  if (quiet || !SYNC_ON || !session()) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(function(){ push(id); }, 800);
+ }
  function meta(id){
   return CHECK.filter(function(c){ return c.id === id; })[0] || {tasks: []};
  }
@@ -1226,6 +1429,15 @@ window.__STATUSES__ = ["Not started", "In progress", "Done", "Not needed"];
  evFilter();
  renderChecklist();
  showTab(store.get('tab', TABS[0]));
+
+ if (SYNC_ON) {
+  var arrived = adoptRedirect();
+  renderAccount();
+  if (session()) {
+   (arrived ? whoAmI() : Promise.resolve((session() || {}).email))
+    .then(function(){ renderAccount(); return pullAll(); });
+  }
+ }
 
  var panel = months.querySelector('[data-month="' + TODAY.slice(0, 7) + '"]');
  if (panel) months.scrollLeft = panel.offsetLeft - months.offsetLeft;

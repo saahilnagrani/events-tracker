@@ -18,7 +18,9 @@ import http.server
 import json
 import socket
 import socketserver
+import subprocess
 import sys
+import tempfile
 import threading
 from pathlib import Path
 
@@ -622,6 +624,64 @@ def main():
                   ctx.eval_on_selector_all(".day[data-tier]", "els => els.length") > 0)
             check("filters still work offline", (ctx.click("#f-prime"),
                                                  count_of(ctx) > 0)[1])
+
+            print("\nsync backend")
+            check("no account row until a backend is configured",
+                  ctx.eval_on_selector("#cl-account", "el => el.hidden"))
+            check("the page states its backend config either way",
+                  ctx.evaluate("() => typeof window.__BACKEND__ === 'object'"))
+
+            # Build a second copy pointed at a project that does not answer. This is the
+            # state the app will spend most of its life in: configured, but the network
+            # or the server is unavailable. It must stay fully usable.
+            with tempfile.TemporaryDirectory() as tmp:
+                cfg = Path(tmp) / "backend.json"
+                cfg.write_text(json.dumps({"supabase_url": "https://demo.supabase.co",
+                                           "supabase_anon_key": "demo-key"}))
+                out = Path(tmp) / "site"
+                built = subprocess.run(
+                    [sys.executable, str(ROOT / "src" / "build_site.py"),
+                     "--backend", str(cfg), "--out-dir", str(out)],
+                    capture_output=True, text=True)
+                if not check("a configured build succeeds", built.returncode == 0,
+                             built.stderr.strip()[:120]):
+                    pass
+                else:
+                    url2, stop2 = serve(out)
+                    off = browser.new_page(viewport={"width": 1440, "height": 900})
+                    dead = []
+                    off.on("pageerror", lambda e: dead.append(str(e)))
+                    off.route("**/demo.supabase.co/**", lambda r: r.abort())
+                    off.goto(url2, wait_until="load")
+                    off.click("#tab-checklist")
+                    off.wait_for_timeout(400)
+                    check("a configured backend shows the sign-in row",
+                          off.is_visible("#cl-account"))
+                    check("an unreachable backend still renders the tasks",
+                          off.eval_on_selector_all(".tk", "els => els.length") > 0)
+                    off.fill("#sync-email", "someone@example.com")
+                    off.click("#sync-in")
+                    off.wait_for_timeout(500)
+                    check("an unreachable backend says so instead of failing silently",
+                          "reach" in off.inner_text("#cl-account").lower(),
+                          " ".join(off.inner_text("#cl-account").split())[-38:])
+                    off.click(".cl-add summary")
+                    off.fill("#add-task", "Still works with the backend down")
+                    off.click("#add-save")
+                    off.wait_for_timeout(300)
+                    check("edits still work with the backend down",
+                          off.eval_on_selector_all('.tk[data-added="1"]',
+                                                   "els => els.length") == 1)
+                    off.reload(wait_until="load")
+                    off.click("#tab-checklist")
+                    off.wait_for_timeout(400)
+                    check("those edits still persist locally",
+                          off.eval_on_selector_all('.tk[data-added="1"]',
+                                                   "els => els.length") == 1)
+                    check("a dead backend raises no page errors", not dead,
+                          "; ".join(dead[:2]))
+                    off.close()
+                    stop2()
 
             print("\nconsole")
             real = [e for e in errors if "favicon" not in e.lower()]

@@ -350,6 +350,7 @@ def checklist_html(checklists):
         + '</div>' for c in checklists)
 
     return f"""
+ <div class="cl-account" id="cl-account" hidden></div>
  <div class="cl-bar">
   {picker}
   <label class="cl-date">Show date
@@ -826,6 +827,17 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .tk-ws{font-weight:700;color:var(--ink-2)}
 .tk-flag{color:var(--crit);font-weight:700;letter-spacing:.05em}
 .tk-due.over{color:var(--crit);font-weight:700}
+/* account and sync status */
+.cl-account{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;
+ color:var(--ink-2);background:var(--surface-1);border:1px solid var(--ring);
+ border-radius:11px;padding:10px 12px;margin:12px 0 4px}
+.cl-account b{color:var(--ink)}
+.cl-account input[type="email"]{font:inherit;font-size:13px;padding:7px 10px;
+ border-radius:9px;border:1px solid var(--ring);background:var(--plane);color:var(--ink);
+ min-height:36px;flex:1;min-width:180px}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.sync-dot.on{background:var(--good)}
+
 /* add-a-task form */
 .cl-add-form{display:grid;gap:10px;background:var(--surface-1);border:1px solid var(--ring);
  border-radius:12px;padding:12px 13px;margin-top:4px}
@@ -1247,6 +1259,189 @@ JS = """
   });
  });
 
+ // ================================================================ sync
+ // Talks to Supabase over plain REST rather than pulling in supabase-js from a CDN,
+ // because the page must render and keep working from cache with no network, and a
+ // script tag pointed at another origin breaks that promise.
+ //
+ // localStorage stays the working store: every edit lands there first and the app is
+ // fully usable signed out or offline. The server is a sync target, not the source of
+ // truth for the current session.
+ var BACKEND = window.__BACKEND__ || {};
+ var SYNC_ON = !!(BACKEND.supabase_url && BACKEND.supabase_anon_key);
+ var SESSION_KEY = 'sync:session';
+ var syncNote = '';
+
+ function session(){
+  try { return JSON.parse(store.get(SESSION_KEY, 'null')); } catch (e) { return null; }
+ }
+ function setSession(s){
+  if (s) store.set(SESSION_KEY, JSON.stringify(s));
+  else { try { localStorage.removeItem(SESSION_KEY); } catch (e) {} }
+ }
+
+ function api(path, opts){
+  opts = opts || {};
+  var s = session();
+  var headers = {
+   'apikey': BACKEND.supabase_anon_key,
+   'Content-Type': 'application/json'
+  };
+  if (s && s.access_token) headers.Authorization = 'Bearer ' + s.access_token;
+  Object.keys(opts.headers || {}).forEach(function(k){ headers[k] = opts.headers[k]; });
+  return fetch(BACKEND.supabase_url.replace(/\/$/, '') + path, {
+   method: opts.method || 'GET', headers: headers,
+   body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+ }
+
+ // A magic link comes back with the tokens in the URL fragment. Take them, then strip
+ // them from the address bar so they are not left sitting in history.
+ function adoptRedirect(){
+  if (!location.hash || location.hash.indexOf('access_token') < 0) return false;
+  var parts = {};
+  location.hash.replace(/^#/, '').split('&').forEach(function(pair){
+   var kv = pair.split('=');
+   parts[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
+  });
+  if (!parts.access_token) return false;
+  setSession({access_token: parts.access_token, refresh_token: parts.refresh_token,
+              expires_at: Date.now() + (Number(parts.expires_in || 3600) * 1000),
+              email: ''});
+  history.replaceState(null, '', location.pathname + location.search);
+  return true;
+ }
+
+ function refreshIfStale(){
+  var s = session();
+  if (!s || !s.refresh_token) return Promise.resolve(false);
+  if (s.expires_at && s.expires_at - Date.now() > 60000) return Promise.resolve(true);
+  return api('/auth/v1/token?grant_type=refresh_token',
+             {method: 'POST', body: {refresh_token: s.refresh_token}})
+   .then(function(r){ return r.ok ? r.json() : null; })
+   .then(function(j){
+    if (!j || !j.access_token) { setSession(null); return false; }
+    setSession({access_token: j.access_token, refresh_token: j.refresh_token,
+                expires_at: Date.now() + (Number(j.expires_in || 3600) * 1000),
+                email: (j.user && j.user.email) || (session() || {}).email || ''});
+    return true;
+   })
+   .catch(function(){ return false; });
+ }
+
+ function whoAmI(){
+  return api('/auth/v1/user').then(function(r){ return r.ok ? r.json() : null; })
+   .then(function(j){
+    if (!j || !j.email) return null;
+    var s = session() || {};
+    s.email = j.email;
+    setSession(s);
+    return j.email;
+   }).catch(function(){ return null; });
+ }
+
+ function signIn(email){
+  var back = location.origin + location.pathname;
+  return api('/auth/v1/otp', {method: 'POST',
+    body: {email: email, create_user: true, options: {email_redirect_to: back}}})
+   .then(function(r){
+    syncNote = r.ok ? 'Check ' + email + ' for a sign-in link.'
+                    : 'Could not send the link (' + r.status + ').';
+    renderAccount();
+   })
+   .catch(function(){ syncNote = 'Could not reach the server.'; renderAccount(); });
+ }
+
+ function pull(id){
+  return refreshIfStale().then(function(ok){
+   if (!ok) return null;
+   return api('/rest/v1/checklist_state?select=data,updated_at&id=eq.' +
+              encodeURIComponent(id))
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(rows){ return rows && rows.length ? rows[0] : null; });
+  }).catch(function(){ return null; });
+ }
+
+ function push(id){
+  if (!SYNC_ON || !session()) return Promise.resolve(false);
+  var state = clState(id);
+  state.updated_at = new Date().toISOString();
+  clSave(id, state, true);
+  return refreshIfStale().then(function(ok){
+   if (!ok) return false;
+   return api('/rest/v1/checklist_state',
+     {method: 'POST',
+      headers: {'Prefer': 'resolution=merge-duplicates,return=minimal'},
+      body: [{id: id, data: state, updated_by: (session() || {}).email || ''}]})
+    .then(function(r){
+     syncNote = r.ok ? 'Synced just now'
+                     : (r.status === 401 || r.status === 403
+                        ? 'Signed in, but this address is not on the allowlist.'
+                        : 'Could not save to the server (' + r.status + '); kept on this device.');
+     renderAccount();
+     return r.ok;
+    });
+  }).catch(function(){
+   syncNote = 'Offline; kept on this device.';
+   renderAccount();
+   return false;
+  });
+ }
+
+ // Whole-document last-write-wins per checklist. Two people editing different tasks in
+ // the same checklist within the same moment will have one write win; with a handful of
+ // editors that is a rare, visible loss rather than a silent corruption, and the note
+ // says who wrote last.
+ function pullAll(){
+  if (!SYNC_ON || !session()) return Promise.resolve();
+  return Promise.all(CHECK.map(function(c){
+   return pull(c.id).then(function(row){
+    if (!row) return;
+    var localState = clState(c.id);
+    var mine = localState.updated_at || '';
+    var theirs = row.updated_at || '';
+    if (theirs > mine) {
+     clSave(c.id, Object.assign({}, row.data, {updated_at: theirs}), true);
+     syncNote = 'Updated from the server';
+    } else if (mine && mine > theirs) {
+     return push(c.id);
+    }
+   });
+  })).then(function(){ renderAccount(); renderChecklist(); });
+ }
+
+ function renderAccount(){
+  var box = $('cl-account');
+  if (!box) return;
+  if (!SYNC_ON) { box.hidden = true; return; }
+  box.hidden = false;
+  var s = session();
+  if (s) {
+   box.innerHTML = '<span class="sync-dot on"></span><span>Syncing across your ' +
+     'devices as <b>' + esc(s.email || 'this account') + '</b></span>' +
+     (syncNote ? '<span class="muted">' + esc(syncNote) + '</span>' : '') +
+     '<button type="button" id="sync-out" class="chip-clear">Sign out</button>';
+   var out = $('sync-out');
+   if (out) out.addEventListener('click', function(){
+    setSession(null); syncNote = ''; renderAccount();
+   });
+  } else {
+   box.innerHTML = '<span class="sync-dot"></span><span>Saved on this device only. ' +
+     'Sign in to use the same checklists on your phone and laptop.</span>' +
+     '<input type="email" id="sync-email" placeholder="you@example.com" ' +
+     'autocomplete="email"><button type="button" id="sync-in" class="btn-primary">' +
+     'Email me a link</button>' +
+     (syncNote ? '<span class="muted">' + esc(syncNote) + '</span>' : '');
+   var go = $('sync-in');
+   if (go) go.addEventListener('click', function(){
+    var email = ($('sync-email').value || '').trim();
+    if (!email) { syncNote = 'Enter an email address first.'; renderAccount(); return; }
+    syncNote = 'Sending...'; renderAccount();
+    signIn(email);
+   });
+  }
+ }
+
  // ================================================================ checklist tab
  // Tasks are rendered here rather than in the page source, so an imported task and
  // one added in the browser travel the same path and look the same.
@@ -1256,7 +1451,14 @@ JS = """
  function clState(id){
   try { return JSON.parse(store.get(clKey(id), '{}')) || {}; } catch (e) { return {}; }
  }
- function clSave(id, state){ store.set(clKey(id), JSON.stringify(state)); }
+ var pushTimer = null;
+ // quiet=true means the write came from sync itself; pushing it back would loop.
+ function clSave(id, state, quiet){
+  store.set(clKey(id), JSON.stringify(state));
+  if (quiet || !SYNC_ON || !session()) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(function(){ push(id); }, 800);
+ }
  function meta(id){
   return CHECK.filter(function(c){ return c.id === id; })[0] || {tasks: []};
  }
@@ -1533,6 +1735,15 @@ JS = """
  renderChecklist();
  showTab(store.get('tab', TABS[0]));
 
+ if (SYNC_ON) {
+  var arrived = adoptRedirect();
+  renderAccount();
+  if (session()) {
+   (arrived ? whoAmI() : Promise.resolve((session() || {}).email))
+    .then(function(){ renderAccount(); return pullAll(); });
+  }
+ }
+
  var panel = months.querySelector('[data-month="' + TODAY.slice(0, 7) + '"]');
  if (panel) months.scrollLeft = panel.offsetLeft - months.offsetLeft;
 
@@ -1547,7 +1758,7 @@ JS = """
 
 # ---------------------------------------------------------------- page
 
-def render(viab, cfg, stamp, checklists):
+def render(viab, cfg, stamp, checklists, backend=None):
     days = viab["days"]
     events = viab.get("events", [])
     lenses = viab.get("lenses") or {viab.get("default_lens", "standup"): days}
@@ -1755,6 +1966,7 @@ window.__DEFAULT_LENS__ = {json.dumps(default_lens)};
 window.__CHECKLISTS__ = {json.dumps(checklist_js, ensure_ascii=False,
                                     separators=(",", ":"))};
 window.__STATUSES__ = {json.dumps(STATUSES, ensure_ascii=False)};
+window.__BACKEND__ = {json.dumps(backend or {}, ensure_ascii=False)};
 </script>
 <script>{JS}</script>
 </body>
@@ -1766,6 +1978,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--viability", default=str(ROOT / "docs" / "viability.json"))
     ap.add_argument("--checklists", default=str(ROOT / "data" / "checklists.json"))
+    ap.add_argument("--backend", default=str(ROOT / "data" / "backend.json"))
     ap.add_argument("--out-dir", default=str(ROOT / "docs"))
     ap.add_argument("--force-icons", action="store_true",
                     help="re-rasterise the app icons even if they already exist")
@@ -1786,11 +1999,19 @@ def main():
     if cl_path.exists():
         checklists = json.loads(cl_path.read_text()).get("checklists", [])
 
+    # Empty values mean local-only, which is the state the app ships in.
+    backend = {"supabase_url": "", "supabase_anon_key": ""}
+    be_path = Path(args.backend)
+    if be_path.exists():
+        raw = json.loads(be_path.read_text())
+        backend = {k: (raw.get(k) or "").strip() for k in backend}
+
     stamp = viab.get("generated", date.today().isoformat())
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
-    (out / "index.html").write_text(render(viab, cfg, stamp, checklists), encoding="utf-8")
+    (out / "index.html").write_text(render(viab, cfg, stamp, checklists, backend),
+                                    encoding="utf-8")
     (out / "manifest.webmanifest").write_text(manifest(stamp))
     (out / "sw.js").write_text(service_worker(stamp))
     # The icons are a fixed mark, independent of the data, and rasterising them in pure
@@ -1805,6 +2026,8 @@ def main():
 
     page = (out / "index.html").stat().st_size
     tasks = sum(len(c["tasks"]) for c in checklists)
+    print(f"  checklist sync: "
+          f"{'Supabase ' + backend['supabase_url'] if backend['supabase_url'] else 'local only (data/backend.json not filled in)'}")
     print(f"built {out/'index.html'} ({page // 1024} KB), {len(viab['days'])} days, "
           f"{len(viab.get('events', []))} events, {len(viab.get('lenses') or {})} lenses, "
           f"{len(checklists)} checklists ({tasks} tasks)")
