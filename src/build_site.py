@@ -60,6 +60,8 @@ ICONS = {
                 'M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6'
                 'M6.5 17.5l-1.6 1.6"/>',
     "moon":     '<path d="M20 14.2A8.2 8.2 0 0 1 9.8 4 8.4 8.4 0 1 0 20 14.2z"/>',
+    "user":     '<circle cx="12" cy="8" r="3.8"/>'
+                '<path d="M4.8 20a7.4 7.4 0 0 1 14.4 0"/>',
     "left":     '<path d="M15 5l-7 7 7 7"/>',
     "right":    '<path d="M9 5l7 7-7 7"/>',
     "down":     '<path d="M5 9l7 7 7-7"/>',
@@ -357,8 +359,8 @@ def checklist_html(checklists):
    <input type="date" id="cl-date"></label>
   <button type="button" id="cl-export" class="icon-btn">Copy JSON</button>
  </div>
- <p class="cl-hint muted">Saved in this browser only. This site is static, so nothing
-  is written back to the repository: use <b>Copy JSON</b> and paste into
+ <p class="cl-hint muted" id="cl-hint">Saved in this browser only. This site is static,
+  so nothing is written back to the repository: use <b>Copy JSON</b> and paste into
   <code>data/checklists.json</code> to keep or share a change.</p>
  <div id="cl-progress" class="cl-progress"></div>
  <details class="cl-more">
@@ -832,11 +834,34 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
  color:var(--ink-2);background:var(--surface-1);border:1px solid var(--ring);
  border-radius:11px;padding:10px 12px;margin:12px 0 4px}
 .cl-account b{color:var(--ink)}
-.cl-account input[type="email"]{font:inherit;font-size:13px;padding:7px 10px;
- border-radius:9px;border:1px solid var(--ring);background:var(--plane);color:var(--ink);
- min-height:36px;flex:1;min-width:180px}
+.cl-account .btn-primary{font-size:12.5px;padding:7px 12px;min-height:34px;
+ margin-left:auto}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
 .sync-dot.on{background:var(--good)}
+
+/* ---- the account dialog: one sign-in for the whole app ---- */
+/* The header button carries a dot rather than a second colour, so signed-in state is
+   legible without relying on the icon changing shade. */
+#acct{position:relative}
+.acct-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;
+ background:var(--good);border:1.5px solid var(--plane)}
+.acct-sheet{max-width:none}
+.acct-lead{margin:0 0 10px;font-size:13px;color:var(--ink-2);
+ display:flex;align-items:baseline;gap:7px}
+.acct-lead b{color:var(--ink)}
+.acct-msg{margin:0 0 10px;font-size:12.5px;color:var(--ink-2);background:var(--plane);
+ border:1px solid var(--ring);border-radius:9px;padding:8px 10px}
+.acct-msg.bad{color:var(--crit);border-color:var(--crit)}
+.acct-form{display:grid;gap:11px}
+.acct-lab{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-2)}
+.acct-lab input{font:inherit;font-size:14px;padding:9px 11px;border-radius:9px;
+ border:1px solid var(--ring);background:var(--plane);color:var(--ink);min-height:40px;
+ width:100%;box-sizing:border-box}
+.acct-lab input:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.acct-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.acct-alt{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+ border-top:1px solid var(--ring);padding-top:10px}
+.acct-note{margin:12px 0 0;font-size:11.5px;color:var(--muted)}
 
 /* add-a-task form */
 .cl-add-form{display:grid;gap:10px;background:var(--surface-1);border:1px solid var(--ring);
@@ -1145,16 +1170,20 @@ JS = """
   $('sheet-close').focus();
  }
  function closeSheet(){
-  sheet.hidden = true; sheetBg.hidden = true;
+  if (sheet.hidden) return;
+  sheet.hidden = true;
+  if (!acctSheet || acctSheet.hidden) sheetBg.hidden = true;
   if (lastFocus && lastFocus.focus) lastFocus.focus();
  }
  cells.forEach(function(el){
   el.addEventListener('click', function(){ openSheet(el.dataset.date); });
  });
- sheetBg.addEventListener('click', closeSheet);
+ // One backdrop serves both dialogs, so dismissing has to close whichever is open.
+ function closeDialogs(){ closeSheet(); closeAcct(); }
+ sheetBg.addEventListener('click', closeDialogs);
  $('sheet-close').addEventListener('click', closeSheet);
  document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape' && !sheet.hidden) closeSheet();
+  if (e.key === 'Escape') closeDialogs();
  });
 
  // ---- hover summary, pointer devices only
@@ -1299,8 +1328,10 @@ JS = """
   });
  }
 
- // A magic link comes back with the tokens in the URL fragment. Take them, then strip
- // them from the address bar so they are not left sitting in history.
+ // Confirmation and password-reset emails come back with the tokens in the URL
+ // fragment. Take them, then strip them from the address bar so they are not left
+ // sitting in history.
+ var pendingRecovery = false;
  function adoptRedirect(){
   if (!location.hash || location.hash.indexOf('access_token') < 0) return false;
   var parts = {};
@@ -1312,6 +1343,9 @@ JS = """
   setSession({access_token: parts.access_token, refresh_token: parts.refresh_token,
               expires_at: Date.now() + (Number(parts.expires_in || 3600) * 1000),
               email: ''});
+  // A recovery link signs you in so that you can set a password; landing on the
+  // checklist with no prompt would leave the old password in place.
+  pendingRecovery = parts.type === 'recovery';
   history.replaceState(null, '', location.pathname + location.search);
   return true;
  }
@@ -1344,16 +1378,96 @@ JS = """
    }).catch(function(){ return null; });
  }
 
- function signIn(email){
-  var back = location.origin + location.pathname;
-  return api('/auth/v1/otp', {method: 'POST',
-    body: {email: email, create_user: true, options: {email_redirect_to: back}}})
+ // ---- sign in
+ // Email and password, not a magic link. A link means the device you are signing in
+ // on also needs the mailbox, which on a second phone is the moment you are least
+ // likely to have it. The reset link stays for the one case a link is the only way in.
+ var authMode = 'in';   // in | up | newpass
+ var authBad = false;   // whether syncNote is an error, so it can be coloured
+
+ function say(msg, bad){ syncNote = msg; authBad = !!bad; renderAccount(); }
+
+ function authError(r){
+  return r.json().then(function(j){
+   return j.error_description || j.msg || j.message || ('Something went wrong (' +
+                                                        r.status + ').');
+  }).catch(function(){ return 'Something went wrong (' + r.status + ').'; });
+ }
+
+ function readable(msg){
+  if (/invalid login/i.test(msg)) return 'That email and password do not match an account.';
+  if (/not confirmed/i.test(msg)) return 'Confirm your address first: the link is in your inbox.';
+  if (/already registered/i.test(msg)) return 'That address already has an account. Sign in instead.';
+  return msg;
+ }
+
+ function adopt(j){
+  setSession({access_token: j.access_token, refresh_token: j.refresh_token,
+              expires_at: Date.now() + (Number(j.expires_in || 3600) * 1000),
+              email: (j.user && j.user.email) || ''});
+ }
+
+ function signIn(email, password){
+  say('Signing in...');
+  return api('/auth/v1/token?grant_type=password',
+             {method: 'POST', body: {email: email, password: password}})
    .then(function(r){
-    syncNote = r.ok ? 'Check ' + email + ' for a sign-in link.'
-                    : 'Could not send the link (' + r.status + ').';
-    renderAccount();
+    if (!r.ok) return authError(r).then(function(m){ say(readable(m), true); });
+    return r.json().then(function(j){
+     adopt(j); authMode = 'in'; say(''); closeAcct();
+     return pullAll();
+    });
    })
-   .catch(function(){ syncNote = 'Could not reach the server.'; renderAccount(); });
+   .catch(function(){ say('Could not reach the server.', true); });
+ }
+
+ function signUp(email, password){
+  say('Creating the account...');
+  return api('/auth/v1/signup', {method: 'POST', body: {email: email, password: password}})
+   .then(function(r){
+    if (!r.ok) return authError(r).then(function(m){ say(readable(m), true); });
+    return r.json().then(function(j){
+     if (j.access_token) {           // email confirmation switched off: straight in
+      adopt(j); authMode = 'in'; say(''); closeAcct();
+      return pullAll();
+     }
+     authMode = 'in';
+     say('Account created. Confirm it from the email just sent, then sign in.');
+    });
+   })
+   .catch(function(){ say('Could not reach the server.', true); });
+ }
+
+ function sendReset(email){
+  var back = location.origin + location.pathname;
+  say('Sending...');
+  return api('/auth/v1/recover?redirect_to=' + encodeURIComponent(back),
+             {method: 'POST', body: {email: email}})
+   .then(function(r){
+    if (!r.ok) return authError(r).then(function(m){ say(m, true); });
+    say('Check ' + email + ' for a link to set a new password.');
+   })
+   .catch(function(){ say('Could not reach the server.', true); });
+ }
+
+ function setPassword(password){
+  say('Saving...');
+  return refreshIfStale().then(function(ok){
+   if (!ok) { say('That sign-in has expired. Sign in again.', true); return; }
+   return api('/auth/v1/user', {method: 'PUT', body: {password: password}})
+    .then(function(r){
+     if (!r.ok) return authError(r).then(function(m){ say(readable(m), true); });
+     pendingRecovery = false; authMode = 'in';
+     return whoAmI().then(function(){ say('Password updated.'); });
+    });
+  }).catch(function(){ say('Could not reach the server.', true); });
+ }
+
+ function signOut(){
+  // Best effort: the local session goes either way, so a failed revoke cannot strand
+  // anyone signed in on their own device.
+  api('/auth/v1/logout', {method: 'POST'}).catch(function(){});
+  setSession(null); authMode = 'in'; pendingRecovery = false; say('');
  }
 
  function pull(id){
@@ -1414,36 +1528,184 @@ JS = """
   })).then(function(){ renderAccount(); renderChecklist(); });
  }
 
- function renderAccount(){
+ // ---- the account dialog
+ // The account lives in the header rather than inside the Checklist tab, because it is
+ // the app's account, not the checklist's. What it unlocks is still only the checklist:
+ // the events list and the calendar are generated daily and identical for everyone, so
+ // putting them behind a sign-in would add a door with nothing behind it.
+ var acctSheet = $('acct-sheet');
+
+ function openAcct(){
+  if (!SYNC_ON || !acctSheet) return;
+  say('');
+  lastFocus = document.activeElement;
+  acctSheet.hidden = false; sheetBg.hidden = false;
+  var first = acctSheet.querySelector('input');
+  (first || $('acct-close')).focus();
+ }
+
+ function closeAcct(){
+  if (!acctSheet || acctSheet.hidden) return;
+  acctSheet.hidden = true;
+  if (sheet.hidden) sheetBg.hidden = true;
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+ }
+
+ function field(id, type, label, placeholder, complete){
+  return '<label class="acct-lab" for="' + id + '">' + esc(label) +
+   '<input id="' + id + '" type="' + type + '" autocomplete="' + complete +
+   '" placeholder="' + esc(placeholder) + '"></label>';
+ }
+
+ function noteHtml(){
+  return syncNote
+   ? '<p class="acct-msg' + (authBad ? ' bad' : '') + '">' + esc(syncNote) + '</p>' : '';
+ }
+
+ function renderAcctBody(){
+  var body = $('acct-body');
+  if (!body) return;
+  var s = session();
+  // A sync finishing while someone is halfway through typing must not empty the
+  // fields under them, so what is in them survives the re-render.
+  var kept = {}, focused = document.activeElement;
+  Array.prototype.forEach.call(body.querySelectorAll('input'), function(i){
+   kept[i.id] = i.value;
+  });
+  var restore = function(){
+   Object.keys(kept).forEach(function(id){
+    var el = $(id);
+    if (el && kept[id]) el.value = kept[id];
+   });
+   if (focused && focused.id && $(focused.id) && $(focused.id) !== focused) {
+    var back = $(focused.id);
+    if (back.focus) back.focus();
+   }
+  };
+
+  if (s && (pendingRecovery || authMode === 'newpass')) {
+   body.innerHTML = '<p class="acct-lead">Set a new password for <b>' +
+     esc(s.email || 'your account') + '</b>.</p>' + noteHtml() +
+     '<form class="acct-form" id="acct-form" novalidate>' +
+     field('acct-new', 'password', 'New password', 'At least 8 characters', 'new-password') +
+     '<div class="acct-actions"><button type="submit" class="btn-primary">Save password' +
+     '</button><button type="button" id="acct-skip" class="chip-clear">Not now</button>' +
+     '</div></form>';
+   $('acct-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var p = $('acct-new').value || '';
+    if (p.length < 8) { say('Use at least 8 characters.', true); return; }
+    setPassword(p);
+   });
+   $('acct-skip').addEventListener('click', function(){
+    pendingRecovery = false; authMode = 'in'; say(''); closeAcct();
+   });
+   restore();
+   return;
+  }
+
+  if (s) {
+   body.innerHTML = '<p class="acct-lead"><span class="sync-dot on"></span>' +
+     '<span>Signed in as <b>' + esc(s.email || 'this account') + '</b>. Your ' +
+     'checklists are on every device you sign in on.</span></p>' + noteHtml() +
+     '<form class="acct-form" id="acct-form" novalidate>' +
+     '<div class="acct-alt"><button type="button" id="acct-change" class="chip-clear">' +
+     'Change password</button>' +
+     '<button type="button" id="acct-out" class="chip-clear">Sign out</button></div>' +
+     '</form>' +
+     '<p class="acct-note">The events list and the calendar need no account: they are ' +
+     'rebuilt daily and are the same for everyone.</p>';
+   $('acct-form').addEventListener('submit', function(e){ e.preventDefault(); });
+   $('acct-change').addEventListener('click', function(){
+    authMode = 'newpass'; say('');
+    var f = $('acct-new'); if (f) f.focus();
+   });
+   $('acct-out').addEventListener('click', signOut);
+   restore();
+   return;
+  }
+
+  var up = authMode === 'up';
+  body.innerHTML = '<p class="acct-lead">' + (up
+    ? '<span>Create an account and your checklists sync to every device you sign in ' +
+      'on.</span>'
+    : '<span>Sign in to use the same checklists on your laptop and your phone.</span>') +
+    '</p>' + noteHtml() +
+    '<form class="acct-form" id="acct-form" novalidate>' +
+    field('acct-email', 'email', 'Email', 'you@example.com', 'email') +
+    field('acct-pass', 'password', 'Password',
+          up ? 'At least 8 characters' : '', up ? 'new-password' : 'current-password') +
+    '<button type="submit" class="btn-primary">' +
+    (up ? 'Create account' : 'Sign in') + '</button>' +
+    '<div class="acct-alt"><button type="button" id="acct-swap" class="chip-clear">' +
+    (up ? 'I already have an account' : 'Create an account') + '</button>' +
+    (up ? '' : '<button type="button" id="acct-forgot" class="chip-clear">' +
+               'Forgot password</button>') + '</div></form>' +
+    '<p class="acct-note">Signing in is not the same as being let in: an address has ' +
+    'to be on the allowlist before it can see anything.</p>';
+
+  $('acct-form').addEventListener('submit', function(e){
+   e.preventDefault();
+   var email = ($('acct-email').value || '').trim();
+   var pass = $('acct-pass').value || '';
+   if (!email) { say('Enter your email address.', true); return; }
+   if (up && pass.length < 8) { say('Use at least 8 characters.', true); return; }
+   if (!pass) { say('Enter your password.', true); return; }
+   (up ? signUp : signIn)(email, pass);
+  });
+  $('acct-swap').addEventListener('click', function(){
+   authMode = up ? 'in' : 'up'; say('');
+   var f = $('acct-email'); if (f) f.focus();
+  });
+  var forgot = $('acct-forgot');
+  if (forgot) forgot.addEventListener('click', function(){
+   var email = ($('acct-email').value || '').trim();
+   if (!email) { say('Enter your email address first.', true); return; }
+   sendReset(email);
+  });
+  restore();
+ }
+
+ // The checklist keeps a one-line status, because that is where the synced data is;
+ // the controls themselves are in the dialog.
+ function renderClAccount(){
   var box = $('cl-account');
   if (!box) return;
   if (!SYNC_ON) { box.hidden = true; return; }
   box.hidden = false;
   var s = session();
-  if (s) {
-   box.innerHTML = '<span class="sync-dot on"></span><span>Syncing across your ' +
-     'devices as <b>' + esc(s.email || 'this account') + '</b></span>' +
+  box.innerHTML = s
+   ? '<span class="sync-dot on"></span><span>Syncing as <b>' +
+     esc(s.email || 'this account') + '</b></span>' +
      (syncNote ? '<span class="muted">' + esc(syncNote) + '</span>' : '') +
-     '<button type="button" id="sync-out" class="chip-clear">Sign out</button>';
-   var out = $('sync-out');
-   if (out) out.addEventListener('click', function(){
-    setSession(null); syncNote = ''; renderAccount();
-   });
-  } else {
-   box.innerHTML = '<span class="sync-dot"></span><span>Saved on this device only. ' +
-     'Sign in to use the same checklists on your phone and laptop.</span>' +
-     '<input type="email" id="sync-email" placeholder="you@example.com" ' +
-     'autocomplete="email"><button type="button" id="sync-in" class="btn-primary">' +
-     'Email me a link</button>' +
-     (syncNote ? '<span class="muted">' + esc(syncNote) + '</span>' : '');
-   var go = $('sync-in');
-   if (go) go.addEventListener('click', function(){
-    var email = ($('sync-email').value || '').trim();
-    if (!email) { syncNote = 'Enter an email address first.'; renderAccount(); return; }
-    syncNote = 'Sending...'; renderAccount();
-    signIn(email);
-   });
+     '<button type="button" class="chip-clear" data-acct-open>Account</button>'
+   : '<span class="sync-dot"></span><span>Saved on this device only.</span>' +
+     (syncNote ? '<span class="muted">' + esc(syncNote) + '</span>' : '') +
+     '<button type="button" class="btn-primary" data-acct-open>Sign in</button>';
+  Array.prototype.forEach.call(box.querySelectorAll('[data-acct-open]'), function(b){
+   b.addEventListener('click', openAcct);
+  });
+ }
+
+ function renderAccount(){
+  var hint = $('cl-hint');
+  if (hint && SYNC_ON) {
+   hint.innerHTML = session()
+    ? 'Saved as you go and kept in step across your devices. The task list itself ' +
+      'lives in the repository: use <b>Copy JSON</b> to fold a change back into ' +
+      '<code>data/checklists.json</code>.'
+    : 'Saved in this browser. Sign in to have the same checklists on your other ' +
+      'devices.';
   }
+  var btn = $('acct');
+  if (btn) {
+   btn.hidden = !SYNC_ON;
+   var dot = btn.querySelector('.acct-dot');
+   if (dot) dot.hidden = !session();
+   btn.setAttribute('aria-label', session() ? 'Account, signed in' : 'Sign in');
+  }
+  renderAcctBody();
+  renderClAccount();
  }
 
  // ================================================================ checklist tab
@@ -1722,6 +1984,10 @@ JS = """
   setTimeout(function(){ $('cl-export').textContent = 'Copy JSON'; }, 1800);
  });
 
+ // ================================================================ account button
+ if ($('acct')) $('acct').addEventListener('click', openAcct);
+ if ($('acct-close')) $('acct-close').addEventListener('click', closeAcct);
+
  // ================================================================ theme
  $('theme').addEventListener('click', function(){
   var root = document.documentElement;
@@ -1742,6 +2008,9 @@ JS = """
  if (SYNC_ON) {
   var arrived = adoptRedirect();
   renderAccount();
+  // A reset link lands signed in with a password nobody knows; open the dialog on the
+  // one field that matters rather than leaving it to be found.
+  if (pendingRecovery) openAcct();
   if (session()) {
    (arrived ? whoAmI() : Promise.resolve((session() || {}).email))
     .then(function(){ renderAccount(); return pullAll(); });
@@ -1863,6 +2132,9 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 <header class="top">
  <div class="top-in">
   <h1><span class="app-name">Events Tracker</span><span id="page-title">Events</span></h1>
+  <button type="button" id="acct" class="ghost-btn" hidden
+   aria-haspopup="dialog" aria-label="Account">{icon("user", "th-ic")}
+   <span class="acct-dot" hidden></span></button>
   <button type="button" id="theme" class="ghost-btn"
    aria-label="Switch theme">{icon("sun", "th-ic th-sun")}{icon("moon", "th-ic th-moon")}</button>
  </div>
@@ -1959,6 +2231,15 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
  <h3 id="sheet-title"></h3>
  <p class="sub" id="sheet-sub"></p>
  <div id="sheet-body"></div>
+</div>
+
+<div class="sheet acct-sheet" id="acct-sheet" role="dialog" aria-modal="true"
+ aria-labelledby="acct-title" hidden>
+ <div class="grab"></div>
+ <button type="button" class="close icon-btn" id="acct-close"
+  aria-label="Close">{icon("close")}</button>
+ <h3 id="acct-title">Account</h3>
+ <div id="acct-body"></div>
 </div>
 
 <script>

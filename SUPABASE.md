@@ -1,8 +1,9 @@
-# Shared checklists across devices
+# Accounts and shared checklists
 
 The events list and the calendar are generated daily and are the same for everyone, so
-they need no account. Checklists are different: they hold your edits, and you want them
-on your laptop and your phone. That needs somewhere to put them.
+they need no account: a sign-in there would be a door with nothing behind it. Checklists
+are different: they hold your edits, and you want them on your laptop and your phone.
+That needs an account and somewhere to put the data.
 
 Until the steps below are done, nothing changes. Checklists save to the browser you are
 using, exactly as they do now, and the app never contacts anything.
@@ -21,9 +22,11 @@ What stops a stranger reading your checklists is not secrecy of that key, it is 
 Level Security: the policies in `supabase/schema.sql` refuse every read and write unless
 the caller is signed in *and* their email is in the `allowed_emails` table.
 
-**Signing in is not the same as being allowed in.** Anyone can request a sign-in link
-for their own address. They will then be authenticated and still see nothing, because
-they are not on the allowlist. Adding someone is a deliberate act: one row in one table.
+**Signing in is not the same as being allowed in.** Anyone can create an account for
+their own address. They will then be authenticated and still see nothing, because they
+are not on the allowlist. Adding someone is a deliberate act: one row in one table. If
+you would rather nobody could even create an account, step 4 turns self-serve sign-up
+off and you make the accounts yourself.
 
 ## Steps
 
@@ -60,14 +63,27 @@ delete from public.allowed_emails where email = 'sunny@example.com';
 That takes effect on their next request. They stay able to sign in; they just stop being
 able to see anything.
 
-### 4. Allow the site to receive the sign-in link
+### 4. Decide how accounts get made, and where email links land
 
-1. Open **Authentication -> URL Configuration**.
-2. Set **Site URL** to `https://saahilnagrani.github.io/events-tracker/`.
-3. Add the same address under **Redirect URLs**.
+Sign-in is an email address and a password. Two settings decide how the first one gets
+created, both under **Authentication**:
 
-Miss this and the magic link will send people to a page that cannot complete the
-sign-in.
+- **Providers -> Email -> Confirm email.** On by default. With it on, creating an
+  account sends a confirmation mail and sign-in is refused until the link is clicked.
+  With it off, creating an account signs you straight in. On is the safer default; off
+  is quicker if the mailbox is awkward.
+- **Providers -> Email -> Allow new users to sign up.** Leave it on and anyone can make
+  an account (and still see nothing, because of the allowlist). Turn it off and the
+  *Create an account* button starts returning "signups not allowed"; you then add each
+  person under **Authentication -> Users -> Add user**, setting their password there.
+
+Then, under **URL Configuration**:
+
+1. Set **Site URL** to `https://saahilnagrani.github.io/events-tracker/`.
+2. Add the same address under **Redirect URLs**.
+
+Miss that and the confirmation and password-reset links will land on a page that cannot
+complete them. Ordinary password sign-in does not need it.
 
 ### 5. Point the app at the project
 
@@ -97,9 +113,17 @@ checklist sync: Supabase https://abcdefgh.supabase.co
 
 ### 6. Sign in
 
-Open the Checklist tab. There is now a row at the top offering to email you a link.
-Enter your address, click the button, open the mail, and you land back on the site
-signed in. Repeat once on each device.
+The account control is the person icon in the top right of the app, on every tab, not
+just the Checklist one. Click it, enter your email and a password, and click **Create an
+account** the first time (or make the account yourself in the dashboard if you turned
+sign-up off in step 4). After that it is email and password on any device, with no mail
+round trip.
+
+**Forgot password** sends a reset link; opening it puts you back on the site with the
+new-password field already showing.
+
+The Checklist tab still shows a one-line status of where its data is going, and a way
+back into the same dialog.
 
 ## How the syncing behaves
 
@@ -122,15 +146,20 @@ signed in. Repeat once on each device.
 
 | What you see | Likely cause |
 |---|---|
-| No sign-in row on the Checklist tab | `data/backend.json` is empty, or the site was not rebuilt after filling it in |
-| "Could not send the link" | Project URL or anon key is wrong, or the project is paused |
-| The link opens the site but you are not signed in | Redirect URL not added in step 4 |
+| No account icon in the header | `data/backend.json` is empty, or the site was not rebuilt after filling it in |
+| "That email and password do not match an account" | Wrong password, or the account was never created |
+| "Confirm your address first" | Email confirmation is on and the mail has not been clicked; see step 4 |
+| "Signups not allowed for this instance" | Self-serve sign-up is off; add the user in the dashboard |
+| "Could not reach the server" | Project URL or key is wrong, the project is paused, or there is no connection |
+| A reset link opens the site but nothing happens | Redirect URL not added in step 4 |
 | "Signed in, but this address is not on the allowlist" | Exactly what it says: add the row from step 3 |
 | "Offline; kept on this device" | No connection, or the project is paused. Free projects pause after a week of inactivity; open the dashboard to resume |
 
 ## What has not been tested
 
 This was written without a live project to test against, because creating one needs your
-account. The schema, the policies and the client are all written carefully, but the first
-real sign-in is the first time any of it runs against Supabase. Expect one or two small
-things to need correcting, and tell me what the error says.
+account. The schema, the policies and the client are all written carefully, and the
+client is tested against a backend that refuses every request, so the offline and
+failure paths are known good. What has never run is the succeeding path: creating an
+account, signing in, and a row actually landing in `checklist_state`. Expect one or two
+small things to need correcting, and tell me what the error says.
