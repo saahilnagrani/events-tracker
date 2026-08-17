@@ -13,7 +13,6 @@ Carried over from the prototype deliberately:
   * The data-theme toggle beats the OS preference in both directions.
 
 Changed for mobile:
-  * The agenda list is the default under 700px; the month grid is secondary.
   * The month grid is one month per screen with swipe, not eight side by side.
   * Filters sit in a sticky row and stay reachable one-handed.
   * A web manifest, icons and a service worker make it installable and readable offline.
@@ -185,31 +184,6 @@ def whats_on(day):
     if day["other"]:
         bits.append("Other comedy: " + "; ".join(day["other"]))
     return bits
-
-
-def agenda_html(days):
-    cards = []
-    for day in days:
-        tier = TIERS[day["tier"]]
-        d = date.fromisoformat(day["date"])
-        holiday = (f'<span class="hol">{esc(day["holiday"])}</span>'
-                   if day["holiday"] else "")
-        cards.append(
-            f'<article class="ag t-{day["tier"]}" data-date="{day["date"]}" '
-            f'data-tier="{day["tier"]}" data-dow="{esc(day["dow"])}">'
-            f'<div class="ag-top">'
-            f'<div class="ag-when"><b>{d.strftime("%a %-d %b")}</b>'
-            f'<span>{d.year}</span>{holiday}</div>'
-            f'<div class="badge b-{day["tier"]}">'
-            f'<span class="ic" aria-hidden="true">{tier["icon"]}</span>'
-            f'<span class="badge-lb">{tier["label"]}</span></div>'
-            f'</div>'
-            f'<div class="ag-score">{day["score"]}<span> score</span></div>'
-            f'<ul class="ag-on"></ul>'
-            f'<button type="button" class="ag-more" data-open="{day["date"]}">'
-            f'Why this score</button>'
-            f'</article>')
-    return "".join(cards)
 
 
 # ---------------------------------------------------------------- events tab
@@ -533,18 +507,6 @@ button{font:inherit;font-size:13px;padding:8px 12px;border-radius:8px;cursor:poi
 h2{font-size:16px;margin:26px 0 10px;letter-spacing:-.01em}
 h2 small{font-weight:400;color:var(--ink-2);font-size:12.5px;margin-left:6px}
 
-/* ---- agenda: the default on phones ---- */
-.agenda{display:grid;gap:10px}
-.ag{background:var(--surface-1);border:1px solid var(--ring);border-left:3px solid var(--muted);
- border-radius:12px;padding:12px 13px}
-.ag.t-prime{border-left-color:var(--good)}
-.ag.t-good{border-left-color:var(--info)}
-.ag.t-blocked{border-left-color:var(--crit)}
-.ag-top{display:flex;align-items:flex-start;gap:10px}
-.ag-when{flex:1;line-height:1.3}
-.ag-when b{font-size:15.5px}
-.ag-when span{color:var(--muted);font-size:12.5px;margin-left:5px}
-.hol{display:block;color:var(--ink-2);font-size:12px;margin-left:0}
 .badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;
  letter-spacing:.05em;padding:4px 9px;border-radius:20px;border:1px solid currentColor;
  white-space:nowrap}
@@ -553,13 +515,6 @@ h2 small{font-weight:400;color:var(--ink-2);font-size:12.5px;margin-left:6px}
 .b-blocked{color:var(--crit);background:var(--crit-bg);
  background-image:repeating-linear-gradient(135deg,transparent 0 4px,var(--crit-bg) 4px 8px)}
 .b-weak,.b-poor{color:var(--muted)}
-.ag-score{font-size:23px;font-weight:650;letter-spacing:-.02em;margin:4px 0 2px}
-.ag-score span{font-size:12px;font-weight:400;color:var(--muted)}
-.ag-on{margin:4px 0 0;padding-left:17px;font-size:12.5px;color:var(--ink-2)}
-.ag-on .clear{list-style:none;margin-left:-17px;color:var(--good)}
-.ag-more{margin-top:6px;padding:5px 9px;font-size:12px;border:1px solid var(--ring);
- background:var(--plane)}
-
 /* ---- month grid: one month per screen, swipe between them ---- */
 .mo-nav{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .mo-nav .now{flex:1;font-size:14px;font-weight:600}
@@ -598,7 +553,7 @@ h2 small{font-weight:400;color:var(--ink-2);font-size:12.5px;margin-left:6px}
 .t-weak,.t-poor{opacity:.75}
 .day.past{opacity:.32}
 .dim{opacity:.18}
-.day:focus-visible,.ag-more:focus-visible,button:focus-visible{outline:2px solid var(--ink);
+.day:focus-visible,button:focus-visible{outline:2px solid var(--ink);
  outline-offset:2px}
 [hidden]{display:none !important}
 
@@ -755,7 +710,6 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 @media (min-width:700px){
  .top h1{font-size:22px}
  .wrap{padding:0 20px 72px}
- .agenda{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
  .events{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
  .stats{grid-template-columns:repeat(4,1fr)}
 }
@@ -884,14 +838,13 @@ JS = """
 
  // ================================================================ calendar
  var cells = all('.day[data-tier]');
- var cards = all('.ag[data-tier]');
  var countEl = $('count');
  var mode = 'all';
  var lens = DEFAULT_LENS;
 
  // Past dates are marked here rather than at build time, so the page is identical
  // whichever day it was built and a cached copy still marks the right days as gone.
- cells.concat(cards).forEach(function(el){
+ cells.forEach(function(el){
   var past = el.dataset.date < TODAY;
   el.dataset.past = past ? '1' : '0';
   el.classList.toggle('past', past);
@@ -925,21 +878,6 @@ JS = """
    el.setAttribute('aria-label',
      label.split(',')[0] + ', ' + d.t + ', score ' + d.s);
   });
-  cards.forEach(function(el){
-   var d = dayFor(el.dataset.date);
-   if (!d) return;
-   var t = TIER[d.t] || {icon: '', label: d.t};
-   el.className = 'ag t-' + d.t + (el.dataset.past === '1' ? ' past' : '');
-   el.dataset.tier = d.t;
-   el.querySelector('.badge').className = 'badge b-' + d.t;
-   el.querySelector('.badge .ic').textContent = t.icon;
-   el.querySelector('.badge-lb').textContent = t.label;
-   el.querySelector('.ag-score').innerHTML = d.s + '<span> score</span>';
-   var ul = el.querySelector('.ag-on');
-   ul.innerHTML = d.o.length
-     ? d.o.map(function(i){ return '<li>' + text(i) + '</li>'; }).join('')
-     : '<li class="clear">Nothing scheduled against you</li>';
-  });
   applyFilter(mode);
  }
 
@@ -962,9 +900,7 @@ JS = """
    el.classList.toggle('dim', !on);
    if (on) shown++;
   });
-  cards.forEach(function(el){ el.hidden = !matches(el); });
-  // Counted from the calendar, which holds every date in the window, so the number is
-  // the same in either view.
+  // Counted from the calendar grid, which holds every date in the window.
   countEl.textContent = shown + (shown === 1 ? ' date shown' : ' dates shown');
   countEl.dataset.count = String(shown);
  }
@@ -973,19 +909,6 @@ JS = """
  });
  all('[data-lens-opt]').forEach(function(b){
   b.addEventListener('click', function(){ applyLens(b.dataset.lensOpt); });
- });
-
- var views = {agenda: $('v-agenda'), calendar: $('v-calendar')};
- function applyView(next){
-  for (var k in views) {
-   if (views[k]) views[k].setAttribute('aria-pressed', String(k === next));
-  }
-  $('agenda-section').hidden = next !== 'agenda';
-  $('calendar-section').hidden = next !== 'calendar';
-  store.set('view', next);
- }
- Object.keys(views).forEach(function(k){
-  if (views[k]) views[k].addEventListener('click', function(){ applyView(k); });
  });
 
  // ---- detail sheet
@@ -1019,9 +942,6 @@ JS = """
  }
  cells.forEach(function(el){
   el.addEventListener('click', function(){ openSheet(el.dataset.date); });
- });
- all('.ag-more').forEach(function(el){
-  el.addEventListener('click', function(){ openSheet(el.dataset.open); });
  });
  sheetBg.addEventListener('click', closeSheet);
  $('sheet-close').addEventListener('click', closeSheet);
@@ -1286,11 +1206,6 @@ JS = """
  });
 
  // ================================================================ initial state
- var startView = store.get('view', '');
- if (startView !== 'agenda' && startView !== 'calendar') {
-  startView = matchMedia('(max-width: 699px)').matches ? 'agenda' : 'calendar';
- }
- applyView(startView);
  applyLens(LENSES[store.get('lens', '')] ? store.get('lens', '') : DEFAULT_LENS);
  evFilter();
  renderChecklist();
@@ -1372,7 +1287,7 @@ def render(viab, cfg, stamp, checklists):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Viable dates &ndash; Indian stand-up comedy, UAE</title>
+<title>Viable dates</title>
 <meta name="description" content="Which UAE dates are free for an Indian stand-up show, scored against everything already on sale on Platinumlist.">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png" type="image/png">
@@ -1391,7 +1306,6 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 <body>
 <div class="shell">
 <aside class="side">
- <div class="side-brand"><b>Viable dates</b><span>Indian stand-up, UAE</span></div>
  <nav class="side-nav" aria-label="Sections">
   <button type="button" id="tab-events" aria-pressed="true">
    <span class="nv-ic" aria-hidden="true">&#9776;</span><span>Events</span></button>
@@ -1408,10 +1322,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 <main class="col">
 <header class="top">
  <div class="top-in">
-  <div style="flex:1">
-   <h1>Viable dates for an Indian stand-up show</h1>
-   <p>Dubai and Abu Dhabi, {esc(span)}. Checked daily; data as of {esc(stamp)}.</p>
-  </div>
+  <h1>Viable dates</h1>
   <button type="button" id="theme" class="icon-btn"
    aria-label="Switch theme">&#9681;</button>
  </div>
@@ -1432,11 +1343,6 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 
  <!-- ----------------------------------------------------------- calendar -->
  <section id="panel-calendar" hidden>
-  <p class="scope"><b>The calendar shows every comedy and desi event on sale.</b>
-  The colour answers a narrower question, set by the lens below: could <em>you</em>
-  stage that kind of show that night. A busy night for Arabic comedy is not a blocked
-  night for you.</p>
-
   <div class="filters">
    <div class="seg" role="group" aria-label="Filter dates">
     <button type="button" id="f-all" aria-pressed="true">All</button>
@@ -1444,20 +1350,11 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
     <button type="button" id="f-prime" aria-pressed="false">Prime</button>
    </div>
    <div class="seg" role="group" aria-label="What are you staging">{lens_buttons}</div>
-   <div class="seg" role="group" aria-label="View">
-    <button type="button" id="v-agenda" aria-pressed="false">Agenda</button>
-    <button type="button" id="v-calendar" aria-pressed="false">Grid</button>
-   </div>
    <span class="count" id="count" role="status" aria-live="polite"></span>
   </div>
   <p class="muted" style="font-size:12.5px;margin:2px 0 0" id="lens-blurb"></p>
 
-  <section id="agenda-section" hidden>
-   <h2>Upcoming dates <small>nearest first</small></h2>
-   <div class="agenda">{agenda_html(days)}</div>
-  </section>
-
-  <section id="calendar-section" hidden>
+  <section id="calendar-section">
    <h2>Month by month <small class="only-mob">swipe between months</small>
     <small class="only-desk">hover a date for a summary, click for the full
     detail</small></h2>
