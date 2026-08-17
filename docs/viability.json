@@ -1,0 +1,4771 @@
+{
+ "generated": "2026-08-17",
+ "days": [
+  {
+   "date": "2026-08-13",
+   "dow": "Thu",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-08-14",
+   "dow": "Fri",
+   "score": 3.5,
+   "tier": "good",
+   "reasons": [
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-08-15",
+   "dow": "Sat",
+   "score": 4.0,
+   "tier": "prime",
+   "reasons": [
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-08-16",
+   "dow": "Sun",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-08-17",
+   "dow": "Mon",
+   "score": 0.5,
+   "tier": "poor",
+   "reasons": [
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-08-18",
+   "dow": "Tue",
+   "score": 0.5,
+   "tier": "poor",
+   "reasons": [
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-08-19",
+   "dow": "Wed",
+   "score": 0.2,
+   "tier": "poor",
+   "reasons": [
+    "Other comedy on the same night: The Coterie - The Comedy Lounge in Dubai",
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "The Coterie - The Comedy Lounge in Dubai"
+   ],
+   "holiday": "",
+   "events": [
+    "The Coterie - The Comedy Lounge in Dubai"
+   ]
+  },
+  {
+   "date": "2026-08-20",
+   "dow": "Thu",
+   "score": 1.0,
+   "tier": "weak",
+   "reasons": [
+    "Indian stand-up the night before or after: Sunil Grover in Dubai",
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-08-21",
+   "dow": "Fri",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Sunil Grover in Dubai"
+   ],
+   "boosts": [],
+   "direct": [
+    "Sunil Grover in Dubai"
+   ],
+   "concert": [
+    "The Revolution Tour - Sonu Nigam in Abu Dhabi"
+   ],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "The Revolution Tour - Sonu Nigam in Abu Dhabi",
+    "Sunil Grover in Dubai"
+   ]
+  },
+  {
+   "date": "2026-08-22",
+   "dow": "Sat",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [
+    "Indian stand-up the night before or after: Sunil Grover in Dubai",
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; New Covent Garden Presents: The Laughter Lounge 2 by Callback Comedy in Dubai; The Social Brunch",
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "New Covent Garden Presents: The Laughter Lounge 2 by Callback Comedy in Dubai",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "New Covent Garden Presents: The Laughter Lounge 2 by Callback Comedy in Dubai",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-08-23",
+   "dow": "Sun",
+   "score": 1.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Comedy @ the Speakeasy; Joke Hub - Madcat Comedy Show; The Social Brunch",
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Comedy @ the Speakeasy",
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "Comedy @ the Speakeasy"
+   ]
+  },
+  {
+   "date": "2026-08-24",
+   "dow": "Mon",
+   "score": 0.0,
+   "tier": "poor",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch",
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-08-25",
+   "dow": "Tue",
+   "score": 0.0,
+   "tier": "poor",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch",
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-08-26",
+   "dow": "Wed",
+   "score": 0.2,
+   "tier": "poor",
+   "reasons": [
+    "Other comedy on the same night: Cocktails & Comedy Show; Joke Hub - Madcat Comedy Show; The Social Brunch",
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Cocktails & Comedy Show",
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "Cocktails & Comedy Show"
+   ]
+  },
+  {
+   "date": "2026-08-27",
+   "dow": "Thu",
+   "score": 1.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch",
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-08-28",
+   "dow": "Fri",
+   "score": 1.7,
+   "tier": "weak",
+   "reasons": [
+    "Indian stand-up the night before or after: Atul Khatri live in Dubai; Gaurav Kapoor Live in Dubai",
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; Rami Jbr Stand Up Comedy in Dubai; The Social Brunch",
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "Rami Jbr Stand Up Comedy in Dubai",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "Rami Jbr Stand Up Comedy in Dubai"
+   ]
+  },
+  {
+   "date": "2026-08-29",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Atul Khatri live in Dubai; Gaurav Kapoor Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [
+    "Atul Khatri live in Dubai",
+    "Gaurav Kapoor Live in Dubai"
+   ],
+   "concert": [],
+   "other": [
+    "Ahmed & Ahmed - Stand Up Comedy Show at Jafza One Convention Centre",
+    "Jimmy Carr 'Laughs Funny' Live at Dubai Opera",
+    "Joke Hub - Madcat Comedy Show",
+    "Mohamed Abdelaty Live In Dubai, Sa3a Mally",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "Ahmed & Ahmed - Stand Up Comedy Show at Jafza One Convention Centre",
+    "Atul Khatri live in Dubai",
+    "Gaurav Kapoor Live in Dubai",
+    "Jimmy Carr 'Laughs Funny' Live at Dubai Opera",
+    "Mohamed Abdelaty Live In Dubai, Sa3a Mally"
+   ]
+  },
+  {
+   "date": "2026-08-30",
+   "dow": "Sun",
+   "score": 0.0,
+   "tier": "poor",
+   "reasons": [
+    "Indian stand-up the night before or after: Atul Khatri live in Dubai; Gaurav Kapoor Live in Dubai",
+    "Major desi draw competing for the same wallet: Bhuwin Experience - Noor-e-Daastan in Dubai",
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch",
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [
+    "Bhuwin Experience - Noor-e-Daastan in Dubai"
+   ],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "Bhuwin Experience - Noor-e-Daastan in Dubai"
+   ]
+  },
+  {
+   "date": "2026-08-31",
+   "dow": "Mon",
+   "score": 0.0,
+   "tier": "poor",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch",
+    "Late-August low season: a large share of residents are still away"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-01",
+   "dow": "Tue",
+   "score": 0.7,
+   "tier": "poor",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-02",
+   "dow": "Wed",
+   "score": 1.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-03",
+   "dow": "Thu",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-04",
+   "dow": "Fri",
+   "score": 3.7,
+   "tier": "good",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Laughter Factory: 30 Years of Bringing People Together Through Laughter; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter"
+   ]
+  },
+  {
+   "date": "2026-09-05",
+   "dow": "Sat",
+   "score": 4.2,
+   "tier": "prime",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; Mina Nader at Dubai Opera; The Laughter Factory: 30 Years of Bringing People Together Through Laughter; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "Mina Nader at Dubai Opera",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+    "Mina Nader at Dubai Opera"
+   ]
+  },
+  {
+   "date": "2026-09-06",
+   "dow": "Sun",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; Taha Desouky - Stand Up Comedy Show in Dubai; The Laughter Factory: 30 Years of Bringing People Together Through Laughter; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "Taha Desouky - Stand Up Comedy Show in Dubai",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+    "Taha Desouky - Stand Up Comedy Show in Dubai"
+   ]
+  },
+  {
+   "date": "2026-09-07",
+   "dow": "Mon",
+   "score": 0.7,
+   "tier": "poor",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Laughter Factory: 30 Years of Bringing People Together Through Laughter; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter"
+   ]
+  },
+  {
+   "date": "2026-09-08",
+   "dow": "Tue",
+   "score": 0.7,
+   "tier": "poor",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Laughter Factory: 30 Years of Bringing People Together Through Laughter; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter"
+   ]
+  },
+  {
+   "date": "2026-09-09",
+   "dow": "Wed",
+   "score": 1.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Laughter Factory: 30 Years of Bringing People Together Through Laughter; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter"
+   ]
+  },
+  {
+   "date": "2026-09-10",
+   "dow": "Thu",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Laughter Factory: 30 Years of Bringing People Together Through Laughter; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter"
+   ]
+  },
+  {
+   "date": "2026-09-11",
+   "dow": "Fri",
+   "score": 2.7,
+   "tier": "good",
+   "reasons": [
+    "Indian stand-up the night before or after: Comedy Box Office By Rajat Chauhan and Siddhartha Shetty and Anmol Garg",
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Laughter Factory: 30 Years of Bringing People Together Through Laughter; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter"
+   ]
+  },
+  {
+   "date": "2026-09-12",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Comedy Box Office By Rajat Chauhan and Siddhartha Shetty and Anmol Garg"
+   ],
+   "boosts": [],
+   "direct": [
+    "Comedy Box Office By Rajat Chauhan and Siddhartha Shetty and Anmol Garg"
+   ],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+    "Comedy Box Office By Rajat Chauhan and Siddhartha Shetty and Anmol Garg"
+   ]
+  },
+  {
+   "date": "2026-09-13",
+   "dow": "Sun",
+   "score": 1.2,
+   "tier": "weak",
+   "reasons": [
+    "Indian stand-up the night before or after: Comedy Box Office By Rajat Chauhan and Siddhartha Shetty and Anmol Garg",
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-14",
+   "dow": "Mon",
+   "score": 0.7,
+   "tier": "poor",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-15",
+   "dow": "Tue",
+   "score": 0.7,
+   "tier": "poor",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-16",
+   "dow": "Wed",
+   "score": 1.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-17",
+   "dow": "Thu",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-18",
+   "dow": "Fri",
+   "score": 3.7,
+   "tier": "good",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-19",
+   "dow": "Sat",
+   "score": 0.7,
+   "tier": "poor",
+   "reasons": [
+    "Indian stand-up the night before or after: Phulka Dots - A Musical Stand-Up Comedy Show ft. MOMic Amruta in Dubai",
+    "Major desi draw competing for the same wallet: O Sakhi: Her Voice in Verse and Song in Dubai",
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; Magic Phil in Mother Goose at Theatre by QE2; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [
+    "O Sakhi: Her Voice in Verse and Song in Dubai"
+   ],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "Magic Phil in Mother Goose at Theatre by QE2",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "Magic Phil in Mother Goose at Theatre by QE2",
+    "O Sakhi: Her Voice in Verse and Song in Dubai"
+   ]
+  },
+  {
+   "date": "2026-09-20",
+   "dow": "Sun",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Phulka Dots - A Musical Stand-Up Comedy Show ft. MOMic Amruta in Dubai"
+   ],
+   "boosts": [],
+   "direct": [
+    "Phulka Dots - A Musical Stand-Up Comedy Show ft. MOMic Amruta in Dubai"
+   ],
+   "concert": [
+    "Radhika Das Lightfall Live in Dubai"
+   ],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "Phulka Dots - A Musical Stand-Up Comedy Show ft. MOMic Amruta in Dubai",
+    "Radhika Das Lightfall Live in Dubai"
+   ]
+  },
+  {
+   "date": "2026-09-21",
+   "dow": "Mon",
+   "score": 0.0,
+   "tier": "poor",
+   "reasons": [
+    "Indian stand-up the night before or after: Phulka Dots - A Musical Stand-Up Comedy Show ft. MOMic Amruta in Dubai",
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-22",
+   "dow": "Tue",
+   "score": 0.7,
+   "tier": "poor",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-23",
+   "dow": "Wed",
+   "score": 1.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-24",
+   "dow": "Thu",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-09-25",
+   "dow": "Fri",
+   "score": 0.2,
+   "tier": "poor",
+   "reasons": [
+    "Indian stand-up the night before or after: Sumukhi Suresh Live in Dubai",
+    "Major desi draw competing for the same wallet: Bhakti 2.0 at Oud Mehta Theater in Dubai",
+    "Other comedy on the same night: 3a Ka3ba Improv Comedy Show at Jafza One Convention Centre; Father Ted at Theatre by QE2 in Dubai; Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [
+    "Bhakti 2.0 at Oud Mehta Theater in Dubai"
+   ],
+   "other": [
+    "3a Ka3ba Improv Comedy Show at Jafza One Convention Centre",
+    "Father Ted at Theatre by QE2 in Dubai",
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "3a Ka3ba Improv Comedy Show at Jafza One Convention Centre",
+    "Bhakti 2.0 at Oud Mehta Theater in Dubai",
+    "Father Ted at Theatre by QE2 in Dubai"
+   ]
+  },
+  {
+   "date": "2026-09-26",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Sumukhi Suresh Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [
+    "Sumukhi Suresh Live in Dubai"
+   ],
+   "concert": [
+    "Bhakti 2.0 at Oud Mehta Theater in Dubai",
+    "KHUSHIYAN: A Live Storytelling Experience Featuring Laksh Maheshwari in Dubai"
+   ],
+   "other": [
+    "Father Ted at Theatre by QE2 in Dubai",
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch"
+   ],
+   "holiday": "",
+   "events": [
+    "Joke Hub - Madcat Comedy Show",
+    "The Social Brunch",
+    "Bhakti 2.0 at Oud Mehta Theater in Dubai",
+    "Father Ted at Theatre by QE2 in Dubai",
+    "KHUSHIYAN: A Live Storytelling Experience Featuring Laksh Maheshwari in Dubai",
+    "Sumukhi Suresh Live in Dubai"
+   ]
+  },
+  {
+   "date": "2026-09-27",
+   "dow": "Sun",
+   "score": 0.0,
+   "tier": "poor",
+   "reasons": [
+    "Indian stand-up the night before or after: Sumukhi Suresh Live in Dubai",
+    "Major desi draw competing for the same wallet: Bhakti 2.0 at Oud Mehta Theater in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [
+    "Bhakti 2.0 at Oud Mehta Theater in Dubai"
+   ],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "Bhakti 2.0 at Oud Mehta Theater in Dubai"
+   ]
+  },
+  {
+   "date": "2026-09-28",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-09-29",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-09-30",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-01",
+   "dow": "Thu",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-02",
+   "dow": "Fri",
+   "score": 4.5,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-03",
+   "dow": "Sat",
+   "score": 1.7,
+   "tier": "weak",
+   "reasons": [
+    "Major desi draw competing for the same wallet: Baithak ft. Osman Mir & Aamir Mir",
+    "Other comedy on the same night: Alaa Abu Diab at The Raj Mahal Theatre in Dubai Parks and Resorts; Meen Amin by Ahmed Amin Live at The Agenda in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [
+    "Baithak ft. Osman Mir & Aamir Mir"
+   ],
+   "other": [
+    "Alaa Abu Diab at The Raj Mahal Theatre in Dubai Parks and Resorts",
+    "Meen Amin by Ahmed Amin Live at The Agenda in Dubai"
+   ],
+   "holiday": "",
+   "events": [
+    "Alaa Abu Diab at The Raj Mahal Theatre in Dubai Parks and Resorts",
+    "Baithak ft. Osman Mir & Aamir Mir",
+    "Meen Amin by Ahmed Amin Live at The Agenda in Dubai"
+   ]
+  },
+  {
+   "date": "2026-10-04",
+   "dow": "Sun",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-05",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-06",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-07",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-08",
+   "dow": "Thu",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-09",
+   "dow": "Fri",
+   "score": 0.2,
+   "tier": "poor",
+   "reasons": [
+    "Indian stand-up the night before or after: Jamie Lever Live in Dubai Comedy Festival",
+    "Other comedy on the same night: Alaa El Sheikh Stand-up at Jafza One Convention Centre; Mohandis Al Thauq Al Aam at Dubai Comedy Festival",
+    "Inside Dubai Comedy Festival (9-18 Oct): market saturated, venues booked"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Alaa El Sheikh Stand-up at Jafza One Convention Centre",
+    "Mohandis Al Thauq Al Aam at Dubai Comedy Festival"
+   ],
+   "holiday": "",
+   "events": [
+    "Alaa El Sheikh Stand-up at Jafza One Convention Centre",
+    "Mohandis Al Thauq Al Aam at Dubai Comedy Festival"
+   ]
+  },
+  {
+   "date": "2026-10-10",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Jamie Lever Live in Dubai Comedy Festival"
+   ],
+   "boosts": [],
+   "direct": [
+    "Jamie Lever Live in Dubai Comedy Festival"
+   ],
+   "concert": [],
+   "other": [
+    "Mohandis Al Thauq Al Aam at Dubai Comedy Festival"
+   ],
+   "holiday": "",
+   "events": [
+    "Mohandis Al Thauq Al Aam at Dubai Comedy Festival",
+    "Jamie Lever Live in Dubai Comedy Festival"
+   ]
+  },
+  {
+   "date": "2026-10-11",
+   "dow": "Sun",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Munawar Faruqui Live at Dubai Comedy Festival"
+   ],
+   "boosts": [],
+   "direct": [
+    "Munawar Faruqui Live at Dubai Comedy Festival"
+   ],
+   "concert": [],
+   "other": [
+    "Morgan Jay - The Goofy Guy Tour in Abu Dhabi"
+   ],
+   "holiday": "",
+   "events": [
+    "Morgan Jay - The Goofy Guy Tour in Abu Dhabi",
+    "Munawar Faruqui Live at Dubai Comedy Festival"
+   ]
+  },
+  {
+   "date": "2026-10-12",
+   "dow": "Mon",
+   "score": 0.0,
+   "tier": "poor",
+   "reasons": [
+    "Indian stand-up the night before or after: Munawar Faruqui Live at Dubai Comedy Festival",
+    "Other comedy on the same night: Katherine Ryan Live at Dubai Comedy Festival; Mo Gilligan Live at Dubai Comedy Festival",
+    "Inside Dubai Comedy Festival (9-18 Oct): market saturated, venues booked"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Katherine Ryan Live at Dubai Comedy Festival",
+    "Mo Gilligan Live at Dubai Comedy Festival"
+   ],
+   "holiday": "",
+   "events": [
+    "Katherine Ryan Live at Dubai Comedy Festival",
+    "Mo Gilligan Live at Dubai Comedy Festival"
+   ]
+  },
+  {
+   "date": "2026-10-13",
+   "dow": "Tue",
+   "score": 0.0,
+   "tier": "poor",
+   "reasons": [
+    "Inside Dubai Comedy Festival (9-18 Oct): market saturated, venues booked"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-14",
+   "dow": "Wed",
+   "score": 0.0,
+   "tier": "poor",
+   "reasons": [
+    "Inside Dubai Comedy Festival (9-18 Oct): market saturated, venues booked"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-15",
+   "dow": "Thu",
+   "score": 0.0,
+   "tier": "poor",
+   "reasons": [
+    "Indian stand-up the night before or after: Abbas Bukhari Live at Dubai Comedy Festival; Zarna Garg Live at Dubai Comedy Festival",
+    "Other comedy on the same night: Alexander Merkul Live at Dubai Comedy Festival",
+    "Inside Dubai Comedy Festival (9-18 Oct): market saturated, venues booked"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Alexander Merkul Live at Dubai Comedy Festival"
+   ],
+   "holiday": "",
+   "events": [
+    "Alexander Merkul Live at Dubai Comedy Festival"
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "dow": "Fri",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Abbas Bukhari Live at Dubai Comedy Festival; Zarna Garg Live at Dubai Comedy Festival"
+   ],
+   "boosts": [],
+   "direct": [
+    "Abbas Bukhari Live at Dubai Comedy Festival",
+    "Zarna Garg Live at Dubai Comedy Festival"
+   ],
+   "concert": [
+    "Navratri Utsav 2026 in Dubai"
+   ],
+   "other": [
+    "Alexander Merkul Live at Dubai Comedy Festival",
+    "Game. Set. Match (Re-Run) in Dubai",
+    "Shane Todd Live at Dubai Comedy Festival"
+   ],
+   "holiday": "",
+   "events": [
+    "Alexander Merkul Live at Dubai Comedy Festival",
+    "Abbas Bukhari Live at Dubai Comedy Festival",
+    "Game. Set. Match (Re-Run) in Dubai",
+    "Navratri Utsav 2026 in Dubai",
+    "Shane Todd Live at Dubai Comedy Festival",
+    "Zarna Garg Live at Dubai Comedy Festival"
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "poor",
+   "reasons": [
+    "Indian stand-up the night before or after: Abbas Bukhari Live at Dubai Comedy Festival; Amit Tandon Live at Dubai Comedy Festival; Vir Das Live at Dubai Comedy Festival; Zarna Garg Live at Dubai Comedy Festival",
+    "Major desi draw competing for the same wallet: Navratri Utsav 2026 in Dubai",
+    "Other comedy on the same night: Game. Set. Match (Re-Run) in Dubai; John Achkar Feena Nehke? Live at Dubai Comedy Festival",
+    "Inside Dubai Comedy Festival (9-18 Oct): market saturated, venues booked"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [
+    "Navratri Utsav 2026 in Dubai"
+   ],
+   "other": [
+    "Game. Set. Match (Re-Run) in Dubai",
+    "John Achkar Feena Nehke? Live at Dubai Comedy Festival"
+   ],
+   "holiday": "",
+   "events": [
+    "Game. Set. Match (Re-Run) in Dubai",
+    "Navratri Utsav 2026 in Dubai",
+    "John Achkar Feena Nehke? Live at Dubai Comedy Festival"
+   ]
+  },
+  {
+   "date": "2026-10-18",
+   "dow": "Sun",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Amit Tandon Live at Dubai Comedy Festival; Vir Das Live at Dubai Comedy Festival"
+   ],
+   "boosts": [],
+   "direct": [
+    "Amit Tandon Live at Dubai Comedy Festival",
+    "Vir Das Live at Dubai Comedy Festival"
+   ],
+   "concert": [],
+   "other": [
+    "Game. Set. Match (Re-Run) in Dubai"
+   ],
+   "holiday": "",
+   "events": [
+    "Game. Set. Match (Re-Run) in Dubai",
+    "Amit Tandon Live at Dubai Comedy Festival",
+    "Vir Das Live at Dubai Comedy Festival"
+   ]
+  },
+  {
+   "date": "2026-10-19",
+   "dow": "Mon",
+   "score": 0.5,
+   "tier": "poor",
+   "reasons": [
+    "Indian stand-up the night before or after: Amit Tandon Live at Dubai Comedy Festival; Vir Das Live at Dubai Comedy Festival"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-20",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-21",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-22",
+   "dow": "Thu",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Un Air De Famille at The Junction in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Un Air De Famille at The Junction in Dubai"
+   ],
+   "holiday": "",
+   "events": [
+    "Un Air De Famille at The Junction in Dubai"
+   ]
+  },
+  {
+   "date": "2026-10-23",
+   "dow": "Fri",
+   "score": 3.7,
+   "tier": "good",
+   "reasons": [
+    "Other comedy on the same night: Un Air De Famille at The Junction in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Un Air De Famille at The Junction in Dubai"
+   ],
+   "holiday": "",
+   "events": [
+    "Un Air De Famille at The Junction in Dubai"
+   ]
+  },
+  {
+   "date": "2026-10-24",
+   "dow": "Sat",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [
+    "Indian stand-up the night before or after: Comedy Box Office By Onkar, Shreya, and Pranav Sharma in Dubai; Live Nation Middle East Presents Russell Peters at Etihad Arena in Abu Dhabi",
+    "Major desi draw competing for the same wallet: Falguni Pathak Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [
+    "Falguni Pathak Live in Dubai"
+   ],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "Falguni Pathak Live in Dubai"
+   ]
+  },
+  {
+   "date": "2026-10-25",
+   "dow": "Sun",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Comedy Box Office By Onkar, Shreya, and Pranav Sharma in Dubai; Live Nation Middle East Presents Russell Peters at Etihad Arena in Abu Dhabi"
+   ],
+   "boosts": [],
+   "direct": [
+    "Comedy Box Office By Onkar, Shreya, and Pranav Sharma in Dubai",
+    "Live Nation Middle East Presents Russell Peters at Etihad Arena in Abu Dhabi"
+   ],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "Live Nation Middle East Presents Russell Peters at Etihad Arena in Abu Dhabi",
+    "Comedy Box Office By Onkar, Shreya, and Pranav Sharma in Dubai"
+   ]
+  },
+  {
+   "date": "2026-10-26",
+   "dow": "Mon",
+   "score": 0.5,
+   "tier": "poor",
+   "reasons": [
+    "Indian stand-up the night before or after: Comedy Box Office By Onkar, Shreya, and Pranav Sharma in Dubai; Live Nation Middle East Presents Russell Peters at Etihad Arena in Abu Dhabi"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-27",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-28",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-29",
+   "dow": "Thu",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-30",
+   "dow": "Fri",
+   "score": 3.5,
+   "tier": "good",
+   "reasons": [
+    "Indian stand-up the night before or after: Kunal Kamra Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-10-31",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Kunal Kamra Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [
+    "Kunal Kamra Live in Dubai"
+   ],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "Kunal Kamra Live in Dubai"
+   ]
+  },
+  {
+   "date": "2026-11-01",
+   "dow": "Sun",
+   "score": 1.2,
+   "tier": "weak",
+   "reasons": [
+    "Indian stand-up the night before or after: Kunal Kamra Live in Dubai",
+    "Other comedy on the same night: Mikhail Shats New Program at Meyana Theatre , Jumeirah Beach Hotel in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Mikhail Shats New Program at Meyana Theatre , Jumeirah Beach Hotel in Dubai"
+   ],
+   "holiday": "",
+   "events": [
+    "Mikhail Shats New Program at Meyana Theatre , Jumeirah Beach Hotel in Dubai"
+   ]
+  },
+  {
+   "date": "2026-11-02",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-03",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-04",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-05",
+   "dow": "Thu",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-06",
+   "dow": "Fri",
+   "score": 4.5,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-07",
+   "dow": "Sat",
+   "score": 4.2,
+   "tier": "prime",
+   "reasons": [
+    "Other comedy on the same night: Olga Malashchenko. Stand-up"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Olga Malashchenko. Stand-up"
+   ],
+   "holiday": "",
+   "events": [
+    "Olga Malashchenko. Stand-up"
+   ]
+  },
+  {
+   "date": "2026-11-08",
+   "dow": "Sun",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Abdelkader Secteur at Emirates Theatre in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Abdelkader Secteur at Emirates Theatre in Dubai"
+   ],
+   "holiday": "",
+   "events": [
+    "Abdelkader Secteur at Emirates Theatre in Dubai"
+   ]
+  },
+  {
+   "date": "2026-11-09",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-10",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-11",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-12",
+   "dow": "Thu",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-13",
+   "dow": "Fri",
+   "score": 4.5,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-14",
+   "dow": "Sat",
+   "score": 5.0,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-15",
+   "dow": "Sun",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-16",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-17",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-18",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-19",
+   "dow": "Thu",
+   "score": 1.2,
+   "tier": "weak",
+   "reasons": [
+    "Indian stand-up the night before or after: Out Of Order Ft. Shashi Dhiman in Dubai",
+    "Other comedy on the same night: Bassam Wehbe - One Way Ticket in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Bassam Wehbe - One Way Ticket in Dubai"
+   ],
+   "holiday": "",
+   "events": [
+    "Bassam Wehbe - One Way Ticket in Dubai"
+   ]
+  },
+  {
+   "date": "2026-11-20",
+   "dow": "Fri",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Out Of Order Ft. Shashi Dhiman in Dubai"
+   ],
+   "boosts": [],
+   "direct": [
+    "Out Of Order Ft. Shashi Dhiman in Dubai"
+   ],
+   "concert": [
+    "Anuv Jain Live at Expo City Dubai"
+   ],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "Anuv Jain Live at Expo City Dubai",
+    "Out Of Order Ft. Shashi Dhiman in Dubai"
+   ]
+  },
+  {
+   "date": "2026-11-21",
+   "dow": "Sat",
+   "score": 4.0,
+   "tier": "prime",
+   "reasons": [
+    "Indian stand-up the night before or after: Out Of Order Ft. Shashi Dhiman in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-22",
+   "dow": "Sun",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-23",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-24",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-11-25",
+   "dow": "Wed",
+   "score": 1.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Trevor Noah Live at Dubai Opera"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Trevor Noah Live at Dubai Opera"
+   ],
+   "holiday": "",
+   "events": [
+    "Trevor Noah Live at Dubai Opera"
+   ]
+  },
+  {
+   "date": "2026-11-26",
+   "dow": "Thu",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [
+    "Other comedy on the same night: Trevor Noah Live at Dubai Opera"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [
+    "Trevor Noah Live at Dubai Opera"
+   ],
+   "holiday": "",
+   "events": [
+    "Trevor Noah Live at Dubai Opera"
+   ]
+  },
+  {
+   "date": "2026-11-27",
+   "dow": "Fri",
+   "score": 1.0,
+   "tier": "weak",
+   "reasons": [
+    "Indian stand-up the night before or after: Comedy Box Office By Jaspreet Singh in Dubai",
+    "Major desi draw competing for the same wallet: Atif Aslam 2026 in Dubai; URJA - Divine Energy at Oud Mehta Theater in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [
+    "Atif Aslam 2026 in Dubai",
+    "URJA - Divine Energy at Oud Mehta Theater in Dubai"
+   ],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "Atif Aslam 2026 in Dubai",
+    "URJA - Divine Energy at Oud Mehta Theater in Dubai"
+   ]
+  },
+  {
+   "date": "2026-11-28",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Comedy Box Office By Jaspreet Singh in Dubai"
+   ],
+   "boosts": [],
+   "direct": [
+    "Comedy Box Office By Jaspreet Singh in Dubai"
+   ],
+   "concert": [
+    "URJA - Divine Energy at Oud Mehta Theater in Dubai"
+   ],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "URJA - Divine Energy at Oud Mehta Theater in Dubai",
+    "Comedy Box Office By Jaspreet Singh in Dubai"
+   ]
+  },
+  {
+   "date": "2026-11-29",
+   "dow": "Sun",
+   "score": 0.0,
+   "tier": "poor",
+   "reasons": [
+    "Indian stand-up the night before or after: Comedy Box Office By Jaspreet Singh in Dubai",
+    "Major desi draw competing for the same wallet: URJA - Divine Energy at Oud Mehta Theater in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [
+    "URJA - Divine Energy at Oud Mehta Theater in Dubai"
+   ],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "URJA - Divine Energy at Oud Mehta Theater in Dubai"
+   ]
+  },
+  {
+   "date": "2026-11-30",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-01",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-02",
+   "dow": "Wed",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [
+    "Eid Al Etihad (National Day) public holiday"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "Eid Al Etihad (National Day)",
+   "events": []
+  },
+  {
+   "date": "2026-12-03",
+   "dow": "Thu",
+   "score": 4.0,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [
+    "Eid Al Etihad (National Day) public holiday"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "Eid Al Etihad (National Day)",
+   "events": []
+  },
+  {
+   "date": "2026-12-04",
+   "dow": "Fri",
+   "score": 4.5,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-05",
+   "dow": "Sat",
+   "score": 5.0,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-06",
+   "dow": "Sun",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-07",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-08",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-09",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-10",
+   "dow": "Thu",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-11",
+   "dow": "Fri",
+   "score": 3.5,
+   "tier": "good",
+   "reasons": [
+    "Indian stand-up the night before or after: Gaurav Gupta Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-12",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Gaurav Gupta Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [
+    "Gaurav Gupta Live in Dubai"
+   ],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "Gaurav Gupta Live in Dubai"
+   ]
+  },
+  {
+   "date": "2026-12-13",
+   "dow": "Sun",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [
+    "Indian stand-up the night before or after: Gaurav Gupta Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-14",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-15",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-16",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-17",
+   "dow": "Thu",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-18",
+   "dow": "Fri",
+   "score": 4.5,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-19",
+   "dow": "Sat",
+   "score": 5.0,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-20",
+   "dow": "Sun",
+   "score": 3.7,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [
+    "Dubai Shopping Festival and winter peak: visitor numbers high"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-21",
+   "dow": "Mon",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [
+    "Dubai Shopping Festival and winter peak: visitor numbers high"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-22",
+   "dow": "Tue",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [
+    "Dubai Shopping Festival and winter peak: visitor numbers high"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-23",
+   "dow": "Wed",
+   "score": 2.7,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [
+    "Dubai Shopping Festival and winter peak: visitor numbers high"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-24",
+   "dow": "Thu",
+   "score": 3.7,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [
+    "Dubai Shopping Festival and winter peak: visitor numbers high"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-25",
+   "dow": "Fri",
+   "score": 5.2,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [
+    "Dubai Shopping Festival and winter peak: visitor numbers high"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-26",
+   "dow": "Sat",
+   "score": 5.7,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [
+    "Dubai Shopping Festival and winter peak: visitor numbers high"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-27",
+   "dow": "Sun",
+   "score": 3.7,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [
+    "Dubai Shopping Festival and winter peak: visitor numbers high"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-28",
+   "dow": "Mon",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [
+    "Dubai Shopping Festival and winter peak: visitor numbers high"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-29",
+   "dow": "Tue",
+   "score": 2.2,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [
+    "Dubai Shopping Festival and winter peak: visitor numbers high"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-30",
+   "dow": "Wed",
+   "score": 2.7,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [
+    "Dubai Shopping Festival and winter peak: visitor numbers high"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2026-12-31",
+   "dow": "Thu",
+   "score": 1.2,
+   "tier": "weak",
+   "reasons": [
+    "New Year's Eve or Day: crowded out by NYE programming"
+   ],
+   "boosts": [
+    "Dubai Shopping Festival and winter peak: visitor numbers high"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-01",
+   "dow": "Fri",
+   "score": 3.5,
+   "tier": "good",
+   "reasons": [
+    "New Year's Eve or Day: crowded out by NYE programming"
+   ],
+   "boosts": [
+    "New Year's Day public holiday",
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "New Year's Day",
+   "events": []
+  },
+  {
+   "date": "2027-01-02",
+   "dow": "Sat",
+   "score": 5.5,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-03",
+   "dow": "Sun",
+   "score": 3.5,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-04",
+   "dow": "Mon",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-05",
+   "dow": "Tue",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-06",
+   "dow": "Wed",
+   "score": 2.5,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-07",
+   "dow": "Thu",
+   "score": 3.5,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-08",
+   "dow": "Fri",
+   "score": 4.0,
+   "tier": "prime",
+   "reasons": [
+    "Indian stand-up the night before or after: Varun Grover Live in Dubai"
+   ],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-09",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Varun Grover Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [
+    "Varun Grover Live in Dubai"
+   ],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "Varun Grover Live in Dubai"
+   ]
+  },
+  {
+   "date": "2027-01-10",
+   "dow": "Sun",
+   "score": 2.5,
+   "tier": "good",
+   "reasons": [
+    "Indian stand-up the night before or after: Varun Grover Live in Dubai"
+   ],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-11",
+   "dow": "Mon",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-12",
+   "dow": "Tue",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-13",
+   "dow": "Wed",
+   "score": 2.5,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-14",
+   "dow": "Thu",
+   "score": 3.5,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-15",
+   "dow": "Fri",
+   "score": 5.0,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [
+    "Winter peak season"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-16",
+   "dow": "Sat",
+   "score": 5.0,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-17",
+   "dow": "Sun",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-18",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-19",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-20",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-21",
+   "dow": "Thu",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-22",
+   "dow": "Fri",
+   "score": 3.5,
+   "tier": "good",
+   "reasons": [
+    "Indian stand-up the night before or after: Biswa Kalyan Rath Live in Dubai 2027"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-23",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Biswa Kalyan Rath Live in Dubai 2027"
+   ],
+   "boosts": [],
+   "direct": [
+    "Biswa Kalyan Rath Live in Dubai 2027"
+   ],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "Biswa Kalyan Rath Live in Dubai 2027"
+   ]
+  },
+  {
+   "date": "2027-01-24",
+   "dow": "Sun",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [
+    "Indian stand-up the night before or after: Biswa Kalyan Rath Live in Dubai 2027"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-25",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-26",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-27",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-28",
+   "dow": "Thu",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-29",
+   "dow": "Fri",
+   "score": 4.5,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-30",
+   "dow": "Sat",
+   "score": 5.0,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-01-31",
+   "dow": "Sun",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-01",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-02",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-03",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-04",
+   "dow": "Thu",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-05",
+   "dow": "Fri",
+   "score": 3.5,
+   "tier": "good",
+   "reasons": [
+    "Indian stand-up the night before or after: Sapan Verma Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-06",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Sapan Verma Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [
+    "Sapan Verma Live in Dubai"
+   ],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "Sapan Verma Live in Dubai"
+   ]
+  },
+  {
+   "date": "2027-02-07",
+   "dow": "Sun",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [
+    "Indian stand-up the night before or after: Sapan Verma Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-08",
+   "dow": "Mon",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-09",
+   "dow": "Tue",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-10",
+   "dow": "Wed",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-11",
+   "dow": "Thu",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-12",
+   "dow": "Fri",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-13",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-14",
+   "dow": "Sun",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-15",
+   "dow": "Mon",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-16",
+   "dow": "Tue",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-17",
+   "dow": "Wed",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-18",
+   "dow": "Thu",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-19",
+   "dow": "Fri",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-20",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-21",
+   "dow": "Sun",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-22",
+   "dow": "Mon",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-23",
+   "dow": "Tue",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-24",
+   "dow": "Wed",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-25",
+   "dow": "Thu",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-26",
+   "dow": "Fri",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-27",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-02-28",
+   "dow": "Sun",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-01",
+   "dow": "Mon",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-02",
+   "dow": "Tue",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-03",
+   "dow": "Wed",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-04",
+   "dow": "Thu",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-05",
+   "dow": "Fri",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-06",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-07",
+   "dow": "Sun",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-08",
+   "dow": "Mon",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-09",
+   "dow": "Tue",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Ramadan (expected 8 Feb to 9 Mar 2027): ticketed evening comedy effectively pauses"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-10",
+   "dow": "Wed",
+   "score": 4.5,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [
+    "Eid Al Fitr holiday window: high appetite for family outings",
+    "Eid Al Fitr (expected) public holiday"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "Eid Al Fitr (expected)",
+   "events": []
+  },
+  {
+   "date": "2027-03-11",
+   "dow": "Thu",
+   "score": 5.5,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [
+    "Eid Al Fitr holiday window: high appetite for family outings",
+    "Eid Al Fitr (expected) public holiday"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "Eid Al Fitr (expected)",
+   "events": []
+  },
+  {
+   "date": "2027-03-12",
+   "dow": "Fri",
+   "score": 7.0,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [
+    "Eid Al Fitr holiday window: high appetite for family outings",
+    "Eid Al Fitr (expected) public holiday"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "Eid Al Fitr (expected)",
+   "events": []
+  },
+  {
+   "date": "2027-03-13",
+   "dow": "Sat",
+   "score": 6.5,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [
+    "Eid Al Fitr holiday window: high appetite for family outings"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-14",
+   "dow": "Sun",
+   "score": 4.5,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [
+    "Eid Al Fitr holiday window: high appetite for family outings"
+   ],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-15",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-16",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-17",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-18",
+   "dow": "Thu",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-19",
+   "dow": "Fri",
+   "score": 3.5,
+   "tier": "good",
+   "reasons": [
+    "Indian stand-up the night before or after: Silly Papa Ft. Angad Ranyal Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-20",
+   "dow": "Sat",
+   "score": 0.0,
+   "tier": "blocked",
+   "reasons": [
+    "Direct clash: Silly Papa Ft. Angad Ranyal Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [
+    "Silly Papa Ft. Angad Ranyal Live in Dubai"
+   ],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": [
+    "Silly Papa Ft. Angad Ranyal Live in Dubai"
+   ]
+  },
+  {
+   "date": "2027-03-21",
+   "dow": "Sun",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [
+    "Indian stand-up the night before or after: Silly Papa Ft. Angad Ranyal Live in Dubai"
+   ],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-22",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-23",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-24",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-25",
+   "dow": "Thu",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-26",
+   "dow": "Fri",
+   "score": 4.5,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-27",
+   "dow": "Sat",
+   "score": 5.0,
+   "tier": "prime",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-28",
+   "dow": "Sun",
+   "score": 3.0,
+   "tier": "good",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-29",
+   "dow": "Mon",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-30",
+   "dow": "Tue",
+   "score": 1.5,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  },
+  {
+   "date": "2027-03-31",
+   "dow": "Wed",
+   "score": 2.0,
+   "tier": "weak",
+   "reasons": [],
+   "boosts": [],
+   "direct": [],
+   "concert": [],
+   "other": [],
+   "holiday": "",
+   "events": []
+  }
+ ],
+ "events": [
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "The Coterie - The Comedy Lounge in Dubai",
+   "artist": "Rotating line-up of 5-6 UAE comedians",
+   "start": "2026-08-19",
+   "end": null,
+   "time": "20:00",
+   "venue": "Coterie Social IBN Batuta",
+   "price_from_aed": 85,
+   "language": "Not stated",
+   "notes": "Every other Wednesday; Recurring series; Platinumlist lists only the next occurrence; Start time not published; 20:00 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/the-coterie-the-comedy-lounge"
+  },
+  {
+   "city": "Abu Dhabi",
+   "category": "Desi",
+   "event": "The Revolution Tour - Sonu Nigam in Abu Dhabi",
+   "artist": "Sonu Nigam",
+   "start": "2026-08-21",
+   "end": null,
+   "time": "21:00",
+   "venue": "Etihad Arena",
+   "price_from_aed": 150,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://abu-dhabi.platinumlist.net/event-tickets/106429/the-revolution-tour-sonu-nigam"
+  },
+  {
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "Sunil Grover in Dubai",
+   "artist": "Sunil Grover",
+   "start": "2026-08-21",
+   "end": null,
+   "time": "20:00",
+   "venue": "Coca-Cola Arena",
+   "price_from_aed": 125,
+   "language": "Hindi",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107289/sunil-grover-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Joke Hub - Madcat Comedy Show",
+   "artist": "Rotating Mad Cat Comedy Club line-up",
+   "start": "2026-08-22",
+   "end": "2026-09-26",
+   "time": "20:30",
+   "venue": "Skafos - Canopy by Hilton Dubai Al Seef",
+   "price_from_aed": 85,
+   "language": "Not stated",
+   "notes": "Runs every Saturday; Recurring series; Platinumlist lists only the next occurrence; Start time not published; 20:30 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/joke-hub-madcat-comedy-show"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "New Covent Garden Presents: The Laughter Lounge 2 by Callback Comedy in Dubai",
+   "artist": "",
+   "start": "2026-08-22",
+   "end": null,
+   "time": "20:30",
+   "venue": "Playhouse Studio Theatre, Mall of the Emirates",
+   "price_from_aed": 120,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107757/new-covent-garden-presents-the-laughter-lounge-2-by-callback-comedy-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "The Social Brunch",
+   "artist": "No performer listed (live DJ)",
+   "start": "2026-08-22",
+   "end": "2026-09-26",
+   "time": "13:00",
+   "venue": "Skafos - Canopy by Hilton Dubai Al Seef",
+   "price_from_aed": 146.25,
+   "language": "Not stated",
+   "notes": "Comedy brunch; flash-sale price, standard AED 195; Recurring series; Platinumlist lists only the next occurrence; Start time not published; 13:00 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/the-social-brunch"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Comedy @ the Speakeasy",
+   "artist": "Rotating local comedians",
+   "start": "2026-08-23",
+   "end": null,
+   "time": "19:00",
+   "venue": "Moon Bar by Sana",
+   "price_from_aed": 85,
+   "language": "Not stated",
+   "notes": "Recurring series; Platinumlist lists only the next occurrence; Start time not published; 19:00 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/the-speakeasy-madcat-comedy-show"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Cocktails & Comedy Show",
+   "artist": "Dubai stand-up line-up (not named)",
+   "start": "2026-08-26",
+   "end": null,
+   "time": "20:00",
+   "venue": "Bondz Bar & Lounge",
+   "price_from_aed": 85,
+   "language": "Not stated",
+   "notes": "Recurring series; Platinumlist lists only the next occurrence; Start time not published; 20:00 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/cocktails-comedy-show"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Rami Jbr Stand Up Comedy in Dubai",
+   "artist": "Rami Jbr",
+   "start": "2026-08-28",
+   "end": null,
+   "time": "20:00",
+   "venue": "JAFZA One Convention Center",
+   "price_from_aed": 150,
+   "language": "Arabic",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107007/rami-jbr-stand-up-comedy-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Ahmed & Ahmed - Stand Up Comedy Show at Jafza One Convention Centre",
+   "artist": "Ahmed Magdy & Ahmed Hassan",
+   "start": "2026-08-29",
+   "end": null,
+   "time": "21:00",
+   "venue": "JAFZA One Convention Center",
+   "price_from_aed": 195,
+   "language": "Arabic",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107145/ahmed-ahmed-stand-up-comedy-show-at-jafza-one-convention-centre"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Atul Khatri live in Dubai",
+   "artist": "Atul Khatri",
+   "start": "2026-08-29",
+   "end": null,
+   "time": "20:00",
+   "venue": "Emirates Theatre",
+   "price_from_aed": 125,
+   "language": "Hindi & English",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/105366/atul-khatri-live-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Gaurav Kapoor Live in Dubai",
+   "artist": "Gaurav Kapoor",
+   "start": "2026-08-29",
+   "end": null,
+   "time": "20:30",
+   "venue": "Dubai World Trade Center",
+   "price_from_aed": 125,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107353/gaurav-kapoor-live-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Jimmy Carr 'Laughs Funny' Live at Dubai Opera",
+   "artist": "Jimmy Carr",
+   "start": "2026-08-29",
+   "end": null,
+   "time": "18:30",
+   "venue": "Dubai Opera",
+   "price_from_aed": 250,
+   "language": "Not stated",
+   "notes": "Two shows per night; Start time not published; 18:30 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/107320/jimmy-carr-laughs-funny-live-at-dubai-opera"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Mohamed Abdelaty Live In Dubai, Sa3a Mally",
+   "artist": "Mohamed Abdelaty",
+   "start": "2026-08-29",
+   "end": null,
+   "time": "19:30",
+   "venue": "The New Covent Garden Theatre",
+   "price_from_aed": 195,
+   "language": "Arabic",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107527/mohamed-abdelaty-live-in-dubai-sa3a-mally"
+  },
+  {
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "Bhuwin Experience - Noor-e-Daastan in Dubai",
+   "artist": "Bhuwin (Bhuwin Khursija)",
+   "start": "2026-08-30",
+   "end": null,
+   "time": "14:30",
+   "venue": "The New Covent Garden Theatre",
+   "price_from_aed": 125,
+   "language": "Not stated",
+   "notes": "Start time not published; 14:30 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/105332/bhuwin-experience-noor-e-daastan"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
+   "artist": "",
+   "start": "2026-09-04",
+   "end": "2026-09-12",
+   "time": "20:00",
+   "venue": "Jumeirah Golf Estates - BallroomDukes the Palm Dubai HotelStudio One HotelBla Bla DubaiRadisson Hotel Dubai, Damac Hills, DubaiThe Club, Mina Sadiyat, Abu Dhabi",
+   "price_from_aed": 140,
+   "language": "English",
+   "notes": "Start time not published; 20:00 is the page's scheduling anchor and may be wrong",
+   "url": "https://platinumlist.net/event-tickets/107783/the-laughter-factory-30-years-of-bringing-people-together-through-laughter"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Mina Nader at Dubai Opera",
+   "artist": "Mina Nader",
+   "start": "2026-09-05",
+   "end": null,
+   "time": "18:00",
+   "venue": "Dubai Opera",
+   "price_from_aed": 195,
+   "language": "Arabic",
+   "notes": "Start time not published; 18:00 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/107278/mina-nader-at-dubai-opera"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Taha Desouky - Stand Up Comedy Show in Dubai",
+   "artist": "Taha Desouky",
+   "start": "2026-09-06",
+   "end": null,
+   "time": "21:00",
+   "venue": "Dubai Opera",
+   "price_from_aed": 250,
+   "language": "Arabic",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107253/taha-desouky-stand-up-comedy-show-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Comedy Box Office By Rajat Chauhan and Siddhartha Shetty and Anmol Garg",
+   "artist": "Siddhartha Shetty",
+   "start": "2026-09-12",
+   "end": null,
+   "time": "19:00",
+   "venue": "Emirates Theatre",
+   "price_from_aed": 125,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107404/comedy-box-office-by-rajat-chauhan-and-siddhartha-shetty-and-anmol-garg"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Magic Phil in Mother Goose at Theatre by QE2",
+   "artist": "Magic Phil",
+   "start": "2026-09-19",
+   "end": null,
+   "time": "10:30",
+   "venue": "Theatre by QE2",
+   "price_from_aed": 79,
+   "language": "Not stated",
+   "notes": "Start time not published; 10:30 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/107616/magic-phil-in-mother-goose-at-theatre-by-qe2"
+  },
+  {
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "O Sakhi: Her Voice in Verse and Song in Dubai",
+   "artist": "Katha Sutra",
+   "start": "2026-09-19",
+   "end": null,
+   "time": "17:00",
+   "venue": "Live@Play Warehouse B17, ABA Avenue, Al Quoz",
+   "price_from_aed": 125,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107805/o-sakhi-her-voice-in-verse-and-song"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Phulka Dots - A Musical Stand-Up Comedy Show ft. MOMic Amruta in Dubai",
+   "artist": "MOMic Amruta",
+   "start": "2026-09-20",
+   "end": null,
+   "time": "17:00",
+   "venue": "Live@Play Warehouse B17, ABA Avenue, Al Quoz",
+   "price_from_aed": 100,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107415/phulka-dots-a-musical-stand-up-comedy-show-ft-momic-amruta"
+  },
+  {
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "Radhika Das Lightfall Live in Dubai",
+   "artist": "Radhika Das",
+   "start": "2026-09-20",
+   "end": null,
+   "time": "18:30",
+   "venue": "Coca-Cola Arena",
+   "price_from_aed": 150,
+   "language": "Not stated",
+   "notes": "Event page prints 06:30 with no AM/PM - confirm time before booking",
+   "url": "https://dubai.platinumlist.net/event-tickets/107296/radhika-das-lightfall"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "3a Ka3ba Improv Comedy Show at Jafza One Convention Centre",
+   "artist": "Fouad Yammine, Anthony Hamawi, Tony Dagher, Jad Bou Karam",
+   "start": "2026-09-25",
+   "end": null,
+   "time": "21:00",
+   "venue": "JAFZA One Convention Center",
+   "price_from_aed": 195,
+   "language": "Arabic",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107144/3a-ka3ba-improv-comedy-show-at-jafza-one-convention-centre"
+  },
+  {
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "Bhakti 2.0 at Oud Mehta Theater in Dubai",
+   "artist": "O.S. Arun, Vinay Varanasi, Vishaka Hari",
+   "start": "2026-09-25",
+   "end": "2026-09-27",
+   "time": "18:00",
+   "venue": "Zabeel Ladies Club",
+   "price_from_aed": 80,
+   "language": "Tamil",
+   "notes": "Early-bird price to 31 Aug; standard AED 100; Start time not published; 18:00 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/107427/bhakti-at-oud-mehta-theater-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Father Ted at Theatre by QE2 in Dubai",
+   "artist": "Dubai Drama Group",
+   "start": "2026-09-25",
+   "end": "2026-09-26",
+   "time": "19:30",
+   "venue": "Theatre by QE2",
+   "price_from_aed": 99,
+   "language": "Not stated",
+   "notes": "Start time not published; 19:30 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/104715/father-ted-at-theatre-by-qe2"
+  },
+  {
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "KHUSHIYAN: A Live Storytelling Experience Featuring Laksh Maheshwari in Dubai",
+   "artist": "Laksh Maheshwari",
+   "start": "2026-09-26",
+   "end": null,
+   "time": "20:00",
+   "venue": "Sheikh Rashid Auditorium, IHS",
+   "price_from_aed": 100,
+   "language": "Hindi",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/106836/khushiyan-a-live-storytelling-experience-featuring-laksh-maheshwari"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Sumukhi Suresh Live in Dubai",
+   "artist": "Sumukhi Suresh",
+   "start": "2026-09-26",
+   "end": null,
+   "time": "19:30",
+   "venue": "Emirates Theatre",
+   "price_from_aed": 100,
+   "language": "English",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/106978/sumukhi-suresh-live-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Alaa Abu Diab at The Raj Mahal Theatre in Dubai Parks and Resorts",
+   "artist": "Alaa Abu Diab",
+   "start": "2026-10-03",
+   "end": null,
+   "time": "21:00",
+   "venue": "Rajmahal Theatre",
+   "price_from_aed": 220,
+   "language": "Arabic",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107702/alaa-abu-diab-at-the-raj-mahal-theatre-in-dubai-parks-and-resorts"
+  },
+  {
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "Baithak ft. Osman Mir & Aamir Mir",
+   "artist": "Osman Mir & Aamir Mir",
+   "start": "2026-10-03",
+   "end": null,
+   "time": "21:00",
+   "venue": "Le Méridien Dubai Hotel & Conference Centre",
+   "price_from_aed": 157.5,
+   "language": "Hindi",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107705/baithak-ft-osman-mir-and-aamir-mir"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Meen Amin by Ahmed Amin Live at The Agenda in Dubai",
+   "artist": "Ahmed Amin",
+   "start": "2026-10-03",
+   "end": null,
+   "time": "20:30",
+   "venue": "The Agenda",
+   "price_from_aed": 210,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/106612/meen-amin-by-ahmed-amin-live-at-the-agenda-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Alaa El Sheikh Stand-up at Jafza One Convention Centre",
+   "artist": "Alaa El Sheikh",
+   "start": "2026-10-09",
+   "end": null,
+   "time": "21:00",
+   "venue": "JAFZA One Convention Center",
+   "price_from_aed": 150,
+   "language": "Arabic",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107443/alaa-el-sheikh-stand-up-at-jafza-one-convention-centre"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Mohandis Al Thauq Al Aam at Dubai Comedy Festival",
+   "artist": "Al Qaiser Events production",
+   "start": "2026-10-09",
+   "end": "2026-10-10",
+   "time": "20:30",
+   "venue": "Dubai Opera",
+   "price_from_aed": 250,
+   "language": "Not stated",
+   "notes": "Dubai Comedy Festival; Start time not published; 20:30 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/106245/mohandis-al-thauq-al-aam-at-dubai-comedy-festival"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Jamie Lever Live in Dubai Comedy Festival",
+   "artist": "Jamie Lever",
+   "start": "2026-10-10",
+   "end": null,
+   "time": "19:00",
+   "venue": "Emirates Theatre",
+   "price_from_aed": 145,
+   "language": "Hindi",
+   "notes": "Dubai Comedy Festival",
+   "url": "https://dubai.platinumlist.net/event-tickets/107166/jamie-lever-live-in-dubai-comedy-festival"
+  },
+  {
+   "city": "Abu Dhabi",
+   "category": "Comedy",
+   "event": "Morgan Jay - The Goofy Guy Tour in Abu Dhabi",
+   "artist": "Morgan Jay",
+   "start": "2026-10-11",
+   "end": null,
+   "time": "20:00",
+   "venue": "Etihad Arena",
+   "price_from_aed": 275,
+   "language": "English",
+   "notes": "",
+   "url": "https://abu-dhabi.platinumlist.net/event-tickets/106036/morgan-jay-the-goofy-guy-tour"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Munawar Faruqui Live at Dubai Comedy Festival",
+   "artist": "Munawar Faruqui",
+   "start": "2026-10-11",
+   "end": null,
+   "time": "18:30",
+   "venue": "Dubai Opera",
+   "price_from_aed": 125,
+   "language": "Not stated",
+   "notes": "Dubai Comedy Festival",
+   "url": "https://dubai.platinumlist.net/event-tickets/106537/munawar-faruqui-live-at-dubai-comedy-festival"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Katherine Ryan Live at Dubai Comedy Festival",
+   "artist": "",
+   "start": "2026-10-12",
+   "end": null,
+   "time": "21:30",
+   "venue": "Dubai Opera",
+   "price_from_aed": 195,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/106532/katherine-ryan-live-at-dubai-comedy-festival"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Mo Gilligan Live at Dubai Comedy Festival",
+   "artist": "Mo Gilligan",
+   "start": "2026-10-12",
+   "end": null,
+   "time": "18:30",
+   "venue": "Dubai Opera",
+   "price_from_aed": 250,
+   "language": "Not stated",
+   "notes": "Dubai Comedy Festival",
+   "url": "https://dubai.platinumlist.net/event-tickets/106536/mo-gilligan-live-at-dubai-comedy-festival"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Alexander Merkul Live at Dubai Comedy Festival",
+   "artist": "Alexander Merkul",
+   "start": "2026-10-15",
+   "end": "2026-10-16",
+   "time": "21:30",
+   "venue": "The New Covent Garden Theatre",
+   "price_from_aed": 150,
+   "language": "Russian",
+   "notes": "Dubai Comedy Festival",
+   "url": "https://dubai.platinumlist.net/event-tickets/106503/alexander-merkul-live-at-dubai-comedy-festival"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Abbas Bukhari Live at Dubai Comedy Festival",
+   "artist": "Abbas Bukhari",
+   "start": "2026-10-16",
+   "end": null,
+   "time": "21:30",
+   "venue": "The New Covent Garden Theatre",
+   "price_from_aed": 125,
+   "language": "Urdu",
+   "notes": "Dubai Comedy Festival",
+   "url": "https://dubai.platinumlist.net/event-tickets/107641/abbas-bukhari-live-at-dubai-comedy-festival"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Game. Set. Match (Re-Run) in Dubai",
+   "artist": "Multi-cultural theatrical cast",
+   "start": "2026-10-16",
+   "end": "2026-10-18",
+   "time": "19:00",
+   "venue": "The Junction",
+   "price_from_aed": 105,
+   "language": "Not stated",
+   "notes": "Start time not published; 19:00 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/105073/gamesetmatch-re-run-at-the-junction-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "Navratri Utsav 2026 in Dubai",
+   "artist": "Live music & dance performances (not named)",
+   "start": "2026-10-16",
+   "end": "2026-10-17",
+   "time": "19:00",
+   "venue": "Zabeel Park Amphitheatre",
+   "price_from_aed": 10,
+   "language": "Not stated",
+   "notes": "Start time not published; 19:00 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/107326/navratri-utsav-2026-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Shane Todd Live at Dubai Comedy Festival",
+   "artist": "Shane Todd",
+   "start": "2026-10-16",
+   "end": null,
+   "time": "18:30",
+   "venue": "The New Covent Garden Theatre",
+   "price_from_aed": 195,
+   "language": "Not stated",
+   "notes": "Dubai Comedy Festival",
+   "url": "https://dubai.platinumlist.net/event-tickets/106654/shane-todd-live-at-dubai-comedy-festival"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Zarna Garg Live at Dubai Comedy Festival",
+   "artist": "Zarna Garg",
+   "start": "2026-10-16",
+   "end": null,
+   "time": "18:30",
+   "venue": "Dubai Opera",
+   "price_from_aed": 195,
+   "language": "Not stated",
+   "notes": "Dubai Comedy Festival",
+   "url": "https://dubai.platinumlist.net/event-tickets/107077/zarna-garg-live-at-dubai-comedy-festival"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "John Achkar Feena Nehke? Live at Dubai Comedy Festival",
+   "artist": "John Achkar",
+   "start": "2026-10-17",
+   "end": null,
+   "time": "18:30",
+   "venue": "Dubai Opera",
+   "price_from_aed": 185,
+   "language": "Arabic",
+   "notes": "Dubai Comedy Festival",
+   "url": "https://dubai.platinumlist.net/event-tickets/106524/john-achkar-feena-nehke-live-at-dubai-comedy-festival"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Amit Tandon Live at Dubai Comedy Festival",
+   "artist": "Amit Tandon",
+   "start": "2026-10-18",
+   "end": null,
+   "time": "15:00",
+   "venue": "Dubai Opera",
+   "price_from_aed": 150,
+   "language": "Not stated",
+   "notes": "Dubai Comedy Festival",
+   "url": "https://dubai.platinumlist.net/event-tickets/106482/amit-tandon-live-at-dubai-comedy-festival"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Vir Das Live at Dubai Comedy Festival",
+   "artist": "Vir Das",
+   "start": "2026-10-18",
+   "end": null,
+   "time": "20:00",
+   "venue": "Coca-Cola Arena",
+   "price_from_aed": 195,
+   "language": "Not stated",
+   "notes": "Dubai Comedy Festival",
+   "url": "https://dubai.platinumlist.net/event-tickets/107043/vir-das-live-at-dubai-comedy-festival"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Un Air De Famille at The Junction in Dubai",
+   "artist": "La Troupe de Culture Emulsion",
+   "start": "2026-10-22",
+   "end": "2026-10-23",
+   "time": "19:45",
+   "venue": "The Junction",
+   "price_from_aed": 160,
+   "language": "Not stated",
+   "notes": "Start time not published; 19:45 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/107486/un-air-de-famille-at-the-junction-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "Falguni Pathak Live in Dubai",
+   "artist": "Falguni Pathak",
+   "start": "2026-10-24",
+   "end": null,
+   "time": "18:00",
+   "venue": "Zabeel Park Amphitheatre",
+   "price_from_aed": 60,
+   "language": "Not stated",
+   "notes": "Listing publishes the door time only (18:00); the show starts later",
+   "url": "https://dubai.platinumlist.net/event-tickets/107047/falguni-pathak-live-in-dubai"
+  },
+  {
+   "city": "Abu Dhabi",
+   "category": "Comedy + Desi",
+   "event": "Live Nation Middle East Presents Russell Peters at Etihad Arena in Abu Dhabi",
+   "artist": "Russell Peters",
+   "start": "2026-10-25",
+   "end": null,
+   "time": "20:30",
+   "venue": "Etihad Arena",
+   "price_from_aed": 275,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://abu-dhabi.platinumlist.net/event-tickets/104963/live-nation-middle-east-presents-russell-peters-at-etihad-arena"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Comedy Box Office By Onkar, Shreya, and Pranav Sharma in Dubai",
+   "artist": "Pranav Sharma",
+   "start": "2026-10-25",
+   "end": null,
+   "time": "19:00",
+   "venue": "Emirates Theatre",
+   "price_from_aed": 125,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107402/comedy-box-office-by-onkar-shreya-and-pranav-sharma-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Kunal Kamra Live in Dubai",
+   "artist": "Kunal Kamra",
+   "start": "2026-10-31",
+   "end": null,
+   "time": "18:00",
+   "venue": "Emirates Theatre",
+   "price_from_aed": 155,
+   "language": "Hindi & English",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/106948/kunal-kamra-live-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Mikhail Shats New Program at Meyana Theatre , Jumeirah Beach Hotel in Dubai",
+   "artist": "Mikhail Shats",
+   "start": "2026-11-01",
+   "end": null,
+   "time": "20:00",
+   "venue": "Meyana Theatre, Jumeirah Beach Hotel",
+   "price_from_aed": 550,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107195/mikhail-shats-stand-up-comedy-show-at-meyana-theatrejumeirah-beach-hotel-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Olga Malashchenko. Stand-up",
+   "artist": "Olga Malashchenko",
+   "start": "2026-11-07",
+   "end": null,
+   "time": "19:00",
+   "venue": "Dubai Heights Academy",
+   "price_from_aed": 150,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/105194/olga-malashchenko-stand-up"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Abdelkader Secteur at Emirates Theatre in Dubai",
+   "artist": "Abdelkader Secteur",
+   "start": "2026-11-08",
+   "end": null,
+   "time": "19:30",
+   "venue": "Emirates Theatre",
+   "price_from_aed": 195,
+   "language": "Arabic",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107374/abdelkader-secteur-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Bassam Wehbe - One Way Ticket in Dubai",
+   "artist": "Bassam Wehbe",
+   "start": "2026-11-19",
+   "end": null,
+   "time": "20:30",
+   "venue": "Playhouse Studio Theatre, Mall of the Emirates",
+   "price_from_aed": 200,
+   "language": "Arabic",
+   "notes": "Start time not published; 20:30 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/106609/bassam-wehbe-one-way-ticket"
+  },
+  {
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "Anuv Jain Live at Expo City Dubai",
+   "artist": "Anuv Jain",
+   "start": "2026-11-20",
+   "end": null,
+   "time": "20:00",
+   "venue": "Jubilee Park, Expo City Dubai",
+   "price_from_aed": 149,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/104347/anuv-jain-live-in-expo-city-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Out Of Order Ft. Shashi Dhiman in Dubai",
+   "artist": "Shashi Dhiman",
+   "start": "2026-11-20",
+   "end": null,
+   "time": "20:45",
+   "venue": "Live@Play Warehouse B17, ABA Avenue, Al Quoz",
+   "price_from_aed": 75,
+   "language": "Hindi",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107074/out-of-order-ft-shashi-dhiman-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Trevor Noah Live at Dubai Opera",
+   "artist": "Trevor Noah",
+   "start": "2026-11-25",
+   "end": "2026-11-26",
+   "time": "20:00",
+   "venue": "Dubai Opera",
+   "price_from_aed": 295,
+   "language": "Not stated",
+   "notes": "Start time not published; 20:00 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/107317/trevor-noah-live-at-dubai-opera"
+  },
+  {
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "Atif Aslam 2026 in Dubai",
+   "artist": "Atif Aslam",
+   "start": "2026-11-27",
+   "end": null,
+   "time": "21:00",
+   "venue": "Coca-Cola Arena",
+   "price_from_aed": 150,
+   "language": "Not stated",
+   "notes": "Listing publishes the door time only (21:00); the show starts later",
+   "url": "https://dubai.platinumlist.net/event-tickets/104859/atif-aslam"
+  },
+  {
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "URJA - Divine Energy at Oud Mehta Theater in Dubai",
+   "artist": "Sikkil Gurucharan (27th), Kunnakudi Balamuralikrishna (28th), Bharat Sundar (29th)",
+   "start": "2026-11-27",
+   "end": "2026-11-29",
+   "time": "18:00",
+   "venue": "Zabeel Ladies Club",
+   "price_from_aed": 100,
+   "language": "Carnatic / Indian classical",
+   "notes": "Start time not published; 18:00 is the page's scheduling anchor and may be wrong",
+   "url": "https://dubai.platinumlist.net/event-tickets/104970/urja-divine-energy-at-oud-mehta-theater-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Comedy Box Office By Jaspreet Singh in Dubai",
+   "artist": "Jaspreet Singh",
+   "start": "2026-11-28",
+   "end": null,
+   "time": "19:00",
+   "venue": "Emirates Theatre",
+   "price_from_aed": 125,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107401/comedy-box-office-by-jaspreet-singh"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Gaurav Gupta Live in Dubai",
+   "artist": "Gaurav Gupta",
+   "start": "2026-12-12",
+   "end": null,
+   "time": "18:00",
+   "venue": "Sheikh Rashid Auditorium, IHS",
+   "price_from_aed": 95,
+   "language": "Hindi",
+   "notes": "Recurring series; Platinumlist lists only the next occurrence; Listing publishes the door time only (18:00); the show starts later",
+   "url": "https://dubai.platinumlist.net/event-tickets/gaurav-gupta-live-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Varun Grover Live in Dubai",
+   "artist": "Varun Grover",
+   "start": "2027-01-09",
+   "end": null,
+   "time": "18:00",
+   "venue": "Emirates Theatre",
+   "price_from_aed": 125,
+   "language": "Hindi & English",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/106970/varun-grover-live-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Biswa Kalyan Rath Live in Dubai 2027",
+   "artist": "Biswa Kalyan Rath",
+   "start": "2027-01-23",
+   "end": null,
+   "time": "19:00",
+   "venue": "Sheikh Rashid Auditorium, IHS",
+   "price_from_aed": 100,
+   "language": "Hindi & English",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/106982/biswa-kalyan-rath-live-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Sapan Verma Live in Dubai",
+   "artist": "Sapan Verma",
+   "start": "2027-02-06",
+   "end": null,
+   "time": "19:30",
+   "venue": "Live@Play Warehouse B17, ABA Avenue, Al Quoz",
+   "price_from_aed": 90,
+   "language": "Hindi & English",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/106952/sapan-verma-live-in-dubai"
+  },
+  {
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Silly Papa Ft. Angad Ranyal Live in Dubai",
+   "artist": "Angad Ranyal",
+   "start": "2027-03-20",
+   "end": null,
+   "time": "19:30",
+   "venue": "Live@Play Warehouse B17, ABA Avenue, Al Quoz",
+   "price_from_aed": 90,
+   "language": "Hindi & English",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107030/silly-papa-ft-angad-ranyal-live-in-dubai"
+  }
+ ]
+}
