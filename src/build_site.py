@@ -38,12 +38,50 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 TIERS = {
-    "prime":   {"icon": "✓", "label": "PRIME",   "blurb": "book this"},
-    "good":    {"icon": "●", "label": "GOOD",    "blurb": "workable"},
-    "weak":    {"icon": "·", "label": "LOW",     "blurb": "weeknight or diluted"},
-    "poor":    {"icon": "·", "label": "LOW",     "blurb": "weeknight or diluted"},
-    "blocked": {"icon": "✕", "label": "BLOCKED", "blurb": "direct clash or Ramadan"},
+    "prime":   {"icon": "check",   "label": "PRIME",   "blurb": "book this"},
+    "good":    {"icon": "dot",     "label": "GOOD",    "blurb": "workable"},
+    "weak":    {"icon": "dash",    "label": "LOW",     "blurb": "weeknight or diluted"},
+    "poor":    {"icon": "dash",    "label": "LOW",     "blurb": "weeknight or diluted"},
+    "blocked": {"icon": "cross",   "label": "BLOCKED", "blurb": "direct clash or Ramadan"},
 }
+
+# One inline sprite, drawn on a 24x24 grid with a 2px round-capped stroke so every icon
+# reads as one family. Inline rather than a font or a CDN: the page has to render from
+# cache with no network, and a strict relative-path deploy leaves nothing to fetch.
+ICONS = {
+    "events":   '<path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1.1"/>'
+                '<circle cx="4" cy="12" r="1.1"/><circle cx="4" cy="18" r="1.1"/>',
+    "calendar": '<rect x="3" y="5" width="18" height="16" rx="2.5"/>'
+                '<path d="M3 10h18M8 3v4M16 3v4"/>',
+    "checklist": '<path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1z"/>'
+                 '<path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7'
+                 'a2 2 0 0 1 2-2h2"/><path d="M9 13l2.2 2.2L15.5 11"/>',
+    "sun":      '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M2 12h2.2'
+                'M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6'
+                'M6.5 17.5l-1.6 1.6"/>',
+    "moon":     '<path d="M20 14.2A8.2 8.2 0 0 1 9.8 4 8.4 8.4 0 1 0 20 14.2z"/>',
+    "left":     '<path d="M15 5l-7 7 7 7"/>',
+    "right":    '<path d="M9 5l7 7-7 7"/>',
+    "down":     '<path d="M5 9l7 7 7-7"/>',
+    "close":    '<path d="M6 6l12 12M18 6L6 18"/>',
+    "check":    '<path d="M4.5 12.5l5 5 10-11"/>',
+    "dot":      '<circle cx="12" cy="12" r="4.6" fill="currentColor" stroke="none"/>',
+    "dash":     '<path d="M7 12h10"/>',
+    "cross":    '<path d="M6 6l12 12M18 6L6 18"/>',
+}
+
+
+def sprite():
+    symbols = "".join(
+        f'<symbol id="i-{name}" viewBox="0 0 24 24">{body}</symbol>'
+        for name, body in ICONS.items())
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" style="display:none" '
+            f'aria-hidden="true">{symbols}</svg>')
+
+
+def icon(name, cls="ic"):
+    return (f'<svg class="{cls}" aria-hidden="true" focusable="false">'
+            f'<use href="#i-{name}"></use></svg>')
 DOW_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 # Mirrors src/import_checklist.py. "Not needed" is excluded from progress totals, the
 # same way the source workbook's dashboard excludes it.
@@ -147,7 +185,7 @@ def day_cell(day):
         f'data-tier="{day["tier"]}" data-dow="{esc(day["dow"])}" '
         f'aria-label="{esc(label)}">'
         f'<span class="dn">{d.day}</span>'
-        f'<span class="ic" aria-hidden="true">{tier["icon"]}</span>'
+        f'{icon(tier["icon"])}'
         f'<span class="lb">{tier["label"]}</span></button>'
     )
 
@@ -245,6 +283,7 @@ def events_html(events):
         note = f'<p class="ev-note">{esc(e["notes"])}</p>' if e.get("notes") else ""
         rows.append(
             f'<article class="ev" data-month="{esc(event_month(e))}" '
+            f'data-start="{esc(e.get("start"))}" data-end="{esc(e.get("end") or "")}" '
             f'data-artist="{esc(e.get("artist"))}" '
             f'data-category="{esc(e.get("category"))}" '
             f'data-language="{esc(language)}">'
@@ -470,6 +509,14 @@ CSS = """
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
+/* Kills the blue/grey rectangle Chrome and Safari flash over a tapped control. */
+*{-webkit-tap-highlight-color:transparent}
+button{-webkit-user-select:none;user-select:none}
+/* Every icon is a sprite reference sized in em, so it follows whatever font-size the
+   surrounding rule or container query already sets. */
+svg.ic,svg.nv-ic,svg.th-ic{width:1em;height:1em;fill:none;stroke:currentColor;
+ stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;
+ vertical-align:-.12em}
 body{margin:0;background:var(--plane);color:var(--ink);
  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.5;
  /* clears the fixed bottom nav */
@@ -483,6 +530,10 @@ a{color:inherit}
  border-bottom:1px solid var(--ring);padding:10px 14px 8px}
 .top-in{max-width:1180px;margin:0 auto;display:flex;align-items:flex-start;gap:10px}
 .top h1{font-size:17px;margin:0;letter-spacing:-.01em;flex:1;line-height:1.25}
+/* A phone gets the app name and keeps it: the bottom bar already says which page you
+   are on, so repeating it in the header spends the only line there is. */
+#page-title{display:none}
+.app-name{display:inline}
 .top p{margin:2px 0 0;color:var(--ink-2);font-size:12.5px}
 .controls{position:sticky;top:0;z-index:29;background:var(--plane);
  border-bottom:1px solid var(--ring);padding:8px 14px}
@@ -498,6 +549,18 @@ button{font:inherit;font-size:13px;padding:8px 12px;border-radius:8px;cursor:poi
 .seg button{border:0;padding:7px 11px;min-height:34px}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface-1)}
 .icon-btn{border:1px solid var(--ring);background:var(--surface-1);min-width:38px}
+/* The theme control is the icon itself: no border, no filled surface. */
+.ghost-btn{border:0;background:none;padding:6px;min-width:34px;min-height:34px;
+ color:var(--ink-2);display:inline-flex;align-items:center;justify-content:center}
+.ghost-btn:hover{color:var(--ink)}
+.th-ic{font-size:19px}
+.th-moon{display:none}
+:root[data-theme="dark"] .th-sun{display:none}
+:root[data-theme="dark"] .th-moon{display:inline-block}
+@media (prefers-color-scheme:dark){
+ :root:where(:not([data-theme="light"])) .th-sun{display:none}
+ :root:where(:not([data-theme="light"])) .th-moon{display:inline-block}
+}
 .count{font-size:12.5px;color:var(--ink-2);margin-left:auto;font-variant-numeric:tabular-nums}
 
 /* ---- the distinction that matters, kept in the page not in a tooltip ---- */
@@ -561,7 +624,7 @@ h2 small{font-weight:400;color:var(--ink-2);font-size:12.5px;margin-left:6px}
  flex-direction:column;gap:1px;align-items:flex-start;text-align:left;overflow:hidden}
 .day.pad{border:0;background:none;pointer-events:none;min-height:0}
 .dn{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
-.ic{font-size:12px;line-height:1}
+.ic{font-size:12px}
 /* Sized so BLOCKED, the longest label, fits a phone cell without being
    ellipsised. Clipping it would leave colour doing the work on its own. */
 .lb{font-size:6.5px;letter-spacing:0;color:var(--muted);margin-top:auto;font-weight:700;
@@ -585,6 +648,14 @@ h2 small{font-weight:400;color:var(--ink-2);font-size:12.5px;margin-left:6px}
  color:var(--ink-2)}
 .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;
  vertical-align:-1px;border:1px solid var(--ring)}
+.lg-item{display:inline-flex;align-items:center;gap:4px}
+.lg-item .ic{font-size:13px}
+.lg-item.t-prime .ic{color:var(--good)}
+.lg-item.t-good .ic{color:var(--info)}
+.lg-item.t-blocked .ic{color:var(--crit)}
+.lg-item.t-weak .ic{color:var(--muted)}
+/* the legend swatch carries the tier background; the row itself must not */
+.legend .lg-item{background:none;border:0;padding:0}
 
 /* ---- at a glance ---- */
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
@@ -639,10 +710,14 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
  font-size:11px;letter-spacing:.01em;color:var(--muted);white-space:nowrap}
 .side-nav button[aria-pressed="true"]{color:var(--ink);background:var(--plane);
  font-weight:650}
-.nv-ic{font-size:16px;line-height:1}
+.nv-ic{font-size:19px}
 
 /* ---- multi-select facets ---- */
-.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 4px}
+.filters{display:flex;gap:8px;align-items:center;margin:14px 0 4px;
+ flex-wrap:nowrap;overflow-x:auto;overflow-y:visible;scrollbar-width:none;
+ margin-left:-14px;margin-right:-14px;padding:2px 14px}
+.filters::-webkit-scrollbar{display:none}
+.filters>*{flex:none}
 .ms{position:relative}
 .ms>summary{list-style:none;cursor:pointer;font-size:13px;padding:8px 12px;
  border:1px solid var(--ring);border-radius:9px;background:var(--surface-1);
@@ -652,9 +727,10 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .ms[open]>summary{border-color:var(--ink)}
 .ms-badge{background:var(--ink);color:var(--surface-1);border-radius:20px;
  font-size:10.5px;font-weight:700;padding:1px 6px}
-.ms-menu{position:absolute;z-index:25;top:calc(100% + 4px);left:0;min-width:210px;
- max-height:290px;overflow:auto;background:var(--surface-1);border:1px solid var(--ring);
- border-radius:11px;padding:6px;box-shadow:0 12px 34px rgba(0,0,0,.16)}
+.ms-menu{position:fixed;z-index:35;left:10px;right:10px;
+ bottom:calc(72px + env(safe-area-inset-bottom));max-height:52vh;overflow:auto;
+ background:var(--surface-1);border:1px solid var(--ring);border-radius:12px;padding:6px;
+ box-shadow:0 -8px 34px rgba(0,0,0,.24)}
 .ms-opt{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;
  font-size:13px;cursor:pointer}
 .ms-opt:hover{background:var(--plane)}
@@ -799,6 +875,9 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
   padding:18px 20px 20px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
  .sheet .grab{display:none}
 
+ .filters{flex-wrap:wrap;overflow:visible;margin-left:0;margin-right:0;padding:2px 0}
+ .ms-menu{position:absolute;top:calc(100% + 4px);bottom:auto;left:0;right:auto;
+  min-width:210px;max-height:290px;box-shadow:0 12px 34px rgba(0,0,0,.16)}
  .cl-progress{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
  .tk-task{font-size:14px}
 
@@ -818,10 +897,12 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
  .side-nav button[aria-pressed="true"]{background:var(--ink);color:var(--surface-1);
   font-weight:600}
  .side-nav button:hover:not([aria-pressed="true"]){background:var(--surface-1)}
- .nv-ic{font-size:14px}
+ .nv-ic{font-size:17px}
  .side-foot{display:flex;margin-top:auto;align-items:center;gap:8px;padding:0 6px}
  .side-stamp{font-size:11px;color:var(--muted);line-height:1.35}
  .top{position:static;border-bottom:0;padding:22px 24px 0}
+ #page-title{display:inline}
+ .app-name{display:none}
  .wrap{padding:0 24px 72px}
  .top-in,.wrap{max-width:1180px;margin-left:0}
 }
@@ -857,6 +938,14 @@ JS = """
  var CHECK = window.__CHECKLISTS__ || [];
  var DEFAULT_LENS = window.__DEFAULT_LENS__ || 'standup';
  var text = function(i){ return POOL[i] || ''; };
+ var svgIcon = function(name){
+  return '<svg class="ic" aria-hidden="true" focusable="false"><use href="#i-' +
+         name + '"></use></svg>';
+ };
+ var setIcon = function(el, name){
+  var use = el && el.querySelector('use');
+  if (use) use.setAttribute('href', '#i-' + name);
+ };
  var store = {
   get: function(k, d){ try { var v = localStorage.getItem(k);
                              return v === null ? d : v; } catch (e) { return d; } },
@@ -928,7 +1017,7 @@ JS = """
    var t = TIER[d.t] || {icon: '', label: d.t};
    el.className = 'day t-' + d.t + (el.dataset.past === '1' ? ' past' : '');
    el.dataset.tier = d.t;
-   el.querySelector('.ic').textContent = t.icon;
+   setIcon(el.querySelector('.ic'), t.icon);
    el.querySelector('.lb').textContent = t.label;
    var label = el.getAttribute('aria-label') || '';
    el.setAttribute('aria-label',
@@ -975,8 +1064,8 @@ JS = """
   var t = TIER[d.t] || {icon: '', label: d.t};
   var parts = new Date(iso + 'T00:00:00').toDateString().split(' ');
   $('sheet-title').textContent = parts[0] + ' ' + parts[2] + ' ' + parts[1] + ' ' + parts[3];
-  $('sheet-sub').innerHTML = '<span class="badge b-' + d.t + '"><span class="ic" ' +
-    'aria-hidden="true">' + t.icon + '</span><span>' + t.label + '</span></span> ' +
+  $('sheet-sub').innerHTML = '<span class="badge b-' + d.t + '">' + svgIcon(t.icon) +
+    '<span>' + t.label + '</span></span> ' +
     'score ' + d.s + ' &middot; ' + ((LENSES[lens] || {}).label || lens) +
     (DAYS[iso].h ? ' &middot; ' + DAYS[iso].h : '');
   function list(title, ids){
@@ -1050,17 +1139,29 @@ JS = """
  var evCount = $('ev-count');
  // Nothing checked in a facet means that facet is not constraining. Within a facet the
  // checks are OR; across facets they are AND.
+ // An event counts as past once its last date has gone, so a run that started last
+ // week but ends next month is still current. Past events stay in the dataset until
+ // they drop off the listings, and are hidden unless asked for.
+ function isPast(el){
+  var last = el.dataset.end || el.dataset.start || '';
+  return last !== '' && last < TODAY;
+ }
  function evFilter(){
   var want = {};
   all('input[data-facet]').forEach(function(box){
    if (!box.checked) return;
    (want[box.dataset.facet] = want[box.dataset.facet] || []).push(box.value);
   });
-  var shown = 0;
+  var showPast = $('ev-past') && $('ev-past').checked;
+  var shown = 0, past = 0;
   evs.forEach(function(el){
    var ok = true;
    for (var facet in want) {
     if (want[facet].indexOf(el.dataset[facet] || '') < 0) { ok = false; break; }
+   }
+   if (ok && isPast(el)) {
+    past++;
+    if (!showPast) ok = false;
    }
    el.hidden = !ok;
    if (ok) shown++;
@@ -1072,8 +1173,11 @@ JS = """
    if (badge) { badge.textContent = n; badge.hidden = n === 0; }
   });
   if (evCount) {
-   evCount.textContent = shown + (shown === 1 ? ' event' : ' events');
+   var hidden = showPast ? 0 : past;
+   evCount.textContent = shown + (shown === 1 ? ' event' : ' events') +
+     (hidden ? ' \u00b7 ' + hidden + ' past hidden' : '');
    evCount.dataset.count = String(shown);
+   evCount.dataset.past = String(past);
   }
  }
  all('input[data-facet]').forEach(function(box){
@@ -1081,8 +1185,10 @@ JS = """
  });
  if ($('ev-clear')) $('ev-clear').addEventListener('click', function(){
   all('input[data-facet]').forEach(function(b){ b.checked = false; });
+  if ($('ev-past')) $('ev-past').checked = false;
   evFilter();
  });
+ if ($('ev-past')) $('ev-past').addEventListener('change', evFilter);
  // A click outside an open facet menu closes it.
  document.addEventListener('click', function(e){
   all('details.ms[open]').forEach(function(d){
@@ -1312,8 +1418,9 @@ def render(viab, cfg, stamp, checklists):
                         for n, t in stats)
 
     legend = "".join(
-        f'<span><i style="background:{bg};border-color:{bc}"></i>'
-        f'{TIERS[t]["icon"]} {TIERS[t]["label"].title()} &ndash; {TIERS[t]["blurb"]}</span>'
+        f'<span class="lg-item t-{t}"><i style="background:{bg};border-color:{bc}"></i>'
+        f'{icon(TIERS[t]["icon"])} {TIERS[t]["label"].title()} '
+        f'&ndash; {TIERS[t]["blurb"]}</span>'
         for t, bg, bc in [
             ("prime", "var(--good-bg)", "var(--good)"),
             ("good", "var(--info-bg)", "var(--info)"),
@@ -1360,16 +1467,17 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 <style>{CSS}</style>
 </head>
 <body>
+{sprite()}
 <div class="shell">
 <aside class="side">
  <div class="side-brand"><b>Events Tracker</b><span>Dubai and Abu Dhabi</span></div>
  <nav class="side-nav" aria-label="Sections">
   <button type="button" id="tab-events" aria-pressed="true">
-   <span class="nv-ic" aria-hidden="true">&#9776;</span><span>Events</span></button>
+   {icon("events", "nv-ic")}<span>Events</span></button>
   <button type="button" id="tab-calendar" aria-pressed="false">
-   <span class="nv-ic" aria-hidden="true">&#9638;</span><span>Calendar</span></button>
+   {icon("calendar", "nv-ic")}<span>Calendar</span></button>
   <button type="button" id="tab-checklist" aria-pressed="false">
-   <span class="nv-ic" aria-hidden="true">&#10003;</span><span>Checklist</span></button>
+   {icon("checklist", "nv-ic")}<span>Checklist</span></button>
  </nav>
  <div class="side-foot">
   <span class="side-stamp">Checked daily<br>data as of {esc(stamp)}</span>
@@ -1379,9 +1487,9 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 <main class="col">
 <header class="top">
  <div class="top-in">
-  <h1 id="page-title">Events</h1>
-  <button type="button" id="theme" class="icon-btn"
-   aria-label="Switch theme">&#9681;</button>
+  <h1><span class="app-name">Events Tracker</span><span id="page-title">Events</span></h1>
+  <button type="button" id="theme" class="ghost-btn"
+   aria-label="Switch theme">{icon("sun", "th-ic th-sun")}{icon("moon", "th-ic th-moon")}</button>
  </div>
 </header>
 
@@ -1391,6 +1499,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
  <section id="panel-events" hidden>
   <div class="filters">
    {facet_bar}
+   <label class="cl-toggle"><input type="checkbox" id="ev-past"> Show past</label>
    <button type="button" id="ev-clear" class="chip-clear">Clear filters</button>
    <span class="count" id="ev-count" role="status" aria-live="polite"></span>
   </div>
@@ -1416,10 +1525,10 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
     detail</small></h2>
    <div class="mo-nav">
     <button type="button" id="mo-prev" class="icon-btn"
-     aria-label="Previous month">&#8592;</button>
+     aria-label="Previous month">{icon("left")}</button>
     <span class="now">Tap any date for detail</span>
     <button type="button" id="mo-next" class="icon-btn"
-     aria-label="Next month">&#8594;</button>
+     aria-label="Next month">{icon("right")}</button>
    </div>
    <div class="months" id="months">{months_html(days)}</div>
    <div class="legend">{legend}</div>
@@ -1471,7 +1580,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
  aria-labelledby="sheet-title" hidden>
  <div class="grab"></div>
  <button type="button" class="close icon-btn" id="sheet-close"
-  aria-label="Close">&#10005;</button>
+  aria-label="Close">{icon("close")}</button>
  <h3 id="sheet-title"></h3>
  <p class="sub" id="sheet-sub"></p>
  <div id="sheet-body"></div>

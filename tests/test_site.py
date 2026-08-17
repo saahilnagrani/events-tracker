@@ -311,8 +311,9 @@ def main():
                       const lb = document.querySelector('.day:not(.pad) .lb');
                       const ic = document.querySelector('.day:not(.pad) .ic');
                       if (getComputedStyle(lb).display !== 'none') return true;
-                      return ic.textContent.trim().length > 0 &&
-                             parseFloat(getComputedStyle(ic).fontSize) >= 14; }"""))
+                      const r = ic.getBoundingClientRect();
+                      return ic.querySelector('use') && r.width >= 12 && r.height >= 12;
+                  }"""))
             check("months lay out two or more to a row",
                   desk.evaluate("""() => {
                       const mos = [...document.querySelectorAll('.mo')];
@@ -430,6 +431,61 @@ def main():
                                            "e => e.value") == "Done",
                   f'date={ctx.input_value("#cl-date")}')
             ctx.click("#tab-calendar")
+
+            print("\nicons, chrome and past events")
+            check("icons come from one inline sprite, not glyphs or a font",
+                  ctx.eval_on_selector_all("symbol[id^='i-']", "els => els.length") >= 10)
+            check("every icon resolves to a symbol that exists",
+                  ctx.evaluate("""() => [...document.querySelectorAll('svg use')]
+                      .every(u => document.getElementById(
+                          (u.getAttribute('href') || '').slice(1)))"""))
+            check("day icons render at a visible size", ctx.eval_on_selector(
+                ".day:not(.pad) .ic",
+                "el => el.getBoundingClientRect().width >= 10"))
+            # A tapped control in Chrome and Safari otherwise flashes a filled rectangle
+            # before the pressed state lands.
+            check("no tap-highlight rectangle on the bottom nav",
+                  ctx.eval_on_selector(".side-nav button",
+                                       "el => getComputedStyle(el)"
+                                       ".webkitTapHighlightColor")
+                  in ("rgba(0, 0, 0, 0)", "transparent"))
+            check("the theme control is the icon alone, with no box",
+                  ctx.eval_on_selector("#theme", """el => {
+                      const s = getComputedStyle(el);
+                      return s.borderStyle === 'none' &&
+                             s.backgroundColor === 'rgba(0, 0, 0, 0)'; }"""))
+            check("phone header shows the app name on every page",
+                  ctx.inner_text("h1").strip() == "Events Tracker",
+                  ctx.inner_text("h1"))
+            # Must be measured on the visible panel: a hidden element reports zero
+            # width, so a hidden row would pass this by accident.
+            check("the filter row scrolls sideways rather than stacking",
+                  ctx.eval_on_selector("#panel-calendar .filters",
+                                       "el => getComputedStyle(el).flexWrap === 'nowrap'"
+                                       " && el.scrollWidth > el.clientWidth"),
+                  ctx.eval_on_selector("#panel-calendar .filters",
+                                       "el => el.scrollWidth + ' vs ' + el.clientWidth"))
+
+            print("\ncurrent month and past dates")
+            first = ctx.eval_on_selector(
+                ".mo:first-of-type", "el => el.querySelector('.day:not(.pad)').dataset.date")
+            check("the current month starts on the 1st", first.endswith("-01"), first)
+            check("dates already gone are marked past",
+                  ctx.eval_on_selector_all(".day.past", "els => els.length") > 0)
+
+            ctx.click("#tab-events")
+            ctx.wait_for_timeout(150)
+            check("the events list can show past events on request",
+                  ctx.eval_on_selector_all("#ev-past", "els => els.length") == 1)
+            shown_now = int(ctx.get_attribute("#ev-count", "data-count"))
+            past_now = int(ctx.get_attribute("#ev-count", "data-past"))
+            ctx.check("#ev-past")
+            ctx.wait_for_timeout(150)
+            check("showing past adds exactly the past events back",
+                  int(ctx.get_attribute("#ev-count", "data-count")) == shown_now + past_now,
+                  f"{shown_now} + {past_now} past")
+            ctx.uncheck("#ev-past")
+            open_calendar(ctx)
 
             print("\ncolour is never the only signal")
             check("every scored day carries an icon and a text label",

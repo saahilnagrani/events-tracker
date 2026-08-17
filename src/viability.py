@@ -60,11 +60,16 @@ def lens_config(cfg, lens):
 
 
 def window(cfg):
-    """Rolling window when range_months is set, else the fixed tuned range."""
+    """Rolling window when range_months is set, else the fixed tuned range.
+
+    The window starts on the first of the current month, not today, so the current
+    month renders whole. Starting mid-month left the calendar's first panel with a
+    row of blanks where the first two weeks should be.
+    """
     months = cfg.get("range_months")
     if not months:
         return parse(cfg["range"][0]), parse(cfg["range"][1])
-    start = date.today()
+    start = date.today().replace(day=1)
     month = start.month - 1 + int(months)
     end = date(start.year + month // 12, month % 12 + 1, 1) - timedelta(days=1)
     return start, end
