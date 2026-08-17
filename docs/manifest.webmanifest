@@ -1,0 +1,32 @@
+{
+ "name": "UAE comedy and desi events tracker",
+ "short_name": "Viable dates",
+ "description": "Which UAE dates are free for an Indian stand-up show, scored against everything already on sale.",
+ "start_url": ".",
+ "scope": ".",
+ "display": "standalone",
+ "orientation": "portrait-primary",
+ "background_color": "#f9f9f7",
+ "theme_color": "#0ca30c",
+ "icons": [
+  {
+   "src": "./icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "./icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "./icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ],
+ "version": "2026-08-17"
+}
