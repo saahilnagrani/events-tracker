@@ -132,24 +132,24 @@ def write_png(path, size):
 
 # ---------------------------------------------------------------- page pieces
 
-def day_cell(day, today):
+def day_cell(day):
+    # Whether a date is in the past is decided at runtime, not baked in here. Doing it
+    # at build time would make the page differ every day even when no event changed,
+    # and would leave a cached offline copy dimming the wrong days.
     tier = TIERS[day["tier"]]
-    past = day["date"] < today
     d = date.fromisoformat(day["date"])
-    classes = f"day t-{day['tier']}" + (" past" if past else "")
-    label = (f"{d.strftime('%a %d %b %Y')}, {day['tier']}, "
-             f"score {day['score']}" + (", past" if past else ""))
+    label = f"{d.strftime('%a %d %b %Y')}, {day['tier']}, score {day['score']}"
     return (
-        f'<button type="button" class="{classes}" data-date="{day["date"]}" '
+        f'<button type="button" class="day t-{day["tier"]}" data-date="{day["date"]}" '
         f'data-tier="{day["tier"]}" data-dow="{esc(day["dow"])}" '
-        f'data-past="{1 if past else 0}" aria-label="{esc(label)}">'
+        f'aria-label="{esc(label)}">'
         f'<span class="dn">{d.day}</span>'
         f'<span class="ic" aria-hidden="true">{tier["icon"]}</span>'
         f'<span class="lb">{tier["label"]}</span></button>'
     )
 
 
-def months_html(days, today):
+def months_html(days):
     groups = {}
     for day in days:
         d = date.fromisoformat(day["date"])
@@ -163,7 +163,7 @@ def months_html(days, today):
         # A month at the edge of the model's range starts partway through.
         lead = date.fromisoformat(items[0]["date"]).day - 1
         cells += ['<div class="day pad" aria-hidden="true"></div>'] * lead
-        cells += [day_cell(day, today) for day in items]
+        cells += [day_cell(day) for day in items]
         heads = "".join(f'<div class="hd">{d}</div>' for d in DOW_ORDER)
         panels.append(
             f'<section class="mo" data-month="{year}-{month:02d}" '
@@ -184,11 +184,9 @@ def whats_on(day):
     return bits
 
 
-def agenda_html(days, today):
+def agenda_html(days):
     cards = []
     for day in days:
-        if day["date"] < today:
-            continue
         tier = TIERS[day["tier"]]
         d = date.fromisoformat(day["date"])
         on = whats_on(day)
@@ -198,7 +196,7 @@ def agenda_html(days, today):
                    if day["holiday"] else "")
         cards.append(
             f'<article class="ag t-{day["tier"]}" data-date="{day["date"]}" '
-            f'data-tier="{day["tier"]}" data-dow="{esc(day["dow"])}" data-past="0">'
+            f'data-tier="{day["tier"]}" data-dow="{esc(day["dow"])}">'
             f'<div class="ag-top">'
             f'<div class="ag-when"><b>{d.strftime("%a %-d %b")}</b>'
             f'<span>{d.year}</span>{holiday}</div>'
@@ -517,6 +515,19 @@ JS = """
  var cards = Array.prototype.slice.call(document.querySelectorAll('.ag[data-tier]'));
  var mode = 'all';
 
+ // Marked here rather than at build time, so the page is identical whichever day it is
+ // built and a cached copy still marks the right days as gone.
+ function localIso(d){
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+         '-' + String(d.getDate()).padStart(2, '0');
+ }
+ var TODAY = localIso(new Date());
+ cells.concat(cards).forEach(function(el){
+  var past = el.dataset.date < TODAY;
+  el.dataset.past = past ? '1' : '0';
+  el.classList.toggle('past', past);
+ });
+
  function matches(el){
   if (el.dataset.past === '1') return false;
   if (mode === 'wknd') return el.dataset.dow === 'Fri' || el.dataset.dow === 'Sat';
@@ -650,15 +661,15 @@ JS = """
 
 # ---------------------------------------------------------------- page
 
-def render(viab, cfg, stamp, today):
+def render(viab, cfg, stamp):
     days = viab["days"]
     events = viab.get("events", [])
+    # Counted over the whole modelled range, not from today, so the headline numbers
+    # match what viability.py reports and do not drift as dates roll past.
     counts = {}
     for day in days:
-        if day["date"] >= today:
-            counts[day["tier"]] = counts.get(day["tier"], 0) + 1
-    upcoming = [d for d in days if d["date"] >= today]
-    clash = len({d["date"] for d in upcoming if d["direct"]})
+        counts[day["tier"]] = counts.get(day["tier"], 0) + 1
+    clash = len({d["date"] for d in days if d["direct"]})
     ram_s, ram_e = cfg["ramadan"]
     ram_days = sum(1 for d in days if ram_s <= d["date"] <= ram_e)
 
@@ -717,7 +728,8 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
  <div class="top-in">
   <div style="flex:1">
    <h1>Viable dates for an Indian stand-up show</h1>
-   <p>Dubai and Abu Dhabi, {esc(span)}. Updated {esc(stamp)}.</p>
+   <p>Dubai and Abu Dhabi, {esc(span)}. Checked daily; data as of
+    {esc(stamp)}.</p>
   </div>
   <button type="button" id="theme" class="icon-btn"
    aria-label="Switch theme">&#9681;</button>
@@ -746,7 +758,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 
  <section id="agenda-section" hidden>
   <h2>Upcoming dates <small>nearest first</small></h2>
-  <div class="agenda">{agenda_html(days, today)}</div>
+  <div class="agenda">{agenda_html(days)}</div>
  </section>
 
  <section id="calendar-section" hidden>
@@ -758,7 +770,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
    <button type="button" id="mo-next" class="icon-btn"
     aria-label="Next month">&#8594;</button>
   </div>
-  <div class="months" id="months">{months_html(days, today)}</div>
+  <div class="months" id="months">{months_html(days)}</div>
   <div class="legend">{legend}</div>
  </section>
 
@@ -823,7 +835,6 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--viability", default=str(ROOT / "docs" / "viability.json"))
     ap.add_argument("--out-dir", default=str(ROOT / "docs"))
-    ap.add_argument("--today", help="override today's date (testing)")
     ap.add_argument("--force-icons", action="store_true",
                     help="re-rasterise the app icons even if they already exist")
     args = ap.parse_args()
@@ -838,12 +849,11 @@ def main():
         print("viability.json has no days; refusing to build an empty calendar")
         return 1
 
-    today = args.today or date.today().isoformat()
-    stamp = viab.get("generated", today)
+    stamp = viab.get("generated", date.today().isoformat())
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
-    (out / "index.html").write_text(render(viab, cfg, stamp, today), encoding="utf-8")
+    (out / "index.html").write_text(render(viab, cfg, stamp), encoding="utf-8")
     (out / "manifest.webmanifest").write_text(manifest(stamp))
     (out / "sw.js").write_text(service_worker(stamp))
     # The icons are a fixed mark, independent of the data, and rasterising them in pure
