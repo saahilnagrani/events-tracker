@@ -635,6 +635,11 @@ def main():
                       return document.getElementById('cl-account').hidden === !on; }"""),
                   "configured" if ctx.evaluate(
                       "() => !!((window.__BACKEND__||{}).supabase_url)") else "local only")
+            check("the header account button follows the same rule",
+                  ctx.evaluate("""() => {
+                      const b = window.__BACKEND__ || {};
+                      const on = !!(b.supabase_url && b.supabase_anon_key);
+                      return document.getElementById('acct').hidden === !on; }"""))
             check("the page states its backend config either way",
                   ctx.evaluate("() => typeof window.__BACKEND__ === 'object'"))
 
@@ -666,12 +671,44 @@ def main():
                           off.is_visible("#cl-account"))
                     check("an unreachable backend still renders the tasks",
                           off.eval_on_selector_all(".tk", "els => els.length") > 0)
-                    off.fill("#sync-email", "someone@example.com")
-                    off.click("#sync-in")
-                    off.wait_for_timeout(500)
+
+                    # Sign-in is email and password, reachable from any tab, not a
+                    # control buried in the checklist.
+                    off.click("#acct")
+                    off.wait_for_timeout(200)
+                    check("the header button opens the account dialog",
+                          off.is_visible("#acct-sheet"))
+                    check("the dialog asks for an email and a password",
+                          off.is_visible("#acct-email") and off.is_visible("#acct-pass"))
+                    check("the password field is a password field",
+                          off.get_attribute("#acct-pass", "type") == "password")
+                    check("there is no native select or magic-link-only path left",
+                          off.eval_on_selector_all(
+                              "#acct-sheet select", "els => els.length") == 0)
+                    off.fill("#acct-email", "someone@example.com")
+                    off.click("#acct-form button[type=submit]")
+                    off.wait_for_timeout(300)
+                    check("submitting without a password is refused locally",
+                          "password" in off.inner_text("#acct-body").lower()
+                          and off.is_visible("#acct-sheet"))
+                    off.fill("#acct-pass", "hunter2hunter2")
+                    off.click("#acct-form button[type=submit]")
+                    off.wait_for_timeout(600)
                     check("an unreachable backend says so instead of failing silently",
-                          "reach" in off.inner_text("#cl-account").lower(),
-                          " ".join(off.inner_text("#cl-account").split())[-38:])
+                          "reach" in off.inner_text("#acct-body").lower(),
+                          " ".join(off.inner_text("#acct-body").split())[-40:])
+                    check("what was typed survives the failure",
+                          off.input_value("#acct-email") == "someone@example.com")
+                    off.click("#acct-swap")
+                    off.wait_for_timeout(200)
+                    check("the dialog switches to creating an account",
+                          "create account" in off.inner_text(
+                              "#acct-form button[type=submit]").lower())
+                    off.keyboard.press("Escape")
+                    off.wait_for_timeout(200)
+                    check("Escape closes the account dialog",
+                          not off.is_visible("#acct-sheet")
+                          and not off.is_visible("#sheet-bg"))
                     off.click(".cl-add summary")
                     off.fill("#add-task", "Still works with the backend down")
                     off.click("#add-save")
