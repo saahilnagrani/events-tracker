@@ -235,6 +235,61 @@ def main():
                 check(f"{width}px: page does not scroll sideways", not hscroll)
                 pg.close()
 
+            print("\nnavigation adapts to the screen")
+            # One set of nav buttons, laid out two ways. Duplicating the markup per
+            # breakpoint would mean duplicate ids, so this checks the CSS switch.
+            nav = browser.new_page(viewport={"width": 1440, "height": 900})
+            nav.goto(url, wait_until="load")
+            rail = nav.evaluate("""() => {
+                const s = document.querySelector('.side').getBoundingClientRect();
+                const col = document.querySelector('.col').getBoundingClientRect();
+                const brand = getComputedStyle(document.querySelector('.side-brand'));
+                const btns = [...document.querySelectorAll('.side-nav button')]
+                  .map(b => Math.round(b.getBoundingClientRect().top));
+                return {w: Math.round(s.width), h: Math.round(s.height),
+                        colLeft: Math.round(col.left), brand: brand.display,
+                        stacked: new Set(btns).size === btns.length}; }""")
+            check("laptop shows a left rail, not a top bar",
+                  rail["h"] > 400 and rail["w"] < 320, f"{rail['w']}x{rail['h']}")
+            check("content sits to the right of the rail",
+                  rail["colLeft"] >= rail["w"] - 1, f"col at {rail['colLeft']}")
+            check("rail stacks its items vertically", rail["stacked"])
+            check("rail shows the brand", rail["brand"] != "none")
+            nav.close()
+
+            phone = browser.new_page(viewport={"width": 390, "height": 800})
+            phone.goto(url, wait_until="load")
+            bar = phone.evaluate("""() => {
+                const el = document.querySelector('.side');
+                const s = el.getBoundingClientRect();
+                const btns = [...document.querySelectorAll('.side-nav button')]
+                  .map(b => Math.round(b.getBoundingClientRect().top));
+                const body = document.body.getBoundingClientRect();
+                const last = document.querySelector('.cl-json, .limits, .events');
+                return {w: Math.round(s.width), h: Math.round(s.height),
+                        bottom: Math.round(s.bottom), top: Math.round(s.top),
+                        fixed: getComputedStyle(el).position,
+                        sameRow: new Set(btns).size === 1,
+                        pad: parseFloat(getComputedStyle(document.body).paddingBottom),
+                        brand: getComputedStyle(
+                          document.querySelector('.side-brand')).display}; }""")
+            check("phone nav is pinned to the bottom of the viewport",
+                  bar["fixed"] == "fixed" and abs(bar["bottom"] - 800) <= 1,
+                  f"position={bar['fixed']} bottom={bar['bottom']}")
+            check("phone nav is not a top bar", bar["top"] > 600, f"top={bar['top']}")
+            check("phone nav is a bar, not a rail",
+                  bar["h"] < 120 and bar["w"] > 300, f"{bar['w']}x{bar['h']}")
+            check("content clears the bottom nav", bar["pad"] >= bar["h"] - 4,
+                  f"padding {bar['pad']} vs bar {bar['h']}")
+            check("phone keeps the sections on one row", bar["sameRow"])
+            check("phone hides the rail brand", bar["brand"] == "none")
+            check("theme toggle stays reachable on a phone",
+                  phone.is_visible("#theme"))
+            check("phone does not wrap the lens buttons", phone.eval_on_selector_all(
+                ".seg button", "els => els.every(e => "
+                "e.getBoundingClientRect().height < 46)"))
+            phone.close()
+
             print("\nlaptop gets a laptop layout")
             desk = browser.new_page(viewport={"width": 1440, "height": 900})
             desk.goto(url, wait_until="load")
