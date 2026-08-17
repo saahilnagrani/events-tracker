@@ -378,8 +378,8 @@ def encode(lenses):
 
 def manifest(stamp):
     return json.dumps({
-        "name": "UAE comedy and desi events tracker",
-        "short_name": "Viable dates",
+        "name": "Events Tracker",
+        "short_name": "Events Tracker",
         "description": "Which UAE dates are free for an Indian stand-up show, "
                        "scored against everything already on sale.",
         # Relative so the installed app scopes to /events-tracker/ on Pages.
@@ -821,7 +821,11 @@ JS = """
  var TODAY = localIso(new Date());
 
  // ================================================================ tabs
+ // The app is Events Tracker; each section is a page within it and names itself in
+ // the heading and the browser tab.
+ var APP = 'Events Tracker';
  var TABS = ['events', 'calendar', 'checklist'];
+ var PAGE = {events: 'Events', calendar: 'Calendar', checklist: 'Checklist'};
  function showTab(name){
   if (TABS.indexOf(name) < 0) name = TABS[0];
   TABS.forEach(function(t){
@@ -829,6 +833,9 @@ JS = """
    if (btn) btn.setAttribute('aria-pressed', String(t === name));
    if (panel) panel.hidden = t !== name;
   });
+  var title = $('page-title');
+  if (title) title.textContent = PAGE[name];
+  document.title = PAGE[name] + ' \u00b7 ' + APP;
   store.set('tab', name);
  }
  TABS.forEach(function(t){
@@ -1287,8 +1294,8 @@ def render(viab, cfg, stamp, checklists):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Viable dates</title>
-<meta name="description" content="Which UAE dates are free for an Indian stand-up show, scored against everything already on sale on Platinumlist.">
+<title>Events Tracker</title>
+<meta name="description" content="Events Tracker: every comedy and desi event on sale in Dubai and Abu Dhabi, which dates are viable for staging a show, and checklists for the shows you are running.">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="./icon-192.png">
@@ -1306,6 +1313,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 <body>
 <div class="shell">
 <aside class="side">
+ <div class="side-brand"><b>Events Tracker</b><span>Dubai and Abu Dhabi</span></div>
  <nav class="side-nav" aria-label="Sections">
   <button type="button" id="tab-events" aria-pressed="true">
    <span class="nv-ic" aria-hidden="true">&#9776;</span><span>Events</span></button>
@@ -1322,7 +1330,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 <main class="col">
 <header class="top">
  <div class="top-in">
-  <h1>Viable dates</h1>
+  <h1 id="page-title">Events</h1>
   <button type="button" id="theme" class="icon-btn"
    aria-label="Switch theme">&#9681;</button>
  </div>
@@ -1332,7 +1340,6 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 
  <!-- ------------------------------------------------------------- events -->
  <section id="panel-events" hidden>
-  <h2>Everything on sale <small>{len(events)} events, filter to narrow it</small></h2>
   <div class="filters">
    {facet_bar}
    <button type="button" id="ev-clear" class="chip-clear">Clear filters</button>
@@ -1403,7 +1410,6 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 
  <!-- ---------------------------------------------------------- checklist -->
  <section id="panel-checklist" hidden>
-  <h2>Event checklist <small>for shows you are organising</small></h2>
   {checklist_html(checklists)}
  </section>
 </div>
