@@ -1,5 +1,5 @@
 {
- "generated": "2026-08-18",
+ "generated": "2026-08-19",
  "default_lens": "standup",
  "lens_meta": {
   "standup": {
@@ -870,15 +870,18 @@
   {
    "date": "2026-09-13",
    "dow": "Sun",
-   "score": 1.2,
-   "tier": "weak",
+   "score": 0.0,
+   "tier": "poor",
    "reasons": [
     "Competing act the night before or after: Comedy Box Office By Rajat Chauhan and Siddhartha Shetty and Anmol Garg",
+    "Major desi draw competing for the same wallet: Jasmine Sandlas Live at Coca-Cola Arena in Dubai",
     "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
    ],
    "boosts": [],
    "direct": [],
-   "concert": [],
+   "concert": [
+    "Jasmine Sandlas Live at Coca-Cola Arena in Dubai"
+   ],
    "other": [
     "Joke Hub - Madcat Comedy Show",
     "The Social Brunch"
@@ -886,7 +889,8 @@
    "holiday": "",
    "events": [
     "Joke Hub - Madcat Comedy Show",
-    "The Social Brunch"
+    "The Social Brunch",
+    "Jasmine Sandlas Live at Coca-Cola Arena in Dubai"
    ]
   },
   {
@@ -1002,7 +1006,7 @@
    "reasons": [
     "Competing act the night before or after: Phulka Dots - A Musical Stand-Up Comedy Show ft. MOMic Amruta in Dubai",
     "Major desi draw competing for the same wallet: O Sakhi: Her Voice in Verse and Song in Dubai",
-    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; Magic Phil in Mother Goose at Theatre by QE2; The Social Brunch"
+    "Other comedy on the same night: Gurleen Pannu Live at Sheikh Rashid Auditorium; Joke Hub - Madcat Comedy Show; Magic Phil in Mother Goose at Theatre by QE2; The Social Brunch"
    ],
    "boosts": [],
    "direct": [],
@@ -1010,6 +1014,7 @@
     "O Sakhi: Her Voice in Verse and Song in Dubai"
    ],
    "other": [
+    "Gurleen Pannu Live at Sheikh Rashid Auditorium",
     "Joke Hub - Madcat Comedy Show",
     "Magic Phil in Mother Goose at Theatre by QE2",
     "The Social Brunch"
@@ -1018,6 +1023,7 @@
    "events": [
     "Joke Hub - Madcat Comedy Show",
     "The Social Brunch",
+    "Gurleen Pannu Live at Sheikh Rashid Auditorium",
     "Magic Phil in Mother Goose at Theatre by QE2",
     "O Sakhi: Her Voice in Verse and Song in Dubai"
    ]
@@ -1550,7 +1556,7 @@
    "reasons": [
     "Competing act the night before or after: Abbas Bukhari Live at Dubai Comedy Festival; Amit Tandon Live at Dubai Comedy Festival; Vir Das Live at Dubai Comedy Festival; Zarna Garg Live at Dubai Comedy Festival",
     "Major desi draw competing for the same wallet: Navratri Utsav 2026 in Dubai",
-    "Other comedy on the same night: Game. Set. Match (Re-Run) in Dubai; John Achkar Feena Nehke? Live at Dubai Comedy Festival",
+    "Other comedy on the same night: Game. Set. Match (Re-Run) in Dubai; John Achkar Feena Nehke? Live at Dubai Comedy Festival; Neema Naz Live at Dubai Comedy Festival",
     "Inside Dubai Comedy Festival (9-18 Oct): market saturated, venues booked"
    ],
    "boosts": [],
@@ -1560,13 +1566,15 @@
    ],
    "other": [
     "Game. Set. Match (Re-Run) in Dubai",
-    "John Achkar Feena Nehke? Live at Dubai Comedy Festival"
+    "John Achkar Feena Nehke? Live at Dubai Comedy Festival",
+    "Neema Naz Live at Dubai Comedy Festival"
    ],
    "holiday": "",
    "events": [
     "Game. Set. Match (Re-Run) in Dubai",
     "Navratri Utsav 2026 in Dubai",
-    "John Achkar Feena Nehke? Live at Dubai Comedy Festival"
+    "John Achkar Feena Nehke? Live at Dubai Comedy Festival",
+    "Neema Naz Live at Dubai Comedy Festival"
    ]
   },
   {
@@ -1992,15 +2000,21 @@
   {
    "date": "2026-11-14",
    "dow": "Sat",
-   "score": 5.0,
-   "tier": "prime",
-   "reasons": [],
+   "score": 2.5,
+   "tier": "good",
+   "reasons": [
+    "Major desi draw competing for the same wallet: Stand Up Comedy By Salah El Daly Live in Dubai"
+   ],
    "boosts": [],
    "direct": [],
-   "concert": [],
+   "concert": [
+    "Stand Up Comedy By Salah El Daly Live in Dubai"
+   ],
    "other": [],
    "holiday": "",
-   "events": []
+   "events": [
+    "Stand Up Comedy By Salah El Daly Live in Dubai"
+   ]
   },
   {
    "date": "2026-11-15",
@@ -6476,15 +6490,18 @@
    {
     "date": "2026-09-13",
     "dow": "Sun",
-    "score": 1.2,
-    "tier": "weak",
+    "score": 0.0,
+    "tier": "poor",
     "reasons": [
      "Competing act the night before or after: Comedy Box Office By Rajat Chauhan and Siddhartha Shetty and Anmol Garg",
+     "Major desi draw competing for the same wallet: Jasmine Sandlas Live at Coca-Cola Arena in Dubai",
      "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
     ],
     "boosts": [],
     "direct": [],
-    "concert": [],
+    "concert": [
+     "Jasmine Sandlas Live at Coca-Cola Arena in Dubai"
+    ],
     "other": [
      "Joke Hub - Madcat Comedy Show",
      "The Social Brunch"
@@ -6492,7 +6509,8 @@
     "holiday": "",
     "events": [
      "Joke Hub - Madcat Comedy Show",
-     "The Social Brunch"
+     "The Social Brunch",
+     "Jasmine Sandlas Live at Coca-Cola Arena in Dubai"
     ]
    },
    {
@@ -6608,7 +6626,7 @@
     "reasons": [
      "Competing act the night before or after: Phulka Dots - A Musical Stand-Up Comedy Show ft. MOMic Amruta in Dubai",
      "Major desi draw competing for the same wallet: O Sakhi: Her Voice in Verse and Song in Dubai",
-     "Other comedy on the same night: Joke Hub - Madcat Comedy Show; Magic Phil in Mother Goose at Theatre by QE2; The Social Brunch"
+     "Other comedy on the same night: Gurleen Pannu Live at Sheikh Rashid Auditorium; Joke Hub - Madcat Comedy Show; Magic Phil in Mother Goose at Theatre by QE2; The Social Brunch"
     ],
     "boosts": [],
     "direct": [],
@@ -6616,6 +6634,7 @@
      "O Sakhi: Her Voice in Verse and Song in Dubai"
     ],
     "other": [
+     "Gurleen Pannu Live at Sheikh Rashid Auditorium",
      "Joke Hub - Madcat Comedy Show",
      "Magic Phil in Mother Goose at Theatre by QE2",
      "The Social Brunch"
@@ -6624,6 +6643,7 @@
     "events": [
      "Joke Hub - Madcat Comedy Show",
      "The Social Brunch",
+     "Gurleen Pannu Live at Sheikh Rashid Auditorium",
      "Magic Phil in Mother Goose at Theatre by QE2",
      "O Sakhi: Her Voice in Verse and Song in Dubai"
     ]
@@ -7156,7 +7176,7 @@
     "reasons": [
      "Competing act the night before or after: Abbas Bukhari Live at Dubai Comedy Festival; Amit Tandon Live at Dubai Comedy Festival; Vir Das Live at Dubai Comedy Festival; Zarna Garg Live at Dubai Comedy Festival",
      "Major desi draw competing for the same wallet: Navratri Utsav 2026 in Dubai",
-     "Other comedy on the same night: Game. Set. Match (Re-Run) in Dubai; John Achkar Feena Nehke? Live at Dubai Comedy Festival",
+     "Other comedy on the same night: Game. Set. Match (Re-Run) in Dubai; John Achkar Feena Nehke? Live at Dubai Comedy Festival; Neema Naz Live at Dubai Comedy Festival",
      "Inside Dubai Comedy Festival (9-18 Oct): market saturated, venues booked"
     ],
     "boosts": [],
@@ -7166,13 +7186,15 @@
     ],
     "other": [
      "Game. Set. Match (Re-Run) in Dubai",
-     "John Achkar Feena Nehke? Live at Dubai Comedy Festival"
+     "John Achkar Feena Nehke? Live at Dubai Comedy Festival",
+     "Neema Naz Live at Dubai Comedy Festival"
     ],
     "holiday": "",
     "events": [
      "Game. Set. Match (Re-Run) in Dubai",
      "Navratri Utsav 2026 in Dubai",
-     "John Achkar Feena Nehke? Live at Dubai Comedy Festival"
+     "John Achkar Feena Nehke? Live at Dubai Comedy Festival",
+     "Neema Naz Live at Dubai Comedy Festival"
     ]
    },
    {
@@ -7598,15 +7620,21 @@
    {
     "date": "2026-11-14",
     "dow": "Sat",
-    "score": 5.0,
-    "tier": "prime",
-    "reasons": [],
+    "score": 2.5,
+    "tier": "good",
+    "reasons": [
+     "Major desi draw competing for the same wallet: Stand Up Comedy By Salah El Daly Live in Dubai"
+    ],
     "boosts": [],
     "direct": [],
-    "concert": [],
+    "concert": [
+     "Stand Up Comedy By Salah El Daly Live in Dubai"
+    ],
     "other": [],
     "holiday": "",
-    "events": []
+    "events": [
+     "Stand Up Comedy By Salah El Daly Live in Dubai"
+    ]
    },
    {
     "date": "2026-11-15",
@@ -12054,9 +12082,10 @@
    {
     "date": "2026-09-12",
     "dow": "Sat",
-    "score": 1.7,
-    "tier": "weak",
+    "score": 0.7,
+    "tier": "poor",
     "reasons": [
+     "Competing act the night before or after: Jasmine Sandlas Live at Coca-Cola Arena in Dubai",
      "Major desi draw competing for the same wallet: Comedy Box Office By Rajat Chauhan and Siddhartha Shetty and Anmol Garg",
      "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Laughter Factory: 30 Years of Bringing People Together Through Laughter; The Social Brunch"
     ],
@@ -12081,13 +12110,15 @@
    {
     "date": "2026-09-13",
     "dow": "Sun",
-    "score": 2.2,
-    "tier": "weak",
+    "score": 0.0,
+    "tier": "blocked",
     "reasons": [
-     "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+     "Direct clash: Jasmine Sandlas Live at Coca-Cola Arena in Dubai"
     ],
     "boosts": [],
-    "direct": [],
+    "direct": [
+     "Jasmine Sandlas Live at Coca-Cola Arena in Dubai"
+    ],
     "concert": [],
     "other": [
      "Joke Hub - Madcat Comedy Show",
@@ -12096,15 +12127,17 @@
     "holiday": "",
     "events": [
      "Joke Hub - Madcat Comedy Show",
-     "The Social Brunch"
+     "The Social Brunch",
+     "Jasmine Sandlas Live at Coca-Cola Arena in Dubai"
     ]
    },
    {
     "date": "2026-09-14",
     "dow": "Mon",
-    "score": 0.7,
+    "score": 0.0,
     "tier": "poor",
     "reasons": [
+     "Competing act the night before or after: Jasmine Sandlas Live at Coca-Cola Arena in Dubai",
      "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
     ],
     "boosts": [],
@@ -12219,6 +12252,7 @@
     ],
     "concert": [],
     "other": [
+     "Gurleen Pannu Live at Sheikh Rashid Auditorium",
      "Joke Hub - Madcat Comedy Show",
      "Magic Phil in Mother Goose at Theatre by QE2",
      "The Social Brunch"
@@ -12227,6 +12261,7 @@
     "events": [
      "Joke Hub - Madcat Comedy Show",
      "The Social Brunch",
+     "Gurleen Pannu Live at Sheikh Rashid Auditorium",
      "Magic Phil in Mother Goose at Theatre by QE2",
      "O Sakhi: Her Voice in Verse and Song in Dubai"
     ]
@@ -12762,13 +12797,15 @@
     "concert": [],
     "other": [
      "Game. Set. Match (Re-Run) in Dubai",
-     "John Achkar Feena Nehke? Live at Dubai Comedy Festival"
+     "John Achkar Feena Nehke? Live at Dubai Comedy Festival",
+     "Neema Naz Live at Dubai Comedy Festival"
     ],
     "holiday": "",
     "events": [
      "Game. Set. Match (Re-Run) in Dubai",
      "Navratri Utsav 2026 in Dubai",
-     "John Achkar Feena Nehke? Live at Dubai Comedy Festival"
+     "John Achkar Feena Nehke? Live at Dubai Comedy Festival",
+     "Neema Naz Live at Dubai Comedy Festival"
     ]
    },
    {
@@ -13177,9 +13214,11 @@
    {
     "date": "2026-11-13",
     "dow": "Fri",
-    "score": 4.5,
-    "tier": "prime",
-    "reasons": [],
+    "score": 3.5,
+    "tier": "good",
+    "reasons": [
+     "Competing act the night before or after: Stand Up Comedy By Salah El Daly Live in Dubai"
+    ],
     "boosts": [],
     "direct": [],
     "concert": [],
@@ -13190,22 +13229,30 @@
    {
     "date": "2026-11-14",
     "dow": "Sat",
-    "score": 5.0,
-    "tier": "prime",
-    "reasons": [],
+    "score": 0.0,
+    "tier": "blocked",
+    "reasons": [
+     "Direct clash: Stand Up Comedy By Salah El Daly Live in Dubai"
+    ],
     "boosts": [],
-    "direct": [],
+    "direct": [
+     "Stand Up Comedy By Salah El Daly Live in Dubai"
+    ],
     "concert": [],
     "other": [],
     "holiday": "",
-    "events": []
+    "events": [
+     "Stand Up Comedy By Salah El Daly Live in Dubai"
+    ]
    },
    {
     "date": "2026-11-15",
     "dow": "Sun",
-    "score": 3.0,
-    "tier": "good",
-    "reasons": [],
+    "score": 2.0,
+    "tier": "weak",
+    "reasons": [
+     "Competing act the night before or after: Stand Up Comedy By Salah El Daly Live in Dubai"
+    ],
     "boosts": [],
     "direct": [],
     "concert": [],
@@ -17653,14 +17700,15 @@
    {
     "date": "2026-09-13",
     "dow": "Sun",
-    "score": 1.2,
-    "tier": "weak",
+    "score": 0.0,
+    "tier": "blocked",
     "reasons": [
-     "Competing act the night before or after: Comedy Box Office By Rajat Chauhan and Siddhartha Shetty and Anmol Garg",
-     "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+     "Direct clash: Jasmine Sandlas Live at Coca-Cola Arena in Dubai"
     ],
     "boosts": [],
-    "direct": [],
+    "direct": [
+     "Jasmine Sandlas Live at Coca-Cola Arena in Dubai"
+    ],
     "concert": [],
     "other": [
      "Joke Hub - Madcat Comedy Show",
@@ -17669,15 +17717,17 @@
     "holiday": "",
     "events": [
      "Joke Hub - Madcat Comedy Show",
-     "The Social Brunch"
+     "The Social Brunch",
+     "Jasmine Sandlas Live at Coca-Cola Arena in Dubai"
     ]
    },
    {
     "date": "2026-09-14",
     "dow": "Mon",
-    "score": 0.7,
+    "score": 0.0,
     "tier": "poor",
     "reasons": [
+     "Competing act the night before or after: Jasmine Sandlas Live at Coca-Cola Arena in Dubai",
      "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
     ],
     "boosts": [],
@@ -17792,6 +17842,7 @@
     ],
     "concert": [],
     "other": [
+     "Gurleen Pannu Live at Sheikh Rashid Auditorium",
      "Joke Hub - Madcat Comedy Show",
      "Magic Phil in Mother Goose at Theatre by QE2",
      "The Social Brunch"
@@ -17800,6 +17851,7 @@
     "events": [
      "Joke Hub - Madcat Comedy Show",
      "The Social Brunch",
+     "Gurleen Pannu Live at Sheikh Rashid Auditorium",
      "Magic Phil in Mother Goose at Theatre by QE2",
      "O Sakhi: Her Voice in Verse and Song in Dubai"
     ]
@@ -18339,13 +18391,15 @@
     "concert": [],
     "other": [
      "Game. Set. Match (Re-Run) in Dubai",
-     "John Achkar Feena Nehke? Live at Dubai Comedy Festival"
+     "John Achkar Feena Nehke? Live at Dubai Comedy Festival",
+     "Neema Naz Live at Dubai Comedy Festival"
     ],
     "holiday": "",
     "events": [
      "Game. Set. Match (Re-Run) in Dubai",
      "Navratri Utsav 2026 in Dubai",
-     "John Achkar Feena Nehke? Live at Dubai Comedy Festival"
+     "John Achkar Feena Nehke? Live at Dubai Comedy Festival",
+     "Neema Naz Live at Dubai Comedy Festival"
     ]
    },
    {
@@ -18758,9 +18812,11 @@
    {
     "date": "2026-11-13",
     "dow": "Fri",
-    "score": 4.5,
-    "tier": "prime",
-    "reasons": [],
+    "score": 3.5,
+    "tier": "good",
+    "reasons": [
+     "Competing act the night before or after: Stand Up Comedy By Salah El Daly Live in Dubai"
+    ],
     "boosts": [],
     "direct": [],
     "concert": [],
@@ -18771,22 +18827,30 @@
    {
     "date": "2026-11-14",
     "dow": "Sat",
-    "score": 5.0,
-    "tier": "prime",
-    "reasons": [],
+    "score": 0.0,
+    "tier": "blocked",
+    "reasons": [
+     "Direct clash: Stand Up Comedy By Salah El Daly Live in Dubai"
+    ],
     "boosts": [],
-    "direct": [],
+    "direct": [
+     "Stand Up Comedy By Salah El Daly Live in Dubai"
+    ],
     "concert": [],
     "other": [],
     "holiday": "",
-    "events": []
+    "events": [
+     "Stand Up Comedy By Salah El Daly Live in Dubai"
+    ]
    },
    {
     "date": "2026-11-15",
     "dow": "Sun",
-    "score": 3.0,
-    "tier": "good",
-    "reasons": [],
+    "score": 2.0,
+    "tier": "weak",
+    "reasons": [
+     "Competing act the night before or after: Stand Up Comedy By Salah El Daly Live in Dubai"
+    ],
     "boosts": [],
     "direct": [],
     "concert": [],
@@ -22402,7 +22466,7 @@
  "events": [
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "The Coterie - The Comedy Lounge in Dubai",
@@ -22418,7 +22482,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Abu Dhabi",
    "category": "Desi",
    "event": "The Revolution Tour - Sonu Nigam in Abu Dhabi",
@@ -22434,7 +22498,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Desi",
    "event": "Sunil Grover in Dubai",
@@ -22450,7 +22514,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Joke Hub - Madcat Comedy Show",
@@ -22466,7 +22530,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "New Covent Garden Presents: The Laughter Lounge 2 by Callback Comedy in Dubai",
@@ -22481,7 +22545,7 @@
    "url": "https://dubai.platinumlist.net/event-tickets/107757/new-covent-garden-presents-the-laughter-lounge-2-by-callback-comedy-in-dubai"
   },
   {
-   "listed": true,
+   "listed": false,
    "last_seen": "2026-08-18",
    "city": "Dubai",
    "category": "Comedy",
@@ -22498,7 +22562,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Comedy @ the Speakeasy",
@@ -22514,7 +22578,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Cocktails & Comedy Show",
@@ -22530,7 +22594,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Rami Jbr Stand Up Comedy in Dubai",
@@ -22546,7 +22610,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Ahmed & Ahmed - Stand Up Comedy Show at Jafza One Convention Centre",
@@ -22562,7 +22626,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Atul Khatri live in Dubai",
@@ -22578,7 +22642,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Gaurav Kapoor Live in Dubai",
@@ -22594,7 +22658,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Jimmy Carr 'Laughs Funny' Live at Dubai Opera",
@@ -22610,7 +22674,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Mohamed Abdelaty Live In Dubai, Sa3a Mally",
@@ -22626,7 +22690,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Desi",
    "event": "Bhuwin Experience - Noor-e-Daastan in Dubai",
@@ -22642,7 +22706,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "The Laughter Factory: 30 Years of Bringing People Together Through Laughter",
@@ -22658,7 +22722,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Mina Nader at Dubai Opera",
@@ -22674,7 +22738,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Taha Desouky - Stand Up Comedy Show in Dubai",
@@ -22690,7 +22754,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Comedy Box Office By Rajat Chauhan and Siddhartha Shetty and Anmol Garg",
@@ -22706,7 +22770,39 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
+   "city": "Dubai",
+   "category": "Desi",
+   "event": "Jasmine Sandlas Live at Coca-Cola Arena in Dubai",
+   "artist": "",
+   "start": "2026-09-13",
+   "end": null,
+   "time": "20:00",
+   "venue": "Coca-Cola Arena",
+   "price_from_aed": 149,
+   "language": "Punjabi",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107762/jasmine-sandlas-the-dream-girl-tour-live-at-coca-cola-arena-in-dubai"
+  },
+  {
+   "listed": true,
+   "last_seen": "2026-08-19",
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Gurleen Pannu Live at Sheikh Rashid Auditorium",
+   "artist": "",
+   "start": "2026-09-19",
+   "end": null,
+   "time": "20:00",
+   "venue": "Sheikh Rashid Auditorium, IHS",
+   "price_from_aed": 75,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107308/gurleen-pannu-live-at-sheikh-rashid-auditorium"
+  },
+  {
+   "listed": true,
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Magic Phil in Mother Goose at Theatre by QE2",
@@ -22722,7 +22818,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Desi",
    "event": "O Sakhi: Her Voice in Verse and Song in Dubai",
@@ -22738,7 +22834,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Phulka Dots - A Musical Stand-Up Comedy Show ft. MOMic Amruta in Dubai",
@@ -22754,7 +22850,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Desi",
    "event": "Radhika Das Lightfall Live in Dubai",
@@ -22770,7 +22866,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "3a Ka3ba Improv Comedy Show at Jafza One Convention Centre",
@@ -22786,7 +22882,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Desi",
    "event": "Bhakti 2.0 at Oud Mehta Theater in Dubai",
@@ -22802,7 +22898,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Father Ted at Theatre by QE2 in Dubai",
@@ -22818,7 +22914,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Desi",
    "event": "KHUSHIYAN: A Live Storytelling Experience Featuring Laksh Maheshwari in Dubai",
@@ -22834,7 +22930,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Sumukhi Suresh Live in Dubai",
@@ -22850,7 +22946,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Alaa Abu Diab at The Raj Mahal Theatre in Dubai Parks and Resorts",
@@ -22866,7 +22962,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Desi",
    "event": "Baithak ft. Osman Mir & Aamir Mir",
@@ -22882,7 +22978,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Meen Amin by Ahmed Amin Live at The Agenda in Dubai",
@@ -22898,7 +22994,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Alaa El Sheikh Stand-up at Jafza One Convention Centre",
@@ -22914,7 +23010,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Mohandis Al Thauq Al Aam at Dubai Comedy Festival",
@@ -22930,7 +23026,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Jamie Lever Live in Dubai Comedy Festival",
@@ -22946,7 +23042,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Abu Dhabi",
    "category": "Comedy",
    "event": "Morgan Jay - The Goofy Guy Tour in Abu Dhabi",
@@ -22962,7 +23058,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Munawar Faruqui Live at Dubai Comedy Festival",
@@ -22978,7 +23074,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Katherine Ryan Live at Dubai Comedy Festival",
@@ -22994,7 +23090,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Mo Gilligan Live at Dubai Comedy Festival",
@@ -23010,7 +23106,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Alexander Merkul Live at Dubai Comedy Festival",
@@ -23026,7 +23122,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Abbas Bukhari Live at Dubai Comedy Festival",
@@ -23042,7 +23138,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Game. Set. Match (Re-Run) in Dubai",
@@ -23058,7 +23154,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Desi",
    "event": "Navratri Utsav 2026 in Dubai",
@@ -23074,7 +23170,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Shane Todd Live at Dubai Comedy Festival",
@@ -23090,7 +23186,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Zarna Garg Live at Dubai Comedy Festival",
@@ -23106,7 +23202,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "John Achkar Feena Nehke? Live at Dubai Comedy Festival",
@@ -23122,7 +23218,23 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
+   "city": "Dubai",
+   "category": "Comedy",
+   "event": "Neema Naz Live at Dubai Comedy Festival",
+   "artist": "",
+   "start": "2026-10-17",
+   "end": null,
+   "time": "21:30",
+   "venue": "The New Covent Garden Theatre",
+   "price_from_aed": 195,
+   "language": "Not stated",
+   "notes": "",
+   "url": "https://dubai.platinumlist.net/event-tickets/107680/neema-naz-live-at-dubai-comedy-festival"
+  },
+  {
+   "listed": true,
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Amit Tandon Live at Dubai Comedy Festival",
@@ -23138,7 +23250,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Vir Das Live at Dubai Comedy Festival",
@@ -23154,7 +23266,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Un Air De Famille at The Junction in Dubai",
@@ -23170,7 +23282,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Desi",
    "event": "Falguni Pathak Live in Dubai",
@@ -23186,7 +23298,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Abu Dhabi",
    "category": "Comedy + Desi",
    "event": "Live Nation Middle East Presents Russell Peters at Etihad Arena in Abu Dhabi",
@@ -23202,7 +23314,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Comedy Box Office By Onkar, Shreya, and Pranav Sharma in Dubai",
@@ -23218,23 +23330,23 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Kunal Kamra Live in Dubai",
    "artist": "Kunal Kamra",
    "start": "2026-10-31",
    "end": null,
-   "time": "18:00",
+   "time": "17:30",
    "venue": "Emirates Theatre",
-   "price_from_aed": 155,
+   "price_from_aed": 125,
    "language": "Hindi & English",
-   "notes": "",
+   "notes": "Start time not published; 17:30 is the page's scheduling anchor and may be wrong",
    "url": "https://dubai.platinumlist.net/event-tickets/106948/kunal-kamra-live-in-dubai"
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Mikhail Shats New Program at Meyana Theatre , Jumeirah Beach Hotel in Dubai",
@@ -23250,7 +23362,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Olga Malashchenko. Stand-up",
@@ -23266,7 +23378,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Abdelkader Secteur at Emirates Theatre in Dubai",
@@ -23282,7 +23394,23 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "event": "Stand Up Comedy By Salah El Daly Live in Dubai",
+   "artist": "",
+   "start": "2026-11-14",
+   "end": null,
+   "time": "19:00",
+   "venue": "Dubai - Emirates International School Auditorium",
+   "price_from_aed": 125,
+   "language": "Arabic",
+   "notes": "Listing publishes the door time only (19:00); the show starts later",
+   "url": "https://dubai.platinumlist.net/event-tickets/107862/stand-up-comedy-by-salah-el-daly-live-in-dubai"
+  },
+  {
+   "listed": true,
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Bassam Wehbe - One Way Ticket in Dubai",
@@ -23298,7 +23426,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Desi",
    "event": "Anuv Jain Live at Expo City Dubai",
@@ -23314,7 +23442,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Out Of Order Ft. Shashi Dhiman in Dubai",
@@ -23330,7 +23458,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Trevor Noah Live at Dubai Opera",
@@ -23346,7 +23474,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Desi",
    "event": "Atif Aslam 2026 in Dubai",
@@ -23362,7 +23490,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Desi",
    "event": "URJA - Divine Energy at Oud Mehta Theater in Dubai",
@@ -23378,7 +23506,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Comedy Box Office By Jaspreet Singh in Dubai",
@@ -23394,7 +23522,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Gaurav Gupta Live in Dubai",
@@ -23410,7 +23538,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy",
    "event": "Varun Grover Live in Dubai",
@@ -23426,7 +23554,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Biswa Kalyan Rath Live in Dubai 2027",
@@ -23442,7 +23570,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Sapan Verma Live in Dubai",
@@ -23458,7 +23586,7 @@
   },
   {
    "listed": true,
-   "last_seen": "2026-08-18",
+   "last_seen": "2026-08-19",
    "city": "Dubai",
    "category": "Comedy + Desi",
    "event": "Silly Papa Ft. Angad Ranyal Live in Dubai",

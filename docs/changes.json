@@ -1,33 +1,141 @@
 {
- "generated": "2026-08-18",
+ "generated": "2026-08-19",
  "has_changes": true,
  "summary": {
-  "added": 0,
-  "removed": 0,
+  "added": 4,
+  "removed": 1,
   "changed": 1,
-  "dates_lost": 0,
+  "dates_lost": 2,
   "dates_gained": 0,
-  "review_queue": 13,
-  "review_queue_new": 0
+  "review_queue": 15,
+  "review_queue_new": 2
  },
- "added": [],
- "removed": [],
+ "added": [
+  {
+   "event": "Jasmine Sandlas Live at Coca-Cola Arena in Dubai",
+   "city": "Dubai",
+   "category": "Desi",
+   "start": "2026-09-13",
+   "end": null,
+   "time": "20:00",
+   "venue": "Coca-Cola Arena",
+   "price_from_aed": 149,
+   "url": "https://dubai.platinumlist.net/event-tickets/107762/jasmine-sandlas-the-dream-girl-tour-live-at-coca-cola-arena-in-dubai"
+  },
+  {
+   "event": "Gurleen Pannu Live at Sheikh Rashid Auditorium",
+   "city": "Dubai",
+   "category": "Comedy",
+   "start": "2026-09-19",
+   "end": null,
+   "time": "20:00",
+   "venue": "Sheikh Rashid Auditorium, IHS",
+   "price_from_aed": 75,
+   "url": "https://dubai.platinumlist.net/event-tickets/107308/gurleen-pannu-live-at-sheikh-rashid-auditorium"
+  },
+  {
+   "event": "Neema Naz Live at Dubai Comedy Festival",
+   "city": "Dubai",
+   "category": "Comedy",
+   "start": "2026-10-17",
+   "end": null,
+   "time": "21:30",
+   "venue": "The New Covent Garden Theatre",
+   "price_from_aed": 195,
+   "url": "https://dubai.platinumlist.net/event-tickets/107680/neema-naz-live-at-dubai-comedy-festival"
+  },
+  {
+   "event": "Stand Up Comedy By Salah El Daly Live in Dubai",
+   "city": "Dubai",
+   "category": "Comedy + Desi",
+   "start": "2026-11-14",
+   "end": null,
+   "time": "19:00",
+   "venue": "Dubai - Emirates International School Auditorium",
+   "price_from_aed": 125,
+   "url": "https://dubai.platinumlist.net/event-tickets/107862/stand-up-comedy-by-salah-el-daly-live-in-dubai"
+  }
+ ],
+ "removed": [
+  {
+   "event": "The Social Brunch",
+   "city": "Dubai",
+   "category": "Comedy",
+   "start": "2026-08-22",
+   "end": "2026-09-26",
+   "time": "13:00",
+   "venue": "Skafos - Canopy by Hilton Dubai Al Seef",
+   "price_from_aed": 146.25,
+   "url": "https://dubai.platinumlist.net/event-tickets/the-social-brunch"
+  }
+ ],
  "changed": [
   {
-   "event": "The Revolution Tour - Sonu Nigam in Abu Dhabi",
-   "url": "https://abu-dhabi.platinumlist.net/event-tickets/106429/the-revolution-tour-sonu-nigam",
-   "start": "2026-08-21",
+   "event": "Kunal Kamra Live in Dubai",
+   "url": "https://dubai.platinumlist.net/event-tickets/106948/kunal-kamra-live-in-dubai",
+   "start": "2026-10-31",
    "fields": {
+    "time": {
+     "from": "18:00",
+     "to": "17:30"
+    },
     "price_from_aed": {
-     "from": 150,
-     "to": 200
+     "from": 155,
+     "to": 125
     }
    }
   }
  ],
- "dates_lost": [],
+ "dates_lost": [
+  {
+   "date": "2026-09-13",
+   "dow": "Sun",
+   "was": "weak",
+   "now": "poor",
+   "score_was": 1.2,
+   "score_now": 0.0,
+   "taken_by": [
+    "Jasmine Sandlas Live at Coca-Cola Arena in Dubai"
+   ],
+   "reasons": [
+    "Competing act the night before or after: Comedy Box Office By Rajat Chauhan and Siddhartha Shetty and Anmol Garg",
+    "Major desi draw competing for the same wallet: Jasmine Sandlas Live at Coca-Cola Arena in Dubai",
+    "Other comedy on the same night: Joke Hub - Madcat Comedy Show; The Social Brunch"
+   ]
+  },
+  {
+   "date": "2026-11-14",
+   "dow": "Sat",
+   "was": "prime",
+   "now": "good",
+   "score_was": 5.0,
+   "score_now": 2.5,
+   "taken_by": [
+    "Stand Up Comedy By Salah El Daly Live in Dubai"
+   ],
+   "reasons": [
+    "Major desi draw competing for the same wallet: Stand Up Comedy By Salah El Daly Live in Dubai"
+   ]
+  }
+ ],
  "dates_gained": [],
  "review_queue": [
+  {
+   "event": "Jasmine Sandlas Live at Coca-Cola Arena in Dubai",
+   "url": "https://dubai.platinumlist.net/event-tickets/107762/jasmine-sandlas-the-dream-girl-tour-live-at-coca-cola-arena-in-dubai",
+   "city": "Dubai",
+   "start": "2026-09-13",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
+  {
+   "event": "Stand Up Comedy By Salah El Daly Live in Dubai",
+   "url": "https://dubai.platinumlist.net/event-tickets/107862/stand-up-comedy-by-salah-el-daly-live-in-dubai",
+   "city": "Dubai",
+   "start": "2026-11-14",
+   "why": "matches desi keywords but no known artist",
+   "new": true
+  },
   {
    "event": "The Revolution Tour - Sonu Nigam in Abu Dhabi",
    "url": "https://abu-dhabi.platinumlist.net/event-tickets/106429/the-revolution-tour-sonu-nigam",
