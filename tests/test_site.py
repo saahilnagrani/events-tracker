@@ -13,6 +13,7 @@ register on file:// and the offline check would be meaningless.
 
 Run:  python tests/test_site.py
 """
+import datetime as dt
 import glob
 import http.server
 import json
@@ -353,9 +354,19 @@ def main():
                              status.querySelector('.ms-caret') !== null;
                       document.getElementById('tab-calendar').click();
                       return same; }"""))
+            # Picks a card the filters are actually showing. Reading the first .ev
+            # in the DOM measured whatever sorted earliest, and the day that event
+            # slid into the past the filter hid it, its computed display became
+            # none, and a layout check started failing on data rather than layout.
             check("events list becomes a table, not a card wall",
-                  desk.eval_on_selector(".ev", "el => getComputedStyle(el).display")
-                  == "grid")
+                  desk.evaluate("""() => {
+                      document.getElementById('tab-events').click();
+                      const el = Array.from(document.querySelectorAll('.ev'))
+                                      .find(e => e.offsetParent !== null);
+                      const out = el ? getComputedStyle(el).display
+                                     : 'nothing visible';
+                      document.getElementById('tab-calendar').click();
+                      return out; }""") == "grid")
             desk.hover(".day.t-blocked")
             desk.wait_for_timeout(250)
             check("hovering a date shows a summary without clicking",
@@ -624,6 +635,44 @@ def main():
                   ctx.eval_on_selector_all(".day[data-tier]", "els => els.length") > 0)
             check("filters still work offline", (ctx.click("#f-prime"),
                                                  count_of(ctx) > 0)[1])
+
+            print("\nrefresh control")
+            ctx.click("#tab-events")
+            ctx.wait_for_timeout(200)
+            check("the events tab carries a refresh button",
+                  ctx.is_visible("#refresh"))
+            check("it says how old the data is, in days not a raw date",
+                  "last checked" in ctx.inner_text("#data-when").lower(),
+                  ctx.inner_text("#data-when"))
+            check("fresh data is not flagged stale",
+                  ctx.eval_on_selector(
+                      '#data-when', "el => el.classList.contains('stale')")
+                  == (dt.date.fromisoformat(
+                      ctx.evaluate("() => window.__STAMP__")) <
+                      dt.date.today() - dt.timedelta(days=1)))
+            check("the button knows which repository to ask",
+                  bool(ctx.evaluate("() => (window.__REPO__||{}).slug")),
+                  str(ctx.evaluate("() => window.__REPO__")))
+            # No token stored, so the button must explain itself rather than
+            # silently failing, and must offer the no-token way out.
+            ctx.click("#refresh")
+            ctx.wait_for_timeout(250)
+            check("with no token it opens the setup dialog",
+                  ctx.is_visible("#run-sheet") and ctx.is_visible("#gh-token"))
+            check("the dialog offers running it on GitHub instead",
+                  ctx.eval_on_selector(
+                      '#run-body a[href*="/actions/workflows/"]',
+                      "el => el.getAttribute('target') === '_blank'"))
+            check("the token field is a password field",
+                  ctx.get_attribute("#gh-token", "type") == "password")
+            check("no token is stored just by opening it",
+                  not ctx.evaluate("() => localStorage.getItem('gh:token')"))
+            ctx.keyboard.press("Escape")
+            ctx.wait_for_timeout(200)
+            check("Escape closes it and clears the backdrop",
+                  not ctx.is_visible("#run-sheet")
+                  and not ctx.is_visible("#sheet-bg"))
+            open_calendar(ctx)
 
             print("\nsync backend")
             # Asserts the relationship, not a fixed state: docs/ is built local-only

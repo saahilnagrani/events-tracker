@@ -30,6 +30,7 @@ import html
 import json
 import re
 import struct
+import subprocess
 import sys
 import zlib
 from datetime import date, datetime
@@ -62,6 +63,7 @@ ICONS = {
     "moon":     '<path d="M20 14.2A8.2 8.2 0 0 1 9.8 4 8.4 8.4 0 1 0 20 14.2z"/>',
     "user":     '<circle cx="12" cy="8" r="3.8"/>'
                 '<path d="M4.8 20a7.4 7.4 0 0 1 14.4 0"/>',
+    "refresh":  '<path d="M20.2 12a8.2 8.2 0 1 1-2.4-5.8"/><path d="M20.6 4v4.6H16"/>',
     "left":     '<path d="M15 5l-7 7 7 7"/>',
     "right":    '<path d="M9 5l7 7-7 7"/>',
     "down":     '<path d="M5 9l7 7 7-7"/>',
@@ -839,6 +841,24 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
 .sync-dot.on{background:var(--good)}
 
+/* ---- data freshness and the refresh control ---- */
+.data-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 2px;
+ font-size:12.5px;color:var(--ink-2)}
+.data-when.stale{color:var(--crit);font-weight:600}
+.refresh-btn{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;
+ padding:7px 12px;min-height:34px}
+.refresh-btn[disabled]{opacity:.55;cursor:progress}
+.refresh-btn .ic{font-size:14px}
+.refresh-btn.spin .ic{animation:spin 1.1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.data-msg{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.data-msg.bad{color:var(--crit)}
+.data-msg .chip-clear{padding:2px 2px}
+.run-steps{margin:8px 0 0;padding-left:19px;font-size:12.5px;color:var(--ink-2)}
+.run-steps li{margin-bottom:5px}
+.run-steps code{font-size:11.5px;background:var(--plane);border:1px solid var(--ring);
+ border-radius:5px;padding:1px 4px}
+
 /* ---- the account dialog: one sign-in for the whole app ---- */
 /* The header button carries a dot rather than a second colour, so signed-in state is
    legible without relying on the icon changing shade. */
@@ -1172,14 +1192,16 @@ JS = """
  function closeSheet(){
   if (sheet.hidden) return;
   sheet.hidden = true;
-  if (!acctSheet || acctSheet.hidden) sheetBg.hidden = true;
+  if ((!acctSheet || acctSheet.hidden) && (!runSheet || runSheet.hidden)) {
+   sheetBg.hidden = true;
+  }
   if (lastFocus && lastFocus.focus) lastFocus.focus();
  }
  cells.forEach(function(el){
   el.addEventListener('click', function(){ openSheet(el.dataset.date); });
  });
  // One backdrop serves both dialogs, so dismissing has to close whichever is open.
- function closeDialogs(){ closeSheet(); closeAcct(); }
+ function closeDialogs(){ closeSheet(); closeAcct(); closeRun(); }
  sheetBg.addEventListener('click', closeDialogs);
  $('sheet-close').addEventListener('click', closeSheet);
  document.addEventListener('keydown', function(e){
@@ -1547,7 +1569,7 @@ JS = """
  function closeAcct(){
   if (!acctSheet || acctSheet.hidden) return;
   acctSheet.hidden = true;
-  if (sheet.hidden) sheetBg.hidden = true;
+  if (sheet.hidden && (!runSheet || runSheet.hidden)) sheetBg.hidden = true;
   if (lastFocus && lastFocus.focus) lastFocus.focus();
  }
 
@@ -1988,6 +2010,194 @@ JS = """
  if ($('acct')) $('acct').addEventListener('click', openAcct);
  if ($('acct-close')) $('acct-close').addEventListener('click', closeAcct);
 
+ // ================================================================ refresh
+ // This page is static; the scrape is a GitHub Actions workflow. So the button cannot
+ // run anything itself, it can only ask GitHub to start the workflow, and GitHub will
+ // not take that from an anonymous page. Hence a token: yours, stored in this browser
+ // and nowhere else, sent to api.github.com and nowhere else. Without one the button
+ // still works, it just hands you off to the Actions page instead.
+ var REPO = window.__REPO__ || {};
+ var STAMP = window.__STAMP__ || '';
+ var TOKEN_KEY = 'gh:token';
+ var runSheet = $('run-sheet');
+ var runTimer = null;
+
+ function token(){ return store.get(TOKEN_KEY, ''); }
+ function actionsUrl(){
+  return 'https://github.com/' + REPO.slug + '/actions/workflows/' + REPO.workflow;
+ }
+
+ function ghApi(path, opts){
+  opts = opts || {};
+  return fetch('https://api.github.com/repos/' + REPO.slug + path, {
+   method: opts.method || 'GET',
+   headers: {'Accept': 'application/vnd.github+json',
+             'Authorization': 'Bearer ' + token(),
+             'X-GitHub-Api-Version': '2022-11-28'},
+   body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+ }
+
+ function daysSince(iso){
+  var then = new Date(iso + 'T00:00:00'), now = new Date(TODAY + 'T00:00:00');
+  return Math.round((now - then) / 86400000);
+ }
+
+ function renderStamp(){
+  var el = $('data-when');
+  if (!el || !STAMP) return;
+  var n = daysSince(STAMP);
+  var when = n <= 0 ? 'today' : (n === 1 ? 'yesterday' : n + ' days ago');
+  el.textContent = 'Listings last checked ' + when;
+  // A day behind is normal: the scrape runs at 07:00 Dubai. Two days is not.
+  el.classList.toggle('stale', n > 1);
+  el.title = 'Data as of ' + STAMP;
+ }
+
+ function busy(on){
+  var b = $('refresh');
+  if (!b) return;
+  b.disabled = on;
+  b.classList.toggle('spin', on);
+ }
+
+ function msg(text, bad, extra){
+  var box = $('data-msg');
+  if (!box) return;
+  box.className = 'data-msg' + (bad ? ' bad' : '');
+  box.innerHTML = esc(text) + (extra || '');
+  var again = box.querySelector('[data-reload]');
+  if (again) again.addEventListener('click', function(){ location.reload(); });
+ }
+
+ function startRun(){
+  busy(true);
+  msg('Asking GitHub to run the scrape...');
+  var at = Date.now();
+  ghApi('/actions/workflows/' + REPO.workflow + '/dispatches',
+        {method: 'POST', body: {ref: REPO.branch}})
+   .then(function(r){
+    if (r.status === 204) { msg('Started. It takes about three minutes.'); watchRun(at); return; }
+    busy(false);
+    if (r.status === 401) { msg('GitHub rejected that token.', true); openRun(); return; }
+    if (r.status === 403) {
+     msg('That token is not allowed to start workflows.', true); openRun(); return;
+    }
+    if (r.status === 404) {
+     msg('GitHub cannot see this repository with that token.', true); openRun(); return;
+    }
+    msg('GitHub refused the request (' + r.status + ').', true);
+   })
+   .catch(function(){ busy(false); msg('Could not reach GitHub.', true); });
+ }
+
+ // Polls the workflow rather than trusting the 204: a dispatch that starts and then
+ // fails its own guards publishes nothing, and saying "done" there would be a lie.
+ function watchRun(since){
+  var tries = 0;
+  clearInterval(runTimer);
+  runTimer = setInterval(function(){
+   tries += 1;
+   if (tries > 60) {
+    clearInterval(runTimer); busy(false);
+    msg('Still running after twelve minutes.', true,
+        ' <a href="' + actionsUrl() + '" target="_blank" rel="noopener">Open GitHub</a>');
+    return;
+   }
+   ghApi('/actions/workflows/' + REPO.workflow +
+         '/runs?event=workflow_dispatch&per_page=1')
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){
+     var run = j && j.workflow_runs && j.workflow_runs[0];
+     if (!run || new Date(run.created_at).getTime() < since - 120000) {
+      msg('Waiting for GitHub to pick it up...');
+      return;
+     }
+     if (run.status !== 'completed') { msg('Running... ' + run.status.replace('_', ' ')); return; }
+     clearInterval(runTimer); busy(false);
+     if (run.conclusion === 'success') {
+      msg('Finished.', false,
+          ' <button type="button" class="chip-clear" data-reload>Reload for the new data</button>');
+     } else {
+      msg('That run ended as ' + run.conclusion + ', so nothing was published.', true,
+          ' <a href="' + run.html_url + '" target="_blank" rel="noopener">See why</a>');
+     }
+    })
+    .catch(function(){});
+  }, 12000);
+ }
+
+ function openRun(){
+  if (!runSheet) return;
+  renderRunBody();
+  lastFocus = document.activeElement;
+  runSheet.hidden = false; sheetBg.hidden = false;
+  var f = $('gh-token');
+  (f || $('run-close')).focus();
+ }
+
+ function closeRun(){
+  if (!runSheet || runSheet.hidden) return;
+  runSheet.hidden = true;
+  if (sheet.hidden && (!acctSheet || acctSheet.hidden)) sheetBg.hidden = true;
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+ }
+
+ function renderRunBody(){
+  var body = $('run-body');
+  if (!body) return;
+  var have = !!token();
+  body.innerHTML =
+   '<p class="acct-lead"><span>The scrape runs on GitHub, not in this page. To start ' +
+   'it from here, this browser needs a token of your own. It is kept on this device ' +
+   'and sent only to github.com.</span></p>' +
+   '<ol class="run-steps">' +
+   '<li>Open <a href="https://github.com/settings/personal-access-tokens/new" ' +
+   'target="_blank" rel="noopener">GitHub fine-grained tokens</a>.</li>' +
+   '<li>Repository access: <b>Only select repositories</b>, then <code>' +
+   esc(REPO.slug) + '</code>.</li>' +
+   '<li>Repository permissions: <b>Actions</b> set to <b>Read and write</b>. Nothing ' +
+   'else.</li>' +
+   '<li>Generate it, copy it, paste it below.</li></ol>' +
+   '<form class="acct-form" id="run-form" novalidate style="margin-top:12px">' +
+   '<label class="acct-lab" for="gh-token">Token<input id="gh-token" type="password" ' +
+   'autocomplete="off" placeholder="' + (have ? 'Saved on this device' : 'github_pat_...') +
+   '"></label>' +
+   '<div class="acct-actions"><button type="submit" class="btn-primary">' +
+   (have ? 'Replace and run' : 'Save and run') + '</button>' +
+   (have ? '<button type="button" id="gh-forget" class="chip-clear">Forget it</button>'
+         : '') +
+   '<a class="chip-clear" href="' + actionsUrl() + '" target="_blank" ' +
+   'rel="noopener">Run it on GitHub instead</a></div></form>' +
+   '<p class="acct-note">A fine-grained token scoped to one repository and to Actions ' +
+   'can start this workflow and do nothing else. Anyone with the device can use it, ' +
+   'so on a shared machine use the GitHub link instead.</p>';
+
+  $('run-form').addEventListener('submit', function(e){
+   e.preventDefault();
+   var t = ($('gh-token').value || '').trim();
+   if (!t && !have) { msg('Paste a token first.', true); return; }
+   if (t) store.set(TOKEN_KEY, t);
+   closeRun();
+   startRun();
+  });
+  var forget = $('gh-forget');
+  if (forget) forget.addEventListener('click', function(){
+   try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+   closeRun();
+   msg('Token removed from this device.');
+  });
+ }
+
+ if ($('refresh') && REPO.slug) {
+  $('refresh').hidden = false;
+  $('refresh').addEventListener('click', function(){
+   if (token()) startRun(); else openRun();
+  });
+ }
+ if ($('run-close')) $('run-close').addEventListener('click', closeRun);
+ renderStamp();
+
  // ================================================================ theme
  $('theme').addEventListener('click', function(){
   var root = document.documentElement;
@@ -2031,7 +2241,30 @@ JS = """
 
 # ---------------------------------------------------------------- page
 
-def render(viab, cfg, stamp, checklists, backend=None):
+def repo_info(backend):
+    """Which repository the refresh button should ask to run the workflow.
+
+    Taken from the git remote so a fork or a rename needs no edit, and overridable
+    from data/backend.json for the case where the two differ.
+    """
+    slug = (backend or {}).get("github_repo", "")
+    if not slug:
+        try:
+            out = subprocess.run(["git", "remote", "get-url", "origin"], cwd=ROOT,
+                                 capture_output=True, text=True, timeout=10)
+            url = out.stdout.strip() if out.returncode == 0 else ""
+        except (OSError, subprocess.SubprocessError):
+            url = ""
+        m = re.search(r"[:/]([^/:]+/[^/]+?)(?:\.git)?$", url)
+        slug = m.group(1) if m else ""
+    if not slug:
+        return {}
+    return {"slug": slug,
+            "workflow": (backend or {}).get("github_workflow") or "daily.yml",
+            "branch": (backend or {}).get("github_branch") or "main"}
+
+
+def render(viab, cfg, stamp, checklists, backend=None, repo=None):
     days = viab["days"]
     events = viab.get("events", [])
     lenses = viab.get("lenses") or {viab.get("default_lens", "standup"): days}
@@ -2144,6 +2377,12 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 
  <!-- ------------------------------------------------------------- events -->
  <section id="panel-events" hidden>
+  <div class="data-bar">
+   <span class="data-when" id="data-when">Data as of {esc(stamp)}</span>
+   <button type="button" id="refresh" class="icon-btn refresh-btn" hidden>
+    {icon("refresh")}<span>Refresh now</span></button>
+   <span class="data-msg" id="data-msg" role="status" aria-live="polite"></span>
+  </div>
   <div class="filters">
    {facet_bar}
    <label class="cl-toggle"><input type="checkbox" id="ev-past"> Show past</label>
@@ -2242,6 +2481,15 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
  <div id="acct-body"></div>
 </div>
 
+<div class="sheet acct-sheet" id="run-sheet" role="dialog" aria-modal="true"
+ aria-labelledby="run-title" hidden>
+ <div class="grab"></div>
+ <button type="button" class="close icon-btn" id="run-close"
+  aria-label="Close">{icon("close")}</button>
+ <h3 id="run-title">Run the scrape</h3>
+ <div id="run-body"></div>
+</div>
+
 <script>
 window.__DAYS__ = {json.dumps(payload, ensure_ascii=False, separators=(",", ":"))};
 window.__POOL__ = {json.dumps(pool, ensure_ascii=False, separators=(",", ":"))};
@@ -2252,6 +2500,8 @@ window.__CHECKLISTS__ = {json.dumps(checklist_js, ensure_ascii=False,
                                     separators=(",", ":"))};
 window.__STATUSES__ = {json.dumps(STATUSES, ensure_ascii=False)};
 window.__BACKEND__ = {json.dumps(backend or {}, ensure_ascii=False)};
+window.__REPO__ = {json.dumps(repo or {}, ensure_ascii=False)};
+window.__STAMP__ = {json.dumps(stamp)};
 </script>
 <script>{JS}</script>
 </body>
@@ -2286,17 +2536,19 @@ def main():
 
     # Empty values mean local-only, which is the state the app ships in.
     backend = {"supabase_url": "", "supabase_anon_key": ""}
+    raw_backend = {}
     be_path = Path(args.backend)
     if be_path.exists():
-        raw = json.loads(be_path.read_text())
-        backend = {k: (raw.get(k) or "").strip() for k in backend}
+        raw_backend = json.loads(be_path.read_text())
+        backend = {k: (raw_backend.get(k) or "").strip() for k in backend}
 
     stamp = viab.get("generated", date.today().isoformat())
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
-    (out / "index.html").write_text(render(viab, cfg, stamp, checklists, backend),
-                                    encoding="utf-8")
+    repo = repo_info(raw_backend)
+    (out / "index.html").write_text(
+        render(viab, cfg, stamp, checklists, backend, repo), encoding="utf-8")
     (out / "manifest.webmanifest").write_text(manifest(stamp))
     (out / "sw.js").write_text(service_worker(stamp))
     # The icons are a fixed mark, independent of the data, and rasterising them in pure
@@ -2317,6 +2569,8 @@ def main():
           f"{len(viab.get('events', []))} events, {len(viab.get('lenses') or {})} lenses, "
           f"{len(checklists)} checklists ({tasks} tasks)")
     print(f"  manifest, service worker and icons written; cache stamp {stamp}")
+    print(f"  refresh button: "
+          f"{repo['slug'] + ' / ' + repo['workflow'] if repo else 'hidden (no git remote)'}")
 
     absolute = re.findall(r'(?:href|src)="(/[^/][^"]*)"', (out / "index.html").read_text())
     if absolute:
