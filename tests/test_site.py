@@ -17,6 +17,7 @@ import datetime as dt
 import glob
 import http.server
 import json
+import re
 import socket
 import socketserver
 import subprocess
@@ -635,26 +636,45 @@ def main():
                 corner_alpha = rows[4] if rows[0] == 0 else None
                 return w, h, corner_alpha
 
+            def icon_path(src):
+                return DOCS / src[2:].split("?")[0]
+
             for spec in man["icons"]:
-                path = DOCS / spec["src"][2:]
+                path = icon_path(spec["src"])
                 w, h, alpha = png_info(path)
                 want = int(spec["sizes"].split("x")[0])
-                check(f"{spec['src'][2:]} is really {want}x{want}",
+                check(f"{path.name} is really {want}x{want}",
                       (w, h) == (want, want), f"{w}x{h}")
                 if "maskable" in spec["purpose"]:
-                    check(f"{spec['src'][2:]} fills the square for cropping",
+                    check(f"{path.name} fills the square for cropping",
                           alpha == 255, f"corner alpha {alpha}")
                 else:
-                    check(f"{spec['src'][2:]} is a tile with clear corners",
+                    check(f"{path.name} is a tile with clear corners",
                           alpha == 0, f"corner alpha {alpha}")
             check("the manifest offers a maskable icon at all",
                   any("maskable" in i["purpose"] for i in man["icons"]))
+            # A redraw is only delivered if the URL changes: the service worker
+            # serves assets cache-first, and a same-day rebuild reuses whatever the
+            # earlier build left in the cache. This is what left the old mark in
+            # Chrome's install sheet.
+            sw = (DOCS / "sw.js").read_text()
+            check("every manifest icon URL carries the icon version",
+                  all("?v=" in i["src"] for i in man["icons"]),
+                  ", ".join(i["src"] for i in man["icons"])[:70])
+            check("the service worker precaches those exact URLs",
+                  all(i["src"] in sw for i in man["icons"]))
+            check("the cache is named after the build, not the date",
+                  bool(re.search(r"const CACHE = 'events-tracker-[0-9a-f]{12}'", sw)),
+                  sw.splitlines()[3] if len(sw.splitlines()) > 3 else "")
+            check("the favicon link is versioned too",
+                  "?v=" in ctx.eval_on_selector(
+                      "link[rel=icon]", "el => el.getAttribute('href')"))
             check("the apple touch icon exists and is full bleed",
-                  (DOCS / ctx.eval_on_selector(
+                  icon_path(ctx.eval_on_selector(
                       "link[rel=apple-touch-icon]",
-                      "el => el.getAttribute('href')")[2:]).exists())
+                      "el => el.getAttribute('href')")).exists())
             check("manifest icons are relative and present",
-                  all(i["src"].startswith("./") and (DOCS / i["src"][2:]).exists()
+                  all(i["src"].startswith("./") and icon_path(i["src"]).exists()
                       for i in man["icons"]))
             check("no root-absolute asset paths in the page",
                   ctx.eval_on_selector_all("[href],[src]", """els => els.every(e => {
