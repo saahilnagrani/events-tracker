@@ -22,7 +22,9 @@ import socketserver
 import subprocess
 import sys
 import tempfile
+import struct
 import threading
+import zlib
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
@@ -611,6 +613,46 @@ def main():
                   not str(man["start_url"]).startswith("/"), man["start_url"])
             check("manifest scope is relative",
                   not str(man["scope"]).startswith("/"), man["scope"])
+            # The mark is drawn by src/build_site.py itself, so these check the two
+            # things that are easy to get wrong and invisible until an install: the
+            # declared size matching the file, and the maskable variant reaching the
+            # edges. Android crops a maskable icon to the launcher shape, so a tile
+            # with transparent corners would come back with its corners sliced off.
+            def png_info(path):
+                raw = Path(path).read_bytes()
+                w, h = struct.unpack(">II", raw[16:24])
+                idat = b""
+                i = 8
+                while i < len(raw):
+                    ln = struct.unpack(">I", raw[i:i + 4])[0]
+                    tag = raw[i + 4:i + 8]
+                    if tag == b"IDAT":
+                        idat += raw[i + 8:i + 8 + ln]
+                    i += 12 + ln
+                rows = zlib.decompress(idat)
+                # This writer emits filter 0 on every row, so the first pixel of the
+                # first row is four bytes in after the filter byte.
+                corner_alpha = rows[4] if rows[0] == 0 else None
+                return w, h, corner_alpha
+
+            for spec in man["icons"]:
+                path = DOCS / spec["src"][2:]
+                w, h, alpha = png_info(path)
+                want = int(spec["sizes"].split("x")[0])
+                check(f"{spec['src'][2:]} is really {want}x{want}",
+                      (w, h) == (want, want), f"{w}x{h}")
+                if "maskable" in spec["purpose"]:
+                    check(f"{spec['src'][2:]} fills the square for cropping",
+                          alpha == 255, f"corner alpha {alpha}")
+                else:
+                    check(f"{spec['src'][2:]} is a tile with clear corners",
+                          alpha == 0, f"corner alpha {alpha}")
+            check("the manifest offers a maskable icon at all",
+                  any("maskable" in i["purpose"] for i in man["icons"]))
+            check("the apple touch icon exists and is full bleed",
+                  (DOCS / ctx.eval_on_selector(
+                      "link[rel=apple-touch-icon]",
+                      "el => el.getAttribute('href')")[2:]).exists())
             check("manifest icons are relative and present",
                   all(i["src"].startswith("./") and (DOCS / i["src"][2:]).exists()
                       for i in man["icons"]))

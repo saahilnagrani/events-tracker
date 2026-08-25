@@ -2,7 +2,9 @@
 // daily rebuild supersedes the previous one.
 const CACHE = 'comedy-tracker-2026-08-25';
 const ASSETS = ['./', './index.html', './manifest.webmanifest',
-                './icon-192.png', './icon-512.png', './viability.json'];
+                './icon-192.png', './icon-512.png',
+                './icon-maskable-192.png', './icon-maskable-512.png',
+                './viability.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE)

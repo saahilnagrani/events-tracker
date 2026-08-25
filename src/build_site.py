@@ -100,43 +100,77 @@ def esc(s):
 
 # ---------------------------------------------------------------- icons
 
-def _rounded_rect_check(size, ss=4):
-    """Flat-colour app icon: rounded square plus a tick. Supersampled for smooth edges."""
-    n = size * ss
-    radius = n * 0.22
-    bg = (12, 163, 12)          # --good, the prime tier colour
-    fg = (255, 255, 255)
-    # tick as two segments, in unit coordinates
-    pts = [(0.27, 0.53), (0.43, 0.69), (0.75, 0.33)]
-    segs = [((pts[i][0] * n, pts[i][1] * n), (pts[i + 1][0] * n, pts[i + 1][1] * n))
-            for i in range(len(pts) - 1)]
-    stroke = n * 0.085
+# The mark is a calendar with one date picked out in the prime colour, which is what
+# the app is for. A tick on a green tile said "task done", which is a different app.
+# Bumped whenever the drawing below changes, so a rebuild replaces icons that already
+# exist rather than leaving the old mark in place for anyone who has installed it.
+ICON_VERSION = 2
+ICON_INK   = (20, 20, 19)       # --ink, the tile the mark sits on
+ICON_CREAM = (246, 245, 241)    # --plane, the calendar itself
+ICON_GREEN = (12, 163, 12)      # --good, the prime tier, the chosen date
 
-    def in_round_rect(x, y):
-        cx = min(max(x, radius), n - radius)
-        cy = min(max(y, radius), n - radius)
-        dx, dy = x - cx, y - cy
-        return dx * dx + dy * dy <= radius * radius
+# Everything below is in unit coordinates on the icon square, so one description
+# renders at any size and into either shape.
+CAL_OUTER = (0.155, 0.295, 0.845, 0.865)   # calendar body
+CAL_RADIUS = 0.10
+CAL_STROKE = 0.058
+CAL_RAIL = (0.415, 0.475)                  # the band under the header, y range
+HANGERS = [(0.325, 0.385), (0.615, 0.675)]  # x ranges of the two tabs
+HANGER_Y = (0.185, 0.325)
+PICKED = (0.385, 0.560, 0.615, 0.790)      # the date cell
 
-    def near_tick(x, y):
-        for (x1, y1), (x2, y2) in segs:
-            vx, vy = x2 - x1, y2 - y1
-            wx, wy = x - x1, y - y1
-            L = vx * vx + vy * vy
-            t = 0.0 if L == 0 else max(0.0, min(1.0, (wx * vx + wy * vy) / L))
-            px, py = x1 + t * vx, y1 + t * vy
-            if (x - px) ** 2 + (y - py) ** 2 <= (stroke / 2) ** 2:
-                return True
+
+def _rrect(x, y, box, r):
+    x0, y0, x1, y1 = box
+    if not (x0 <= x <= x1 and y0 <= y <= y1):
         return False
+    dx = max(x0 + r - x, 0.0, x - (x1 - r))
+    dy = max(y0 + r - y, 0.0, y - (y1 - r))
+    return dx * dx + dy * dy <= r * r
 
-    # Render the supersampled mask one row at a time, then box-downsample.
-    rows = []
+
+def _icon_pixel(ux, uy, bleed):
+    """Colour index at a point: 0 transparent, 1 ink, 2 cream, 3 green.
+
+    `bleed` draws the maskable variant: background to every edge, and the mark shrunk
+    into the safe circle, because Android crops the corners off whatever it is given.
+    """
+    if bleed:
+        inside = True
+        k = 0.84
+        gx, gy = 0.5 + (ux - 0.5) / k, 0.5 + (uy - 0.5) / k
+    else:
+        inside = _rrect(ux, uy, (0.0, 0.0, 1.0, 1.0), 0.22)
+        gx, gy = ux, uy
+    if not inside:
+        return 0
+
+    x0, y0, x1, y1 = CAL_OUTER
+    inner = (x0 + CAL_STROKE, y0 + CAL_STROKE, x1 - CAL_STROKE, y1 - CAL_STROKE)
+    on_frame = (_rrect(gx, gy, CAL_OUTER, CAL_RADIUS)
+                and not _rrect(gx, gy, inner, max(CAL_RADIUS - CAL_STROKE, 0.01)))
+    on_rail = (_rrect(gx, gy, CAL_OUTER, CAL_RADIUS)
+               and CAL_RAIL[0] <= gy <= CAL_RAIL[1])
+    on_tab = any(_rrect(gx, gy, (a, HANGER_Y[0], b, HANGER_Y[1]), 0.03)
+                 for a, b in HANGERS)
+    if _rrect(gx, gy, PICKED, 0.045):
+        return 3
+    if on_frame or on_rail or on_tab:
+        return 2
+    return 1
+
+
+def _icon_rows(size, ss=4, bleed=False):
+    """Supersampled RGBA rows, box-downsampled. Pure Python: no imaging library."""
+    n = size * ss
+    palette = {1: ICON_INK, 2: ICON_CREAM, 3: ICON_GREEN}
+    mask = []
     for yy in range(n):
+        uy = (yy + 0.5) / n
         row = bytearray(n)
         for xx in range(n):
-            if in_round_rect(xx + .5, yy + .5):
-                row[xx] = 2 if near_tick(xx + .5, yy + .5) else 1
-        rows.append(row)
+            row[xx] = _icon_pixel((xx + 0.5) / n, uy, bleed)
+        mask.append(row)
 
     out = bytearray()
     area = ss * ss
@@ -145,12 +179,12 @@ def _rounded_rect_check(size, ss=4):
         for x in range(size):
             r = g = b = a = 0
             for dy in range(ss):
-                src = rows[y * ss + dy]
+                src = mask[y * ss + dy]
                 for dx in range(ss):
                     v = src[x * ss + dx]
                     if v:
                         a += 255
-                        c = fg if v == 2 else bg
+                        c = palette[v]
                         r += c[0]; g += c[1]; b += c[2]
             if a:
                 filled = a // 255
@@ -160,8 +194,8 @@ def _rounded_rect_check(size, ss=4):
     return bytes(out)
 
 
-def write_png(path, size):
-    raw = _rounded_rect_check(size)
+def write_png(path, size, bleed=False):
+    raw = _icon_rows(size, bleed=bleed)
 
     def chunk(tag, data):
         return (struct.pack(">I", len(data)) + tag + data
@@ -458,13 +492,18 @@ def manifest(stamp):
         "display": "standalone",
         "orientation": "portrait-primary",
         "background_color": "#f9f9f7",
-        "theme_color": "#0ca30c",
+        # Matches the header rather than the tier green, so the installed app's status
+        # bar and splash are the app's own surface instead of a colour used for one
+        # meaning inside it.
+        "theme_color": "#f9f9f7",
         "icons": [
             {"src": "./icon-192.png", "sizes": "192x192", "type": "image/png",
              "purpose": "any"},
             {"src": "./icon-512.png", "sizes": "512x512", "type": "image/png",
              "purpose": "any"},
-            {"src": "./icon-512.png", "sizes": "512x512", "type": "image/png",
+            {"src": "./icon-maskable-192.png", "sizes": "192x192", "type": "image/png",
+             "purpose": "maskable"},
+            {"src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png",
              "purpose": "maskable"},
         ],
         "version": stamp,
@@ -478,7 +517,9 @@ def service_worker(stamp):
 // daily rebuild supersedes the previous one.
 const CACHE = 'comedy-tracker-{stamp}';
 const ASSETS = ['./', './index.html', './manifest.webmanifest',
-                './icon-192.png', './icon-512.png', './viability.json'];
+                './icon-192.png', './icon-512.png',
+                './icon-maskable-192.png', './icon-maskable-512.png',
+                './viability.json'];
 
 self.addEventListener('install', e => {{
   e.waitUntil(caches.open(CACHE)
@@ -2331,7 +2372,7 @@ def render(viab, cfg, stamp, checklists, backend=None, repo=None):
 <meta name="description" content="Events Tracker: every comedy and desi event on sale in Dubai and Abu Dhabi, which dates are viable for staging a show, and checklists for the shows you are running.">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-maskable-192.png">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f9f9f7">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0d0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2553,10 +2594,21 @@ def main():
     (out / "sw.js").write_text(service_worker(stamp))
     # The icons are a fixed mark, independent of the data, and rasterising them in pure
     # Python costs about 13 seconds. Regenerate only when missing or asked.
-    for size in (192, 512):
-        icon = out / f"icon-{size}.png"
-        if args.force_icons or not icon.exists():
-            write_png(icon, size)
+    # Two shapes: a rounded tile for everywhere that shows the icon as given, and a
+    # full-bleed maskable one for Android, which crops whatever it is handed to the
+    # launcher's shape and would otherwise slice the corners off the tile.
+    wanted = [(f"icon-{n}.png", n, False) for n in (192, 512)] + \
+             [(f"icon-maskable-{n}.png", n, True) for n in (192, 512)]
+    marker = out / "icons.version"
+    fresh = marker.read_text().strip() if marker.exists() else ""
+    stale = fresh != str(ICON_VERSION)
+    drawn = 0
+    for name, size, bleed in wanted:
+        path = out / name
+        if args.force_icons or stale or not path.exists():
+            write_png(path, size, bleed=bleed)
+            drawn += 1
+    marker.write_text(f"{ICON_VERSION}\n")
     # Pages would otherwise run the output through Jekyll, which strips files and
     # directories beginning with an underscore.
     (out / ".nojekyll").write_text("")
@@ -2568,7 +2620,8 @@ def main():
     print(f"built {out/'index.html'} ({page // 1024} KB), {len(viab['days'])} days, "
           f"{len(viab.get('events', []))} events, {len(viab.get('lenses') or {})} lenses, "
           f"{len(checklists)} checklists ({tasks} tasks)")
-    print(f"  manifest, service worker and icons written; cache stamp {stamp}")
+    print(f"  manifest, service worker written; cache stamp {stamp}; "
+          f"{drawn or 'no'} icons drawn (version {ICON_VERSION})")
     print(f"  refresh button: "
           f"{repo['slug'] + ' / ' + repo['workflow'] if repo else 'hidden (no git remote)'}")
 
