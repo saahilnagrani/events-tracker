@@ -28,6 +28,7 @@ Run:  python src/build_site.py
 import argparse
 import html
 import json
+import math
 import re
 import struct
 import subprocess
@@ -100,24 +101,26 @@ def esc(s):
 
 # ---------------------------------------------------------------- icons
 
-# The mark is a calendar with one date picked out in the prime colour, which is what
-# the app is for. A tick on a green tile said "task done", which is a different app.
-# Bumped whenever the drawing below changes, so a rebuild replaces icons that already
-# exist rather than leaving the old mark in place for anyone who has installed it.
-ICON_VERSION = 2
-ICON_INK   = (20, 20, 19)       # --ink, the tile the mark sits on
-ICON_CREAM = (246, 245, 241)    # --plane, the calendar itself
-ICON_GREEN = (12, 163, 12)      # --good, the prime tier, the chosen date
+# The mark is a microphone: stand-up and live music are what this tracks, and a
+# silhouette that specific still reads at the 48px a launcher draws. A calendar glyph
+# was here before and looked like every other calendar; a green tick before that looked
+# like a to-do app.
+ICON_VERSION = 3
+ICON_GOLD  = (232, 184, 84)     # the mark
+ICON_TOP   = (26, 26, 24)       # tile, top of the gradient
+ICON_BOT   = (12, 12, 11)       # tile, bottom
+ICON_GLOW  = (70, 64, 50)       # a warm lift behind the capsule, like a stage light
 
-# Everything below is in unit coordinates on the icon square, so one description
-# renders at any size and into either shape.
-CAL_OUTER = (0.155, 0.295, 0.845, 0.865)   # calendar body
-CAL_RADIUS = 0.10
-CAL_STROKE = 0.058
-CAL_RAIL = (0.415, 0.475)                  # the band under the header, y range
-HANGERS = [(0.325, 0.385), (0.615, 0.675)]  # x ranges of the two tabs
-HANGER_Y = (0.185, 0.325)
-PICKED = (0.385, 0.560, 0.615, 0.790)      # the date cell
+# Geometry in unit coordinates on the icon square, so one description renders at any
+# size and into either shape.
+MIC_CAPSULE = (0.415, 0.135, 0.585, 0.535)
+MIC_CRADLE = (0.5, 0.44, 0.228, 0.172)      # centre x, centre y, outer r, inner r
+MIC_STEM = (0.470, 0.645, 0.530, 0.805)
+MIC_BASE = (0.345, 0.785, 0.655, 0.855)
+
+
+def _lerp(a, b, t):
+    return tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
 
 def _rrect(x, y, box, r):
@@ -129,66 +132,62 @@ def _rrect(x, y, box, r):
     return dx * dx + dy * dy <= r * r
 
 
-def _icon_pixel(ux, uy, bleed):
-    """Colour index at a point: 0 transparent, 1 ink, 2 cream, 3 green.
+def _tile_colour(ux, uy):
+    """Vertical gradient with a soft warm pool behind the capsule."""
+    base = _lerp(ICON_TOP, ICON_BOT, uy)
+    d = math.hypot(ux - 0.5, uy - 0.30) / 0.62
+    lift = max(0.0, 1.0 - d) ** 2 * 0.55
+    return _lerp(base, ICON_GLOW, lift)
+
+
+def _on_mic(x, y):
+    if _rrect(x, y, MIC_CAPSULE, 0.085):
+        return True
+    cx, cy, r_out, r_in = MIC_CRADLE
+    if y >= cy and r_in <= math.hypot(x - cx, y - cy) <= r_out:   # the U cradle
+        return True
+    return _rrect(x, y, MIC_STEM, 0.022) or _rrect(x, y, MIC_BASE, 0.035)
+
+
+def _icon_sample(ux, uy, bleed):
+    """Colour at a point, or None for transparent.
 
     `bleed` draws the maskable variant: background to every edge, and the mark shrunk
     into the safe circle, because Android crops the corners off whatever it is given.
     """
     if bleed:
-        inside = True
         k = 0.84
         gx, gy = 0.5 + (ux - 0.5) / k, 0.5 + (uy - 0.5) / k
-    else:
-        inside = _rrect(ux, uy, (0.0, 0.0, 1.0, 1.0), 0.22)
+    elif _rrect(ux, uy, (0.0, 0.0, 1.0, 1.0), 0.225):
         gx, gy = ux, uy
-    if not inside:
-        return 0
-
-    x0, y0, x1, y1 = CAL_OUTER
-    inner = (x0 + CAL_STROKE, y0 + CAL_STROKE, x1 - CAL_STROKE, y1 - CAL_STROKE)
-    on_frame = (_rrect(gx, gy, CAL_OUTER, CAL_RADIUS)
-                and not _rrect(gx, gy, inner, max(CAL_RADIUS - CAL_STROKE, 0.01)))
-    on_rail = (_rrect(gx, gy, CAL_OUTER, CAL_RADIUS)
-               and CAL_RAIL[0] <= gy <= CAL_RAIL[1])
-    on_tab = any(_rrect(gx, gy, (a, HANGER_Y[0], b, HANGER_Y[1]), 0.03)
-                 for a, b in HANGERS)
-    if _rrect(gx, gy, PICKED, 0.045):
-        return 3
-    if on_frame or on_rail or on_tab:
-        return 2
-    return 1
+    else:
+        return None
+    return ICON_GOLD if _on_mic(gx, gy) else _tile_colour(ux, uy)
 
 
 def _icon_rows(size, ss=4, bleed=False):
     """Supersampled RGBA rows, box-downsampled. Pure Python: no imaging library."""
     n = size * ss
-    palette = {1: ICON_INK, 2: ICON_CREAM, 3: ICON_GREEN}
-    mask = []
+    grid = []
     for yy in range(n):
         uy = (yy + 0.5) / n
-        row = bytearray(n)
-        for xx in range(n):
-            row[xx] = _icon_pixel((xx + 0.5) / n, uy, bleed)
-        mask.append(row)
+        grid.append([_icon_sample((xx + 0.5) / n, uy, bleed) for xx in range(n)])
 
     out = bytearray()
     area = ss * ss
     for y in range(size):
         out.append(0)                                   # PNG filter byte: none
         for x in range(size):
-            r = g = b = a = 0
+            r = g = b = hits = 0
             for dy in range(ss):
-                src = mask[y * ss + dy]
+                src = grid[y * ss + dy]
                 for dx in range(ss):
-                    v = src[x * ss + dx]
-                    if v:
-                        a += 255
-                        c = palette[v]
+                    c = src[x * ss + dx]
+                    if c:
+                        hits += 1
                         r += c[0]; g += c[1]; b += c[2]
-            if a:
-                filled = a // 255
-                out += bytes((r // filled, g // filled, b // filled, a // area))
+            if hits:
+                out += bytes((r // hits, g // hits, b // hits, (hits * 255) // area))
             else:
                 out += b"\0\0\0\0"
     return bytes(out)
