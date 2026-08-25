@@ -142,6 +142,23 @@ back into the same dialog.
 - **If the server cannot be reached**, the app says so and carries on locally. Nothing is
   lost; the next successful write catches up.
 
+## Keeping the project awake
+
+A free Supabase project pauses after seven days with no requests, and this app only
+calls Supabase when somebody opens a checklist. A quiet fortnight would be enough to
+put it to sleep, and a paused project has to be restored by hand from the dashboard.
+
+The daily workflow therefore makes one request to the project every morning, before it
+does anything else, so even a run that fails later still counts as activity. It reads
+the URL and key from `data/backend.json`, and treats 200, 401 and 403 alike: all three
+mean the project answered.
+
+That leaves two ways it could still pause. The workflow itself has to keep running:
+GitHub disables a scheduled workflow after 60 days without any commit to the
+repository, and the daily run only commits on days when the listings actually move. If
+the dataset ever goes two months without a change, push anything to wake the schedule.
+And if you would rather not depend on either, the Pro plan does not pause at all.
+
 ## If something does not work
 
 | What you see | Likely cause |

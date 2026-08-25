@@ -23,6 +23,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # A free Supabase project pauses after seven days with no requests, and this app
+      # only calls it when somebody opens a checklist, which is easily quieter than
+      # that. One request a day from here keeps it awake. It runs before anything that
+      # can fail, so a broken scrape still keeps the database alive, and it cannot fail
+      # the job. The URL and key are read from data/backend.json and are already
+      # public: the anon key ships inside the published page, and Row Level Security is
+      # what protects the data.
+      - name: Keep the Supabase project awake
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          if [ ! -f data/backend.json ]; then
+            echo "no data/backend.json; nothing to keep awake"; exit 0
+          fi
+          URL=$(jq -r '.supabase_url // empty' data/backend.json)
+          KEY=$(jq -r '.supabase_anon_key // empty' data/backend.json)
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "backend not configured; nothing to keep awake"; exit 0
+          fi
+          CODE=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 \
+            "${URL%/}/rest/v1/checklist_state?select=id&limit=1" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" || echo 000)
+          # 200 is an empty allowed read, 401 and 403 are Row Level Security doing its
+          # job. All three mean the project answered, which is the whole point.
+          case "$CODE" in
+            2*|4*) echo "Supabase answered ${CODE}: project is awake" ;;
+            *) echo "::warning::Supabase did not answer (${CODE}); it may be paused" ;;
+          esac
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
