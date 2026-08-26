@@ -46,10 +46,21 @@ jobs:
             "${URL%/}/rest/v1/checklist_state?select=id&limit=1" \
             -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" || echo 000)
           # 200 is an empty allowed read, 401 and 403 are Row Level Security doing its
-          # job. All three mean the project answered, which is the whole point.
+          # job. All three mean the project answered, which is the whole point. 540 is
+          # the gateway's own code for a paused project, and a ping cannot wake one:
+          # that needs a restore from the dashboard, so say so where it will be seen.
           case "$CODE" in
-            2*|4*) echo "Supabase answered ${CODE}: project is awake" ;;
-            *) echo "::warning::Supabase did not answer (${CODE}); it may be paused" ;;
+            540|522|503)
+              echo "::warning::Supabase is paused (${CODE}); restore it in the dashboard"
+              echo "**Supabase is paused.** A ping cannot wake it: open the dashboard and restore the project." >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            2*|4*)
+              echo "Supabase answered ${CODE}: project is awake"
+              ;;
+            *)
+              echo "::warning::Supabase did not answer (${CODE})"
+              echo "**Supabase did not answer** (${CODE}); checklist sync may be down." >> "$GITHUB_STEP_SUMMARY"
+              ;;
           esac
 
       - uses: actions/setup-python@v5

@@ -1470,6 +1470,21 @@ JS = """
   }).catch(function(){ return 'Something went wrong (' + r.status + ').'; });
  }
 
+ // A paused free project still answers on its hostname: the gateway returns 540, or
+ // 503 while it is coming back up. Reporting that as "could not reach the server"
+ // sends you looking at your own connection, which is the wrong place entirely.
+ var PAUSED = 'This project is paused. Open the Supabase dashboard and restore it; ' +
+              'it takes a couple of minutes.';
+
+ function isPaused(r){
+  return r.status === 540 || r.status === 503 || r.status === 522;
+ }
+
+ function fail(r){
+  if (isPaused(r)) return Promise.resolve(PAUSED);
+  return authError(r).then(readable);
+ }
+
  function readable(msg){
   if (/invalid login/i.test(msg)) return 'That email and password do not match an account.';
   if (/not confirmed/i.test(msg)) return 'Confirm your address first: the link is in your inbox.';
@@ -1488,7 +1503,7 @@ JS = """
   return api('/auth/v1/token?grant_type=password',
              {method: 'POST', body: {email: email, password: password}})
    .then(function(r){
-    if (!r.ok) return authError(r).then(function(m){ say(readable(m), true); });
+    if (!r.ok) return fail(r).then(function(m){ say(m, true); });
     return r.json().then(function(j){
      adopt(j); authMode = 'in'; say(''); closeAcct();
      return pullAll();
@@ -1501,7 +1516,7 @@ JS = """
   say('Creating the account...');
   return api('/auth/v1/signup', {method: 'POST', body: {email: email, password: password}})
    .then(function(r){
-    if (!r.ok) return authError(r).then(function(m){ say(readable(m), true); });
+    if (!r.ok) return fail(r).then(function(m){ say(m, true); });
     return r.json().then(function(j){
      if (j.access_token) {           // email confirmation switched off: straight in
       adopt(j); authMode = 'in'; say(''); closeAcct();
@@ -1520,7 +1535,7 @@ JS = """
   return api('/auth/v1/recover?redirect_to=' + encodeURIComponent(back),
              {method: 'POST', body: {email: email}})
    .then(function(r){
-    if (!r.ok) return authError(r).then(function(m){ say(m, true); });
+    if (!r.ok) return fail(r).then(function(m){ say(m, true); });
     say('Check ' + email + ' for a link to set a new password.');
    })
    .catch(function(){ say('Could not reach the server.', true); });
@@ -1532,7 +1547,7 @@ JS = """
    if (!ok) { say('That sign-in has expired. Sign in again.', true); return; }
    return api('/auth/v1/user', {method: 'PUT', body: {password: password}})
     .then(function(r){
-     if (!r.ok) return authError(r).then(function(m){ say(readable(m), true); });
+     if (!r.ok) return fail(r).then(function(m){ say(m, true); });
      pendingRecovery = false; authMode = 'in';
      return whoAmI().then(function(){ say('Password updated.'); });
     });
@@ -1571,7 +1586,10 @@ JS = """
      syncNote = r.ok ? 'Synced just now'
                      : (r.status === 401 || r.status === 403
                         ? 'Signed in, but this address is not on the allowlist.'
-                        : 'Could not save to the server (' + r.status + '); kept on this device.');
+                        : (isPaused(r)
+                           ? PAUSED + ' Your edits are safe on this device.'
+                           : 'Could not save to the server (' + r.status +
+                             '); kept on this device.'));
      renderAccount();
      return r.ok;
     });

@@ -153,6 +153,11 @@ does anything else, so even a run that fails later still counts as activity. It 
 the URL and key from `data/backend.json`, and treats 200, 401 and 403 alike: all three
 mean the project answered.
 
+If it does pause before a ping lands, a ping cannot wake it: pausing is only undone by
+pressing **Restore** in the dashboard, which takes a couple of minutes and loses
+nothing. The app says so plainly rather than blaming your connection, and the daily run
+puts it at the top of its own summary.
+
 That leaves two ways it could still pause. The workflow itself has to keep running:
 GitHub disables a scheduled workflow after 60 days without any commit to the
 repository, and the daily run only commits on days when the listings actually move. If
@@ -170,7 +175,8 @@ And if you would rather not depend on either, the Pro plan does not pause at all
 | "Could not reach the server" | Project URL or key is wrong, the project is paused, or there is no connection |
 | A reset link opens the site but nothing happens | Redirect URL not added in step 4 |
 | "Signed in, but this address is not on the allowlist" | Exactly what it says: add the row from step 3 |
-| "Offline; kept on this device" | No connection, or the project is paused. Free projects pause after a week of inactivity; open the dashboard to resume |
+| "This project is paused" | Exactly that. Open the dashboard, press Restore, wait a couple of minutes. Nothing on your devices is lost |
+| "Offline; kept on this device" | No connection. Edits stay local and catch up on the next successful write |
 
 ## What has not been tested
 
