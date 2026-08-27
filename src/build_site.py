@@ -2393,10 +2393,19 @@ JS = """
   } catch (e) {}
  }
 
+ // The allowlist policy lets a signed-in address read its own row and nothing else,
+ // which exists precisely so the app can say which of the two empty cases it is in.
+ function amAllowed(){
+  return api('/rest/v1/allowed_emails?select=email')
+   .then(function(r){ return r.ok ? r.json() : []; })
+   .then(function(rows){ return (rows || []).length > 0; })
+   .catch(function(){ return false; });
+ }
+
  function useData(data){
-  if (!data || !data.viability) return false;
+  if (!data) return false;
   DATA = data;
-  var viab = data.viability;
+  var viab = data.viability || {};
   var made = prepare(viab);
   DAYS = made.days;
   POOL = made.pool;
@@ -2467,8 +2476,12 @@ JS = """
     return Promise.all(rs.map(function(r){ return r.json(); }));
    }).then(function(bodies){
     var rows = bodies[0] || [], docs = bodies[1] || [];
-    if (!rows.length) throw new Error('empty');
-    return {viability: rows[0].payload,
+    // An empty dataset is not an error. It is either a database nobody has published
+    // to yet, or Row Level Security refusing a caller who is not on the allowlist,
+    // and those two look identical from here: 200, empty array. They are told apart
+    // below, because reporting the first as the second sends you to fix the wrong
+    // thing entirely.
+    return {viability: rows.length ? rows[0].payload : null,
             checklists: docs.map(function(d){ return d.doc; }),
             fetched: new Date().toISOString()};
    });
@@ -2500,11 +2513,29 @@ JS = """
     }
     return;
    }
-   cacheWrite(data);
-   useData(data);
-   unlock();
-   paint();
-   pullAll();
+   if (data.viability) {
+    cacheWrite(data);
+    useData(data);
+    unlock();
+    paint();
+    return pullAll();
+   }
+   // Checklists coming back at all proves the allowlist is fine, so only ask when
+   // there is nothing at all to go on.
+   return (data.checklists.length ? Promise.resolve(true) : amAllowed())
+    .then(function(allowed){
+     if (!allowed) {
+      gate('Signed in, but this address is not on the allowlist yet.');
+      return;
+     }
+     cacheWrite(data);
+     useData(data);
+     unlock();
+     paint();
+     msg('No dataset has been published yet. Press Refresh now to run the scrape, ' +
+         'or wait for the 07:00 run.', true);
+     return pullAll();
+    });
   });
  }
 

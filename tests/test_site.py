@@ -886,6 +886,34 @@ def main():
                   "; ".join(dead[:2]))
             offline.close()
 
+            print("\na database with nothing published yet")
+            # The state this app is in the moment the schema is created: allowed in,
+            # checklists seeded, no dataset written. Reporting that as "not on the
+            # allowlist" would send someone to fix a table that is already correct.
+            fresh = browser.new_page(viewport={"width": 1440, "height": 900})
+            dead = []
+            fresh.on("pageerror", lambda e: dead.append(str(e)))
+            fresh_fake = FakeBackend(published=False)
+            fresh_fake.install(fresh)
+            fresh.goto(url, wait_until="load")
+            fresh.wait_for_timeout(200)
+            fresh_fake.sign_in(fresh)
+            fresh.wait_for_timeout(800)
+            check("an empty dataset is not reported as a locked door",
+                  "allowlist" not in (fresh.inner_text("#gate-msg") +
+                                      fresh.inner_text("#data-msg")).lower())
+            check("it says the dataset has not been published",
+                  "published" in fresh.inner_text("#data-msg").lower(),
+                  " ".join(fresh.inner_text("#data-msg").split())[:60])
+            check("and lets you in, because the way to fix it is inside",
+                  not fresh.is_visible("#gate") and fresh.is_visible("#refresh"))
+            fresh.click("#tab-checklist")
+            fresh.wait_for_timeout(300)
+            check("seeded checklists work with no dataset at all",
+                  fresh.eval_on_selector_all(".tk", "e => e.length") > 0)
+            check("no page errors with an empty dataset", not dead, "; ".join(dead[:2]))
+            fresh.close()
+
             print("\nsigning out takes the data with it")
             out_pg, out_fake = open_app(browser, url,
                                         viewport={"width": 1440, "height": 900})
