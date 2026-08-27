@@ -58,6 +58,23 @@ def git_show(rev, path, log=print):
     return out.stdout
 
 
+def read_if_there(path, label, log=print):
+    """A file that is not there is not a failure on the first run.
+
+    Before the dataset moved into Supabase, "previous" came from git and was always
+    present. Now it comes from a --pull, and on the very first run there is nothing
+    stored to pull, so this has to mean "everything is new" rather than crashing three
+    steps into a scrape that already worked.
+    """
+    if not path:
+        return None
+    p = Path(path)
+    if not p.exists():
+        log(f"  no {label} at {p}; treating every event as new")
+        return None
+    return p.read_text()
+
+
 def load_json(text, default):
     if not text:
         return default
@@ -164,13 +181,14 @@ def main():
 
     new_events = json.loads(Path(args.new).read_text())
     old_events = load_json(
-        Path(args.old).read_text() if args.old else git_show(args.rev, "data/events.json"),
+        read_if_there(args.old, "previous dataset") if args.old
+        else git_show(args.rev, "data/events.json"),
         [])
 
     new_review = load_json(Path(args.new_review).read_text()
                            if Path(args.new_review).exists() else None, [])
     old_review = load_json(
-        Path(args.old_review).read_text() if args.old_review
+        read_if_there(args.old_review, "previous review queue") if args.old_review
         else git_show(args.rev, "data/review_queue.json"),
         [])
 
@@ -179,8 +197,16 @@ def main():
 
     # Both sides are scored with today's config, so a tier move is attributable to the
     # dataset rather than to a weight someone edited in the same commit.
-    lost, gained = diff_days(day_map(old_events, cfg, artists),
-                             day_map(new_events, cfg, artists))
+    first_run = not old_events
+    if first_run:
+        # Every date with an event on it would read as "lost" against a dataset that
+        # never existed. You cannot lose a date you never had, so the day diff is
+        # skipped rather than reported as 65 disasters.
+        print("  first run: no previous dataset, so no dates can have moved")
+        lost, gained = [], []
+    else:
+        lost, gained = diff_days(day_map(old_events, cfg, artists),
+                                 day_map(new_events, cfg, artists))
     review = diff_review(old_review, new_review)
     new_review_count = sum(1 for r in review if r["new"])
 
@@ -188,6 +214,7 @@ def main():
     payload = {
         "generated": date.today().isoformat(),
         "has_changes": has_changes,
+        "first_run": first_run,
         "summary": {"added": len(added), "removed": len(removed), "changed": len(changed),
                     "dates_lost": len(lost), "dates_gained": len(gained),
                     "review_queue": len(review), "review_queue_new": new_review_count},
