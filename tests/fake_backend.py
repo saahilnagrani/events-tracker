@@ -10,6 +10,7 @@ not on the allowlist gets an empty array rather than an error, because that is w
 Row Level Security actually returns, and getting that wrong would hide the bug where
 the app reports "no data" as if it were "not allowed".
 """
+import datetime as dt
 import json
 from pathlib import Path
 
@@ -32,6 +33,7 @@ class FakeBackend:
         # checklists are seeded, and no run has written a dataset yet.
         self.published = published
         self.viability = viability
+        self.updated_at = dt.datetime.now(dt.timezone.utc).isoformat()
         self.checklists = checklists if checklists is not None else [sample_checklist()]
         self.allowed = allowed
         self.paused = paused
@@ -66,9 +68,12 @@ class FakeBackend:
             return route.fulfill(status=200, content_type="application/json",
                                  body=json.dumps(rows))
         if "/rest/v1/datasets" in url:
+            # updated_at is when the run wrote the row, and the page reports it in
+            # local time, so the fixture has to carry a real timestamp.
             rows = [] if not (self.allowed and self.published) else [
                 {"payload": self.viability,
-                 "generated": self.viability.get("generated")}]
+                 "generated": self.viability.get("generated"),
+                 "updated_at": self.updated_at}]
             return route.fulfill(status=200, content_type="application/json",
                                  body=json.dumps(rows))
         if "/rest/v1/checklists" in url:

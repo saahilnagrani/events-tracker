@@ -761,9 +761,17 @@ def main():
             ctx.wait_for_timeout(200)
             check("the events tab carries a refresh button",
                   ctx.is_visible("#refresh"))
-            check("it says how old the data is, in days not a raw date",
-                  "last checked" in ctx.inner_text("#data-when").lower(),
-                  ctx.inner_text("#data-when"))
+            said = ctx.inner_text("#data-when")
+            check("it says when the listings were checked, to the minute",
+                  bool(re.match(r"Listings last checked \d{1,2} [A-Z][a-z]{2} "
+                                r"\d{4}, \d{2}:\d{2}$", said.strip())),
+                  said)
+            # Two phrasings of one fact read as two facts, so the sidebar carries the
+            # same sentence rather than its own wording.
+            check("the sidebar says exactly the same thing",
+                  ctx.inner_text("#side-stamp").strip() == said.strip(),
+                  ctx.inner_text("#side-stamp"))
+
             # The stamp arrives with the data now, so it is read back off the
             # element rather than from a global the page no longer carries.
             stamped = (ctx.get_attribute("#data-when", "title") or "").split()[-1]
@@ -821,6 +829,19 @@ def main():
             # The offline check above shut the server down on purpose, and everything
             # from here needs one again.
             url, shutdown = serve(DOCS)
+
+            # The row is written in UTC and read in Dubai, four hours apart, so a
+            # timestamp that did not convert would be wrong for everyone who uses this.
+            print("\nthe timestamp is the reader's own")
+            shifted, _ = open_app(browser, url, viewport={"width": 1440, "height": 900},
+                                 timezone_id="Pacific/Kiritimati")
+            check("a reader in another zone sees their own clock",
+                  shifted.inner_text("#data-when").strip() != said.strip(),
+                  shifted.inner_text("#data-when"))
+            check("and both places still agree with each other",
+                  shifted.inner_text("#side-stamp").strip()
+                  == shifted.inner_text("#data-when").strip())
+            shifted.close()
 
             print("\nwhen the database will not answer")
             for label, backend, expect in [
