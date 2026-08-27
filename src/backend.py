@@ -18,14 +18,55 @@ import requests
 ROOT = Path(__file__).resolve().parent.parent
 TIMEOUT = 30
 
-# Keys in the `datasets` table. One row each, rewritten whole, because the app reads
-# every one of them in full and never queries inside them.
+# Keys in the `datasets` table. One row each, rewritten whole, because they are
+# derived, thrown away every morning, and read in full. The events are not among them:
+# they accumulate, so they live in a table of their own.
 DATASETS = {
-    "events":       ROOT / "data" / "events.json",
     "review_queue": ROOT / "data" / "review_queue.json",
     "viability":    ROOT / "data" / "viability.json",
     "changes":      ROOT / "data" / "changes.json",
 }
+
+EVENTS_FILE = ROOT / "data" / "events.json"
+
+# The scraper's field names on the left, the table's on the right. Three had to
+# change: start, end and time are all reserved or type names in SQL.
+EVENT_FIELDS = {
+    "url": "url", "event": "event", "artist": "artist", "city": "city",
+    "category": "category", "language": "language", "venue": "venue",
+    "notes": "notes", "price_from_aed": "price_from_aed", "listed": "listed",
+    "first_seen": "first_seen", "last_seen": "last_seen",
+    "time_source": "time_source",
+    "start": "start_date", "end": "end_date", "time": "start_time",
+}
+ROW_FIELDS = {v: k for k, v in EVENT_FIELDS.items()}
+# PostgREST will only take this many rows in one request comfortably; a year of this
+# circuit is a few hundred, so it is a formality rather than a constraint.
+CHUNK = 200
+
+
+def to_row(event):
+    row = {}
+    for key, column in EVENT_FIELDS.items():
+        if key in event:
+            row[column] = event[key]
+    row.setdefault("listed", True)
+    return row
+
+
+def from_row(row):
+    """Back to the shape src/scrape.py and src/viability.py already speak."""
+    event = {}
+    for column, key in ROW_FIELDS.items():
+        if column in row:
+            event[key] = row[column]
+    # numeric comes back as a string or a float depending on the driver, and the page
+    # renders it straight, so 85.00 would read as a price nobody quoted.
+    price = event.get("price_from_aed")
+    if price is not None:
+        price = float(price)
+        event["price_from_aed"] = int(price) if price == int(price) else price
+    return event
 
 
 class BackendError(RuntimeError):
@@ -101,6 +142,31 @@ def get_dataset(name):
              url=url)
     rows = r.json()
     return (rows[0]["payload"], rows[0].get("generated")) if rows else (None, None)
+
+
+def get_events():
+    url, key = config()
+    out, offset = [], 0
+    while True:
+        r = call("GET", f"/rest/v1/events?select=*&order=start_date.asc&"
+                        f"limit={CHUNK}&offset={offset}", key, url=url)
+        rows = r.json()
+        out.extend(from_row(row) for row in rows)
+        if len(rows) < CHUNK:
+            return out
+        offset += CHUNK
+
+
+def put_events(events, log=print):
+    """Upsert by url. Nothing is ever deleted here, which is the point of the table."""
+    url, key = config()
+    rows = [to_row(e) for e in events]
+    for i in range(0, len(rows), CHUNK):
+        call("POST", "/rest/v1/events?on_conflict=url", key, url=url,
+             body=rows[i:i + CHUNK],
+             headers={"Prefer": "resolution=merge-duplicates,return=minimal"})
+    log(f"  pushed {len(rows)} events "
+        f"({sum(1 for e in events if e.get('listed', True))} still listed)")
 
 
 def get_checklists():

@@ -30,7 +30,8 @@ python src/scrape.py              # -> data/events.json, data/review_queue.json
 python src/changes.py --old data/events.prev.json --out data/changes.json
 python src/viability.py           # -> data/viability.json
 python src/build_site.py          # -> docs/ (a shell: no data in it)
-python tests/test_site.py         # 181 browser checks, against a stand-in database
+python tests/test_events_mapping.py  # the table mapping, both ways
+python tests/test_site.py            # 186 browser checks, against a stand-in database
 python src/publish.py --push      # data/*.json -> database
 ```
 

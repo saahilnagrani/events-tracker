@@ -33,9 +33,17 @@ You already have one, restored. If you ever start again: any region near you,
 3. Edit the last statement to carry your real address instead of `you@example.com`.
 4. **Run**. Safe to run again later.
 
-That creates three tables. `allowed_emails` is who may see anything. `datasets` holds
-the daily payloads, machine-written and read-only to everyone else. `checklists` holds
-the documents, seeded once and then owned by whoever is using the app.
+That creates four tables. `allowed_emails` is who may see anything. `events` is one row
+per event, keyed by its Platinumlist URL and never deleted. `datasets` holds the derived
+payloads that are rebuilt whole every morning: the scored calendar, the review queue and
+the change summary. `checklists` holds the documents, seeded once and then owned by
+whoever is using the app.
+
+The events are a table rather than another payload for one reason: they accumulate. A
+delisted show is kept with `listed = false`, and in a blob a short scrape could
+overwrite a long one and take the archive with it, which is exactly what happened once.
+Rows cannot do that. Each row also carries `first_seen`, the day the listing first
+appeared, which is what a "new today" badge and sorting by recently-added both read.
 
 ### 3. Invite the other people
 

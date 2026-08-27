@@ -385,6 +385,10 @@ def build(session, cards, artists, cache, args, log=print):
 
         events.append({
             "listed": True,
+            # The day this listing first appeared. Carried across from the previous
+            # run when there is one, because it can only be recorded as it happens:
+            # nothing about a listing says when we first saw it.
+            "first_seen": old.get("first_seen") or date.today().isoformat(),
             "last_seen": date.today().isoformat(),
             "city": card["city"],
             "category": category,
@@ -417,6 +421,7 @@ def build(session, cards, artists, cache, args, log=print):
         kept = dict(old_event)
         kept["listed"] = False
         kept.setdefault("last_seen", kept.get("start"))
+        kept.setdefault("first_seen", kept.get("last_seen") or kept.get("start"))
         events.append(kept)
         archived += 1
 
@@ -514,6 +519,11 @@ def main():
     # alone, and diffing this file against its committed version is what separates a
     # newly surfaced listing from the standing backlog.
     Path(args.review_out).write_text(json.dumps(review, indent=1, ensure_ascii=False) + "\n")
+    fresh = [e for e in events if e.get("first_seen") == date.today().isoformat()]
+    if fresh:
+        print(f"\nfirst seen today: {len(fresh)}")
+        for e in fresh[:10]:
+            print(f"  {e['start']}  {e['event'][:60]}")
     print(f"\nwrote {args.out} and {args.review_out}")
     return 0
 

@@ -25,9 +25,11 @@ comment on table public.allowed_emails is
 
 -- ---------------------------------------------------------------- the daily dataset
 
--- Two rows, rewritten every morning: 'events' is the scrape, 'viability' is the
--- scored calendar. One row each rather than a row per event, because the app reads
--- the whole thing at once and never queries inside it.
+-- Rewritten every morning: 'viability' is the scored calendar, plus the review queue
+-- and the change summary. One row each rather than a row per day, because they are
+-- derived, thrown away and rebuilt whole, and the app reads them in one go. The
+-- events themselves are not here: they are the one thing that accumulates, so they
+-- get a table of their own above.
 create table if not exists public.datasets (
   key          text primary key,
   payload      jsonb not null,
@@ -38,6 +40,44 @@ create table if not exists public.datasets (
 comment on table public.datasets is
   'Machine-written. The workflow replaces these rows; nobody edits them by hand, and '
   'the app never writes here.';
+
+-- ---------------------------------------------------------------- the events
+
+-- One row per event, keyed by its Platinumlist URL. This was a JSON array inside
+-- datasets until a scrape that had lost its history overwrote it with a shorter one
+-- and took seven archived events with it. Rows cannot do that: a run that finds
+-- fewer events simply does not touch the rest, and removing one would take a delete
+-- that nothing in this repository issues.
+create table if not exists public.events (
+  url             text primary key,
+  event           text not null,
+  artist          text,
+  city            text,
+  category        text,
+  language        text,
+  venue           text,
+  start_date      date,
+  end_date        date,
+  start_time      text,           -- as published, e.g. "20:00"
+  time_source     text,           -- start | doors | anchor, see src/scrape.py
+  price_from_aed  numeric(10,2),
+  notes           text,
+  listed          boolean not null default true,
+  -- The day this event first appeared in a scrape, which is what "new today" means
+  -- and what sorting by "recently added" sorts on. It can only be recorded as it
+  -- happens; there is no way to work it out afterwards.
+  first_seen      date not null default current_date,
+  last_seen       date,           -- the last day it was still on sale
+  updated_at      timestamptz not null default now()
+);
+
+create index if not exists events_start_idx on public.events (start_date);
+create index if not exists events_first_seen_idx on public.events (first_seen desc);
+
+comment on table public.events is
+  'Machine-written by the daily workflow. Delisted events are kept with listed=false '
+  'rather than deleted: a show that ran, sold out or was cancelled is still a fact '
+  'about the market.';
 
 -- ---------------------------------------------------------------- the checklists
 
@@ -72,10 +112,16 @@ create trigger datasets_touch
   before update on public.datasets
   for each row execute function public.touch_updated_at();
 
+drop trigger if exists events_touch on public.events;
+create trigger events_touch
+  before update on public.events
+  for each row execute function public.touch_updated_at();
+
 -- ---------------------------------------------------------------- access rules
 
 alter table public.allowed_emails enable row level security;
 alter table public.datasets       enable row level security;
+alter table public.events         enable row level security;
 alter table public.checklists     enable row level security;
 
 -- security definer so the check can read the allowlist even though the caller cannot.
@@ -90,6 +136,10 @@ $$;
 
 revoke all on function public.is_allowed() from public;
 grant execute on function public.is_allowed() to authenticated;
+
+drop policy if exists events_read on public.events;
+create policy events_read on public.events
+  for select to authenticated using (public.is_allowed());
 
 -- The dataset is read-only to everybody who signs in. There is no insert or update
 -- policy on purpose: the only writer is the workflow, and it uses the service_role
