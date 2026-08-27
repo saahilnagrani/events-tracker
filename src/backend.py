@@ -11,6 +11,7 @@ Nothing here is imported by the page or by the build; only by src/publish.py.
 import json
 import os
 import sys
+from datetime import date
 from pathlib import Path
 
 import requests
@@ -40,25 +41,40 @@ EVENT_FIELDS = {
     "start": "start_date", "end": "end_date", "time": "start_time",
 }
 ROW_FIELDS = {v: k for k, v in EVENT_FIELDS.items()}
+# The scraper always writes these two, even when they are empty, so keeping them null
+# rather than dropping them is what makes a round trip give back what went in.
+KEEP_NULL = {"end", "price_from_aed"}
 # PostgREST will only take this many rows in one request comfortably; a year of this
 # circuit is a few hundred, so it is a formality rather than a constraint.
 CHUNK = 200
 
 
 def to_row(event):
-    row = {}
-    for key, column in EVENT_FIELDS.items():
-        if key in event:
-            row[column] = event[key]
-    row.setdefault("listed", True)
+    """Every column, every time.
+
+    PostgREST rejects a bulk insert whose objects do not all carry the same keys
+    ("All object keys must match"), and events genuinely differ: a one-night show has
+    no end date, most have no time_source. So a row is always the full set, with null
+    where the event says nothing. The two columns that cannot take a null get the
+    default the table would have given them.
+    """
+    row = {column: event.get(key) for key, column in EVENT_FIELDS.items()}
+    if row.get("listed") is None:
+        row["listed"] = True
+    if not row.get("first_seen"):
+        row["first_seen"] = date.today().isoformat()
     return row
 
 
 def from_row(row):
-    """Back to the shape src/scrape.py and src/viability.py already speak."""
+    """Back to the shape src/scrape.py and src/viability.py already speak.
+
+    Columns the event never had come back as null; they are dropped rather than
+    carried, so a round trip does not quietly grow "end": null on every one-night show.
+    """
     event = {}
     for column, key in ROW_FIELDS.items():
-        if column in row:
+        if column in row and not (row[column] is None and key not in KEEP_NULL):
             event[key] = row[column]
     # numeric comes back as a string or a float depending on the driver, and the page
     # renders it straight, so 85.00 would read as a price nobody quoted.

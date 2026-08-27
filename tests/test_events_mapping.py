@@ -65,17 +65,36 @@ def main():
     check("columns the table adds are ignored on the way back",
           "updated_at" not in backend.from_row({**row, "updated_at": "2026-01-01"}))
 
+    # This is the one that bit: PostgREST refuses a bulk insert whose objects have
+    # different keys, and a one-night show has no end date while a run has no
+    # time_source, so rows built only from what was present differed row to row.
     sparse = backend.to_row({"url": "u", "event": "E"})
-    check("a partial event does not fabricate columns",
-          set(sparse) == {"url", "event", "listed"} and sparse["listed"] is True,
-          str(sorted(sparse)))
+    check("a partial event still fills every column",
+          set(sparse) == set(backend.ROW_FIELDS),
+          str(sorted(set(backend.ROW_FIELDS) - set(sparse))))
+    check("the columns that cannot be null are given a value",
+          sparse["listed"] is True and sparse["first_seen"],
+          repr(sparse["first_seen"]))
+    check("and the rest are null rather than invented",
+          sparse["venue"] is None and sparse["start_date"] is None)
+
+    local_events = ROOT / "data" / "events.json"
+    if local_events.exists():
+        rows = [backend.to_row(e) for e in json.loads(local_events.read_text())]
+        shapes = {tuple(sorted(r)) for r in rows}
+        check("every row of a real batch carries the same keys", len(shapes) == 1,
+              f"{len(shapes)} different shapes")
 
     # The real dataset, if this checkout has one, is the best fixture there is.
     local = ROOT / "data" / "events.json"
     if local.exists():
         events = json.loads(local.read_text())
         trips = [backend.from_row(backend.to_row(e)) for e in events]
-        same = [t == {k: v for k, v in e.items() if k in backend.EVENT_FIELDS}
+        # Anything the trip adds must be either null or one of the two the table
+        # will not take a null for, which to_row fills in deliberately.
+        defaulted = {"listed", "first_seen"}
+        same = [all(t.get(k) == v for k, v in e.items() if k in backend.EVENT_FIELDS)
+                and all(t[k] is None or k in defaulted for k in set(t) - set(e))
                 for t, e in zip(trips, events)]
         check(f"every one of {len(events)} real events survives a round trip",
               all(same), f"{same.count(False)} differ")

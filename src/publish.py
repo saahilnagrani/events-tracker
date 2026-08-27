@@ -68,6 +68,20 @@ def push(force=False, log=print):
         # anything; it just fails to mention the rest. Saying so is still worth it,
         # because that run's viability payload will be missing them.
         stored = backend.get_events()
+        # first_seen is the one field that cannot be recovered once it is wrong, and
+        # an upsert overwrites whatever it is given. If a run ever loses its history
+        # it would call every event new and stamp today over the real date, so the
+        # stored date wins whenever it is earlier.
+        was = {e["url"]: e.get("first_seen") for e in stored}
+        moved = 0
+        for e in events:
+            old_first = was.get(e["url"])
+            if old_first and (not e.get("first_seen") or old_first < e["first_seen"]):
+                e["first_seen"] = old_first
+                moved += 1
+        if moved:
+            log(f"  kept the stored first_seen on {moved} events")
+
         if len(events) < len(stored):
             missing = len(stored) - len(events)
             log(f"  NOTE: this run carries {len(events)} events against {len(stored)} "
