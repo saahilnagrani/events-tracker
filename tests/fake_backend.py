@@ -24,9 +24,13 @@ TOKEN = {
 
 
 class FakeBackend:
-    def __init__(self, viability=None, checklists=None, allowed=True, paused=False):
+    def __init__(self, viability=None, checklists=None, allowed=True, paused=False,
+                 published=True):
         if viability is None:
             viability = json.loads((ROOT / "data" / "viability.json").read_text())
+        # published=False is the state of a fresh database: the schema is there, the
+        # checklists are seeded, and no run has written a dataset yet.
+        self.published = published
         self.viability = viability
         self.checklists = checklists if checklists is not None else [sample_checklist()]
         self.allowed = allowed
@@ -57,8 +61,12 @@ class FakeBackend:
                                  body=json.dumps({"email": "tester@example.com"}))
         if "/auth/v1/logout" in url:
             return route.fulfill(status=204, body="")
+        if "/rest/v1/allowed_emails" in url:
+            rows = [{"email": "tester@example.com"}] if self.allowed else []
+            return route.fulfill(status=200, content_type="application/json",
+                                 body=json.dumps(rows))
         if "/rest/v1/datasets" in url:
-            rows = [] if not self.allowed else [
+            rows = [] if not (self.allowed and self.published) else [
                 {"payload": self.viability,
                  "generated": self.viability.get("generated")}]
             return route.fulfill(status=200, content_type="application/json",
