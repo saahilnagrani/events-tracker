@@ -527,6 +527,7 @@ body.locked .filters{display:none}
  .nv-ic{font-size:17px}
  .side-foot{display:flex;margin-top:auto;align-items:center;gap:8px;padding:0 6px}
  .side-stamp{font-size:11px;color:var(--muted);line-height:1.35}
+ .side-stamp.stale{color:var(--crit);font-weight:600}
  .top{position:static;border-bottom:0;padding:22px 24px 0}
  #page-title{display:inline}
  .app-name{display:none}
@@ -564,7 +565,7 @@ body.locked .filters{display:none}
    <svg class="nv-ic" aria-hidden="true" focusable="false"><use href="#i-checklist"></use></svg><span>Checklist</span></button>
  </nav>
  <div class="side-foot">
-  <span class="side-stamp" id="side-stamp">Checked daily</span>
+  <span class="side-stamp" id="side-stamp"></span>
  </div>
 </aside>
 
@@ -1834,17 +1835,34 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
   return Math.round((now - then) / 86400000);
  }
 
+ // "27 Aug 2026, 13:39", in whatever zone the reader is in. The run happens at
+ // 07:00 Dubai and the timestamp arrives in UTC, so anything that did not convert
+ // would be four hours out for the only people who use this.
+ function whenText(iso, dateOnly){
+  var d = new Date(dateOnly ? iso + 'T00:00:00' : iso);
+  if (isNaN(d)) return '';
+  var stamp = d.getDate() + ' ' + MONTHS[d.getMonth()].slice(0, 3) + ' ' +
+              d.getFullYear();
+  if (dateOnly) return stamp;
+  return stamp + ', ' + String(d.getHours()).padStart(2, '0') + ':' +
+         String(d.getMinutes()).padStart(2, '0');
+ }
+
+ // The same sentence in both places on purpose: two phrasings of one fact read as
+ // two facts, and the reader has to work out whether they agree.
  function renderStamp(){
-  var el = $('data-when');
-  if (!el || !STAMP) return;
-  var side = $('side-stamp');
-  if (side) side.innerHTML = 'Checked daily<br>data as of ' + esc(STAMP);
+  if (!STAMP) return;
+  var written = (DATA && DATA.updated_at) || '';
+  var text = 'Listings last checked ' +
+             (written ? whenText(written) : whenText(STAMP, true));
   var n = daysSince(STAMP);
-  var when = n <= 0 ? 'today' : (n === 1 ? 'yesterday' : n + ' days ago');
-  el.textContent = 'Listings last checked ' + when;
   // A day behind is normal: the scrape runs at 07:00 Dubai. Two days is not.
-  el.classList.toggle('stale', n > 1);
-  el.title = 'Data as of ' + STAMP;
+  [$('data-when'), $('side-stamp')].forEach(function(el){
+   if (!el) return;
+   el.textContent = text;
+   el.classList.toggle('stale', n > 1);
+   el.title = 'Data as of ' + STAMP;
+  });
  }
 
  function busy(on){
@@ -2333,7 +2351,7 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
   return refreshIfStale().then(function(ok){
    if (!ok) return null;
    return Promise.all([
-    api('/rest/v1/datasets?select=payload,generated&key=eq.viability'),
+    api('/rest/v1/datasets?select=payload,generated,updated_at&key=eq.viability'),
     api('/rest/v1/checklists?select=id,doc,updated_at')
    ]).then(function(rs){
     var bad = rs.filter(function(r){ return !r.ok; })[0];
@@ -2351,6 +2369,10 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
     // below, because reporting the first as the second sends you to fix the wrong
     // thing entirely.
     return {viability: rows.length ? rows[0].payload : null,
+            // When the run actually wrote it, which is what the page reports. The
+            // payload carries only a date, and "checked 27 Aug" says nothing about
+            // whether that was before or after this morning's listings went up.
+            updated_at: rows.length ? rows[0].updated_at : null,
             checklists: docs.map(function(d){ return d.doc; }),
             fetched: new Date().toISOString()};
    });
