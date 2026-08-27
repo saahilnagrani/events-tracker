@@ -33,21 +33,23 @@ class BackendError(RuntimeError):
 
 
 def config(need_service_key=True, log=print):
-    """(url, key). The URL may come from data/backend.json; the key never does.
+    """(url, key). The URL comes from data/backend.json; the key never does.
 
-    SUPABASE_URL wins when it is set, which is what makes a one-off against another
-    project possible. It is also how you end up pulling from one project and pushing
-    to another without noticing, so a disagreement is said out loud.
+    data/backend.json wins over SUPABASE_URL deliberately. That file is the project
+    the published app reads, so it is the only project worth writing to, and an
+    environment variable left over from an older one is otherwise indistinguishable
+    from a deliberate override until you notice the data went somewhere else. The
+    variable is still honoured when the file has no URL at all.
     """
     env_url = os.environ.get("SUPABASE_URL", "").strip()
     file_url = ""
     path = ROOT / "data" / "backend.json"
     if path.exists():
         file_url = (json.loads(path.read_text()).get("supabase_url") or "").strip()
-    url = env_url or file_url
+    url = file_url or env_url
     if env_url and file_url and env_url.rstrip("/") != file_url.rstrip("/"):
-        log(f"  NOTE: SUPABASE_URL ({env_url}) overrides data/backend.json "
-            f"({file_url}), which is the project the published app reads.")
+        log(f"  NOTE: ignoring SUPABASE_URL ({env_url}); using the project the app "
+            f"reads, from data/backend.json ({file_url}).")
     key = os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
     if not url:
         raise BackendError("no SUPABASE_URL, and data/backend.json has no supabase_url")
