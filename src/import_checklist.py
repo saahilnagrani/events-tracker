@@ -1,5 +1,5 @@
 """
-Import an event checklist workbook -> data/checklists.json
+Import an event checklist workbook -> Supabase (or a local file you keep)
 
 The source workbooks have three sheets: Setup (show name, key dates and assumptions),
 Dashboard (formulas only, recomputed by the site so nothing is read from it) and
@@ -136,7 +136,11 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("workbook")
     ap.add_argument("--id", help="stable id; defaults to a slug of the title")
-    ap.add_argument("--out", default=str(ROOT / "data" / "checklists.json"))
+    ap.add_argument("--out", default=str(ROOT / "data" / "checklists.local.json"),
+                    help="working file; gitignored, because a checklist carries fees "
+                         "and counterparty names and this repository is public")
+    ap.add_argument("--upload", action="store_true",
+                    help="send it straight to Supabase (needs SUPABASE_SERVICE_KEY)")
     args = ap.parse_args()
 
     wb = openpyxl.load_workbook(args.workbook, data_only=True)
@@ -170,6 +174,13 @@ def main():
     print(f"  {len(tasks)} tasks, {sum(1 for t in tasks if t['blocking'])} blocking")
     print(f"  workstreams: {', '.join(f'{k} {v}' for k, v in streams.items())}")
     print(f"  wrote {out}")
+    if args.upload:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import publish
+        return publish.seed_checklists(str(out))
+    print("  nothing has been uploaded. To put it in the database, either re-run with")
+    print("  --upload or run: python src/publish.py --seed-checklists " + str(out))
+    print("  Do not commit that file.")
     return 0
 
 

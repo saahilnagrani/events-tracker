@@ -3,7 +3,7 @@ Viability model: scores every date for staging an Indian (English/Hindi) stand-u
 
 Input:  data/events.json   (list of events, schema in BRIEF.md)
         data/config.json   (weights, blackout windows, holidays)
-Output: docs/viability.json  {"generated": iso, "days": [...], "events": [...]}
+Output: data/viability.json  {"generated": iso, "days": [...], "events": [...]}
 
 This file is already tested against the Aug 2026 dataset and produced 28 prime dates,
 18 direct-clash nights and 48 blocked dates. Treat its scoring as the spec; if you change
@@ -190,13 +190,19 @@ def main():
     lenses = {name: build(events, cfg, artists, name) for name in names}
     days = lenses[default]
 
-    out = ROOT / "docs" / "viability.json"
+    # data/, not docs/: the published directory is served to anyone with the URL, and
+    # the dataset is no longer public. src/publish.py moves this into Supabase, which
+    # is where the page reads it from once somebody has signed in.
+    out = ROOT / "data" / "viability.json"
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps({
         "generated": date.today().isoformat(),
         "default_lens": default,
         "lens_meta": {n: {k: v for k, v in lens_config(cfg, n).items()
                           if k in ("label", "blurb")} for n in names},
+        # The page counts its own headline figures from the days it was given, so the
+        # one thing it cannot derive travels with them.
+        "ramadan": cfg["ramadan"],
         # `days` stays the default lens so every existing reader keeps working.
         "days": days,
         "lenses": lenses,

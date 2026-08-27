@@ -30,6 +30,9 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fake_backend import FakeBackend  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 
@@ -92,6 +95,25 @@ def visible_days(page):
         "els => els.filter(e => !e.classList.contains('dim')).length")
 
 
+def open_app(browser, url, backend=None, **kwargs):
+    """A page with a database behind it, signed in and painted.
+
+    The page ships no data now, so every check that looks at events, dates or tasks
+    needs a backend first. FakeBackend stands in for Supabase; signing in is what
+    fetches, and nothing renders before that.
+    """
+    page = browser.new_page(**kwargs)
+    fake = backend or FakeBackend()
+    fake.install(page)
+    page.goto(url, wait_until="load")
+    page.wait_for_timeout(150)
+    fake.sign_in(page)
+    # attached, not visible: the calendar is painted while the events tab is up.
+    page.wait_for_selector(".day[data-tier]", state="attached", timeout=8000)
+    page.wait_for_timeout(150)
+    return page, fake
+
+
 def main():
     if not (DOCS / "index.html").exists():
         print("docs/index.html missing; run python src/build_site.py first")
@@ -104,11 +126,49 @@ def main():
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(executable_path=exe)
-            ctx = browser.new_page(viewport={"width": 390, "height": 780})
             errors = []
+
+            print("\nnothing in the page")
+            # The whole point of the rebuild: the file served to anybody with the URL
+            # carries no listings, no scores and no checklist.
+            source = (DOCS / "index.html").read_text()
+            # Words like "prime" and "Platinumlist" are legitimately in the furniture,
+            # so this looks for the shapes data takes, plus real values read out of the
+            # local dataset when there is one to read.
+            for needle, what in [('data-date="20', "a dated calendar cell"),
+                                 ('data-month="20', "a dated event row"),
+                                 ("__DAYS__", "an inlined score payload"),
+                                 ("__CHECKLISTS__", "an inlined checklist")]:
+                check(f"the published page carries no {what}", needle not in source,
+                      needle)
+            local = ROOT / "data" / "viability.json"
+            if local.exists():
+                data = json.loads(local.read_text())
+                samples = [e.get("event") for e in data.get("events", [])]
+                samples += [e.get("artist") for e in data.get("events", [])]
+                leaked = [v for v in samples if v and v in source]
+                check("no event title or artist from the dataset appears in the page",
+                      not leaked, "; ".join(leaked[:2]))
+            check("the shell is small, because it is only a shell",
+                  len(source) < 200_000, f"{len(source) // 1024} KB")
+
+            bare = browser.new_page(viewport={"width": 390, "height": 780})
+            bare.on("pageerror", lambda e: errors.append(str(e)))
+            FakeBackend().install(bare)
+            bare.goto(url, wait_until="load")
+            bare.wait_for_timeout(300)
+            check("a signed-out visitor gets the gate, not the app",
+                  bare.is_visible("#gate")
+                  and bare.eval_on_selector_all(".day[data-tier]", "e => e.length") == 0
+                  and bare.eval_on_selector_all(".ev", "e => e.length") == 0)
+            check("and no way to navigate to an empty tab",
+                  not bare.is_visible("#tab-calendar"))
+            bare.close()
+
+            ctx, ctx_fake = open_app(browser, url,
+                                     viewport={"width": 390, "height": 780})
             ctx.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
             ctx.on("pageerror", lambda e: errors.append(str(e)))
-            ctx.goto(url, wait_until="load")
 
             print("\ntabs")
             check("header carries a name and nothing else",
@@ -203,8 +263,7 @@ def main():
                   ctx.eval_on_selector("#months",
                                        "el => el.scrollWidth > el.clientWidth + 50"))
 
-            wide = browser.new_page(viewport={"width": 1280, "height": 900})
-            wide.goto(url, wait_until="load")
+            wide, _ = open_app(browser, url, viewport={"width": 1280, "height": 900})
             open_calendar(wide)
             check("desktop shows several months side by side",
                   wide.eval_on_selector("#months",
@@ -218,8 +277,8 @@ def main():
             # burst out of its panel. Check every month at every width, both that the
             # grid fits and that the label is not being clipped to make it fit.
             for width in (320, 360, 390, 768, 1280, 1440):
-                pg = browser.new_page(viewport={"width": width, "height": 900})
-                pg.goto(url, wait_until="load")
+                pg, _ = open_app(browser, url,
+                                 viewport={"width": width, "height": 900})
                 open_calendar(pg)
                 over = pg.eval_on_selector_all(
                     ".mo .grid",
@@ -244,8 +303,7 @@ def main():
             print("\nnavigation adapts to the screen")
             # One set of nav buttons, laid out two ways. Duplicating the markup per
             # breakpoint would mean duplicate ids, so this checks the CSS switch.
-            nav = browser.new_page(viewport={"width": 1440, "height": 900})
-            nav.goto(url, wait_until="load")
+            nav, _ = open_app(browser, url, viewport={"width": 1440, "height": 900})
             rail = nav.evaluate("""() => {
                 const s = document.querySelector('.side').getBoundingClientRect();
                 const col = document.querySelector('.col').getBoundingClientRect();
@@ -264,8 +322,7 @@ def main():
             check("rail shows the data stamp", rail["foot"] != "none")
             nav.close()
 
-            phone = browser.new_page(viewport={"width": 390, "height": 800})
-            phone.goto(url, wait_until="load")
+            phone, _ = open_app(browser, url, viewport={"width": 390, "height": 800})
             bar = phone.evaluate("""() => {
                 const el = document.querySelector('.side');
                 const s = el.getBoundingClientRect();
@@ -298,8 +355,7 @@ def main():
             phone.close()
 
             print("\nlaptop gets a laptop layout")
-            desk = browser.new_page(viewport={"width": 1440, "height": 900})
-            desk.goto(url, wait_until="load")
+            desk, _ = open_app(browser, url, viewport={"width": 1440, "height": 900})
             open_calendar(desk)
             check("twelve months land as three rows of four on a wide laptop",
                   desk.evaluate("""() => {
@@ -424,9 +480,12 @@ def main():
             ctx.fill("#cl-date", "2027-01-30")
             ctx.dispatch_event("#cl-date", "change")
             ctx.wait_for_timeout(200)
-            # Task 1 is D-150; 150 days before 30 Jan 2027 is 2 Sep 2026.
+            # The fixture's first task is D-60, and 60 days before 30 Jan 2027 is
+            # 1 Dec 2026. Derived here rather than typed, so the fixture can move.
+            first = ctx.eval_on_selector('.tk[data-n="1"]', "e => e.dataset.dminus")
+            want = (dt.date(2027, 1, 30) - dt.timedelta(days=int(first))).isoformat()
             check("due dates derive from the show date",
-                  "2026-09-02" in ctx.eval_on_selector(
+                  want in ctx.eval_on_selector(
                       '.tk[data-n="1"] .tk-due', "e => e.textContent"),
                   ctx.eval_on_selector('.tk[data-n="1"] .tk-due', "e => e.textContent"))
             before = ctx.inner_text(".cl-cell")
@@ -592,8 +651,7 @@ def main():
             for scheme, want_attr, want_bg, started in (
                     ("dark", "light", LIGHT_PLANE, DARK_PLANE),
                     ("light", "dark", DARK_PLANE, LIGHT_PLANE)):
-                pg = browser.new_page(color_scheme=scheme)
-                pg.goto(url, wait_until="load")
+                pg, _ = open_app(browser, url, color_scheme=scheme)
                 before = pg.evaluate("getComputedStyle(document.body).backgroundColor")
                 pg.click("#theme")
                 after = pg.evaluate("getComputedStyle(document.body).backgroundColor")
@@ -706,12 +764,15 @@ def main():
             check("it says how old the data is, in days not a raw date",
                   "last checked" in ctx.inner_text("#data-when").lower(),
                   ctx.inner_text("#data-when"))
+            # The stamp arrives with the data now, so it is read back off the
+            # element rather than from a global the page no longer carries.
+            stamped = (ctx.get_attribute("#data-when", "title") or "").split()[-1]
             check("fresh data is not flagged stale",
                   ctx.eval_on_selector(
                       '#data-when', "el => el.classList.contains('stale')")
-                  == (dt.date.fromisoformat(
-                      ctx.evaluate("() => window.__STAMP__")) <
-                      dt.date.today() - dt.timedelta(days=1)))
+                  == (dt.date.fromisoformat(stamped)
+                      < dt.date.today() - dt.timedelta(days=1)),
+                  stamped)
             check("the button knows which repository to ask",
                   bool(ctx.evaluate("() => (window.__REPO__||{}).slug")),
                   str(ctx.evaluate("() => window.__REPO__")))
@@ -754,89 +815,119 @@ def main():
             check("the page states its backend config either way",
                   ctx.evaluate("() => typeof window.__BACKEND__ === 'object'"))
 
-            # Build a second copy pointed at a project that does not answer. This is the
-            # state the app will spend most of its life in: configured, but the network
-            # or the server is unavailable. It must stay fully usable.
-            with tempfile.TemporaryDirectory() as tmp:
-                cfg = Path(tmp) / "backend.json"
-                cfg.write_text(json.dumps({"supabase_url": "https://demo.supabase.co",
-                                           "supabase_anon_key": "demo-key"}))
-                out = Path(tmp) / "site"
-                built = subprocess.run(
-                    [sys.executable, str(ROOT / "src" / "build_site.py"),
-                     "--backend", str(cfg), "--out-dir", str(out)],
-                    capture_output=True, text=True)
-                if not check("a configured build succeeds", built.returncode == 0,
-                             built.stderr.strip()[:120]):
-                    pass
-                else:
-                    url2, stop2 = serve(out)
-                    off = browser.new_page(viewport={"width": 1440, "height": 900})
-                    dead = []
-                    off.on("pageerror", lambda e: dead.append(str(e)))
-                    off.route("**/demo.supabase.co/**", lambda r: r.abort())
-                    off.goto(url2, wait_until="load")
-                    off.click("#tab-checklist")
-                    off.wait_for_timeout(400)
-                    check("a configured backend shows the sign-in row",
-                          off.is_visible("#cl-account"))
-                    check("an unreachable backend still renders the tasks",
-                          off.eval_on_selector_all(".tk", "els => els.length") > 0)
+            # What the app does when the database will not answer. It used to carry
+            # the data itself, so it degraded to "checklists are local"; now there is
+            # nothing to show, and the only honest thing it can do is say why.
+            # The offline check above shut the server down on purpose, and everything
+            # from here needs one again.
+            url, shutdown = serve(DOCS)
 
-                    # Sign-in is email and password, reachable from any tab, not a
-                    # control buried in the checklist.
-                    off.click("#acct")
-                    off.wait_for_timeout(200)
-                    check("the header button opens the account dialog",
-                          off.is_visible("#acct-sheet"))
-                    check("the dialog asks for an email and a password",
-                          off.is_visible("#acct-email") and off.is_visible("#acct-pass"))
-                    check("the password field is a password field",
-                          off.get_attribute("#acct-pass", "type") == "password")
-                    check("there is no native select or magic-link-only path left",
-                          off.eval_on_selector_all(
-                              "#acct-sheet select", "els => els.length") == 0)
-                    off.fill("#acct-email", "someone@example.com")
-                    off.click("#acct-form button[type=submit]")
-                    off.wait_for_timeout(300)
-                    check("submitting without a password is refused locally",
-                          "password" in off.inner_text("#acct-body").lower()
-                          and off.is_visible("#acct-sheet"))
-                    off.fill("#acct-pass", "hunter2hunter2")
-                    off.click("#acct-form button[type=submit]")
-                    off.wait_for_timeout(600)
-                    check("an unreachable backend says so instead of failing silently",
-                          "reach" in off.inner_text("#acct-body").lower(),
-                          " ".join(off.inner_text("#acct-body").split())[-40:])
-                    check("what was typed survives the failure",
-                          off.input_value("#acct-email") == "someone@example.com")
-                    off.click("#acct-swap")
-                    off.wait_for_timeout(200)
-                    check("the dialog switches to creating an account",
-                          "create account" in off.inner_text(
-                              "#acct-form button[type=submit]").lower())
-                    off.keyboard.press("Escape")
-                    off.wait_for_timeout(200)
-                    check("Escape closes the account dialog",
-                          not off.is_visible("#acct-sheet")
-                          and not off.is_visible("#sheet-bg"))
-                    off.click(".cl-add summary")
-                    off.fill("#add-task", "Still works with the backend down")
-                    off.click("#add-save")
-                    off.wait_for_timeout(300)
-                    check("edits still work with the backend down",
-                          off.eval_on_selector_all('.tk[data-added="1"]',
-                                                   "els => els.length") == 1)
-                    off.reload(wait_until="load")
-                    off.click("#tab-checklist")
-                    off.wait_for_timeout(400)
-                    check("those edits still persist locally",
-                          off.eval_on_selector_all('.tk[data-added="1"]',
-                                                   "els => els.length") == 1)
-                    check("a dead backend raises no page errors", not dead,
-                          "; ".join(dead[:2]))
-                    off.close()
-                    stop2()
+            print("\nwhen the database will not answer")
+            for label, backend, expect in [
+                    ("paused", FakeBackend(paused=True), "paused"),
+                    ("not on the allowlist", FakeBackend(allowed=False), "allowlist")]:
+                pg = browser.new_page(viewport={"width": 1440, "height": 900})
+                dead = []
+                pg.on("pageerror", lambda e: dead.append(str(e)))
+                backend.install(pg)
+                pg.goto(url, wait_until="load")
+                pg.wait_for_timeout(200)
+                backend.sign_in(pg)
+                pg.wait_for_timeout(700)
+                said = " ".join((pg.inner_text("#gate-msg") + " " +
+                                 pg.inner_text("#acct-body")).split()).lower()
+                check(f"a {label} project says so", expect in said, said[:70])
+                check(f"a {label} project shows no data",
+                      pg.eval_on_selector_all(".day[data-tier]", "e => e.length") == 0)
+                check(f"a {label} project raises no page errors", not dead,
+                      "; ".join(dead[:2]))
+                pg.close()
+
+            offline = browser.new_page(viewport={"width": 1440, "height": 900})
+            dead = []
+            offline.on("pageerror", lambda e: dead.append(str(e)))
+            offline.route("**/*.supabase.co/**", lambda r: r.abort())
+            offline.goto(url, wait_until="load")
+            offline.wait_for_timeout(200)
+            offline.click("#gate-in")
+            offline.wait_for_timeout(200)
+            check("the dialog asks for an email and a password",
+                  offline.is_visible("#acct-email") and offline.is_visible("#acct-pass"))
+            check("the password field is a password field",
+                  offline.get_attribute("#acct-pass", "type") == "password")
+            check("no native select anywhere in the dialog",
+                  offline.eval_on_selector_all("#acct-sheet select",
+                                               "els => els.length") == 0)
+            offline.fill("#acct-email", "someone@example.com")
+            offline.click("#acct-form button[type=submit]")
+            offline.wait_for_timeout(250)
+            check("submitting without a password is refused locally",
+                  "password" in offline.inner_text("#acct-body").lower()
+                  and offline.is_visible("#acct-sheet"))
+            offline.fill("#acct-pass", "hunter2hunter2")
+            offline.click("#acct-form button[type=submit]")
+            offline.wait_for_timeout(600)
+            check("an unreachable server says so instead of failing silently",
+                  "reach" in offline.inner_text("#acct-body").lower(),
+                  " ".join(offline.inner_text("#acct-body").split())[-40:])
+            check("what was typed survives the failure",
+                  offline.input_value("#acct-email") == "someone@example.com")
+            offline.click("#acct-swap")
+            offline.wait_for_timeout(200)
+            check("the dialog switches to creating an account",
+                  "create account" in offline.inner_text(
+                      "#acct-form button[type=submit]").lower())
+            offline.keyboard.press("Escape")
+            offline.wait_for_timeout(200)
+            check("Escape closes the account dialog",
+                  not offline.is_visible("#acct-sheet")
+                  and not offline.is_visible("#sheet-bg"))
+            check("a dead backend raises no page errors", not dead,
+                  "; ".join(dead[:2]))
+            offline.close()
+
+            print("\nsigning out takes the data with it")
+            out_pg, out_fake = open_app(browser, url,
+                                        viewport={"width": 1440, "height": 900})
+            check("a signed-in device caches the dataset",
+                  out_pg.evaluate("() => !!localStorage.getItem('data:v1')"))
+            out_pg.click("#acct")
+            out_pg.wait_for_timeout(200)
+            out_pg.click("#acct-out")
+            out_pg.wait_for_timeout(400)
+            check("signing out clears the cached dataset",
+                  not out_pg.evaluate("() => localStorage.getItem('data:v1')"))
+            check("signing out clears the checklists too",
+                  out_pg.evaluate(
+                      "() => Object.keys(localStorage)"
+                      ".filter(k => k.indexOf('checklist:') === 0).length") == 0)
+            check("and the app is behind the gate again",
+                  out_pg.is_visible("#gate")
+                  and out_pg.eval_on_selector_all(".ev", "e => e.length") == 0)
+            out_pg.reload(wait_until="load")
+            out_pg.wait_for_timeout(400)
+            check("a reload after signing out still shows nothing",
+                  out_pg.eval_on_selector_all(".day[data-tier]", "e => e.length") == 0)
+            out_pg.close()
+
+            print("\nchecklist edits reach the database")
+            edit, edit_fake = open_app(browser, url,
+                                       viewport={"width": 1440, "height": 900})
+            edit.click("#tab-checklist")
+            edit.wait_for_timeout(250)
+            edit.click(".cl-add summary")
+            edit.fill("#add-task", "A task added in the browser")
+            edit.click("#add-save")
+            edit.wait_for_timeout(1400)
+            check("an added task is written back, not just kept locally",
+                  any("A task added in the browser" in json.dumps(w)
+                      for w in edit_fake.writes),
+                  f"{len(edit_fake.writes)} writes")
+            check("the write carries the whole document, tasks included",
+                  any(len((w[0].get("doc") or {}).get("tasks", [])) > 0
+                      for w in edit_fake.writes if w),
+                  json.dumps(edit_fake.writes)[:60])
+            edit.close()
 
             print("\nconsole")
             real = [e for e in errors if "favicon" not in e.lower()]

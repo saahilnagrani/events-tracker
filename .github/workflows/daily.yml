@@ -23,13 +23,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # A free Supabase project pauses after seven days with no requests, and this app
-      # only calls it when somebody opens a checklist, which is easily quieter than
-      # that. One request a day from here keeps it awake. It runs before anything that
-      # can fail, so a broken scrape still keeps the database alive, and it cannot fail
-      # the job. The URL and key are read from data/backend.json and are already
-      # public: the anon key ships inside the published page, and Row Level Security is
-      # what protects the data.
+      # A free Supabase project pauses after seven days with no requests. The run
+      # below talks to it anyway, but this goes first and cannot fail the job, so even
+      # a run that dies in the scrape still counts as activity. The URL and key here
+      # are the public ones: the anon key ships inside the page, and Row Level
+      # Security is what protects the data.
       - name: Keep the Supabase project awake
         continue-on-error: true
         run: |
@@ -91,15 +89,24 @@ jobs:
       - name: Install Playwright browser
         run: python -m playwright install --with-deps chromium
 
+      # The database is the store of record now, so the previous dataset comes from
+      # it rather than from the repository: src/scrape.py reads data/events.json to
+      # know what it saw yesterday, and src/changes.py diffs against the .prev copy
+      # taken here before the scrape overwrites it.
+      - name: Pull the previous dataset
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python src/publish.py --pull
+
       # Exits non-zero on a thin or empty scrape and leaves data/ untouched, which
-      # leaves the previously published docs/ in place because nothing downstream runs.
+      # leaves the published dataset in place because nothing downstream runs.
       - name: Scrape Platinumlist
         run: python src/scrape.py
 
-      # Must run before the new dataset is committed: it diffs the working tree against
-      # the committed dataset, so committing first would make every day look quiet.
       - name: Detect changes
-        run: python src/changes.py
+        run: >-
+          python src/changes.py --old data/events.prev.json
+          --old-review data/review_queue.prev.json --out data/changes.json
 
       - name: Score dates
         run: python src/viability.py
@@ -107,33 +114,35 @@ jobs:
       - name: Build site
         run: python src/build_site.py
 
-      # Publishing a page whose filters are dead is worse than publishing nothing, so
-      # this gates the commit rather than reporting after the fact.
+      # The page is a shell, so this proves the shell still works against a stand-in
+      # database. It gates publishing rather than reporting after the fact.
       - name: Smoke-test the built page
         run: python tests/test_site.py
 
-      - name: Commit and push when the dataset moved
+      # Only once the page has been proved does the new dataset become the one the app
+      # serves. The checklists table is deliberately untouched: it holds people's edits.
+      - name: Publish the dataset
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python src/publish.py --push
+
+      # The repository holds code. The only thing a run can change here is the built
+      # shell, and that moves only when the shell itself has been edited.
+      - name: Commit the rebuilt shell if it changed
         id: publish
         run: |
           set -euo pipefail
 
-          # The published page no longer varies with the date it was built, so the only
-          # thing that decides whether there is news is the dataset itself.
-          if git diff --quiet data/events.json data/review_queue.json; then
-            echo "no dataset change; leaving the published site as it is"
-            git checkout -- docs/ data/ || true
+          if git diff --quiet docs/; then
+            echo "shell unchanged; nothing to commit"
             echo "published=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # Written as one line on purpose: inside a YAML block scalar every line is
-          # indented, and Python would reject an indented heredoc body.
-          SUMMARY=$(python -c "import json;c=json.load(open('docs/changes.json'))['summary'];print(', '.join(f'{c[k]} {l}' for k,l in [('added','added'),('removed','removed'),('changed','changed'),('dates_lost','dates lost'),('dates_gained','dates gained')] if c[k]) or 'dataset refreshed')")
-
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/events.json data/review_queue.json docs/
-          git commit -m "Data update: ${SUMMARY}" \
+          git add docs/
+          git commit -m "Rebuild the published shell" \
                      -m "Generated by .github/workflows/daily.yml"
 
           for delay in 2 4 8 16 0; do
@@ -149,23 +158,24 @@ jobs:
           done
 
           echo "published=true" >> "$GITHUB_OUTPUT"
-          echo "summary=${SUMMARY}" >> "$GITHUB_OUTPUT"
 
       - name: Job summary
         if: always()
         run: |
           {
             echo "## Daily scrape"
-            if [ "${{ steps.publish.outputs.published }}" = "true" ]; then
-              echo "Published: ${{ steps.publish.outputs.summary }}"
-            elif [ "${{ steps.publish.outcome }}" = "success" ]; then
-              echo "No dataset change. Nothing committed, previous site left in place."
+            if [ -f data/changes.json ]; then
+              python -c "import json;c=json.load(open('data/changes.json'));s=c['summary'];print('Dataset ' + c['generated'] + ': ' + (', '.join(f'{s[k]} {l}' for k,l in [('added','added'),('removed','removed'),('changed','changed'),('dates_lost','dates lost'),('dates_gained','dates gained')] if s[k]) or 'no change'))"
             else
-              echo "Run failed before publishing. The previously published site is untouched."
+              echo "Run failed before the dataset was rebuilt. The database still holds yesterday's."
+            fi
+            if [ "${{ steps.publish.outputs.published }}" = "true" ]; then
+              echo ""
+              echo "The published shell changed and was committed."
             fi
             echo ""
-            echo "\`docs/changes.json\` carries a \`generated\` date and a \`has_changes\`"
-            echo "flag. Alerting should require both: \`has_changes\` true **and**"
-            echo "\`generated\` equal to today, because on a quiet day nothing is"
-            echo "committed and the file stays as it was."
+            echo "The dataset lives in Supabase, in the \`datasets\` table. The change"
+            echo "summary is the \`changes\` row there, with a \`generated\` date and a"
+            echo "\`has_changes\` flag. Alerting should require both: \`has_changes\` true"
+            echo "**and** \`generated\` equal to today."
           } >> "$GITHUB_STEP_SUMMARY"

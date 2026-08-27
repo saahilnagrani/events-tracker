@@ -5,22 +5,33 @@ staging a show, and checklists for the shows you are running.
 
 Live at <https://saahilnagrani.github.io/events-tracker/>.
 
+## Where the data is
+
+Not here. The repository holds code; the events, the scored calendar and the checklists
+live in Supabase, and the published page is a shell that fetches them once somebody has
+signed in. That is what makes the sign-in real rather than decorative: a static page
+cannot withhold what it has already handed over.
+
+The files under `data/` are working copies for the length of one run, and gitignored.
+
 ## How it runs
 
-`.github/workflows/daily.yml` fires at 03:00 UTC, which is 07:00 in Dubai. It scrapes
-Platinumlist, diffs the result against the committed dataset, rescores every date,
-rebuilds `docs/`, runs the browser smoke test, and commits **only if the dataset
-actually moved**. A failing smoke test stops the publish on purpose: a page whose
-filters are dead is worse than yesterday's page.
+`.github/workflows/daily.yml` fires at 03:00 UTC, which is 07:00 in Dubai. It pulls
+yesterday's dataset out of Supabase, scrapes Platinumlist, diffs the two, rescores every
+date, rebuilds the shell, runs the browser smoke test, and only then writes the new
+dataset back. A failing smoke test stops the publish on purpose.
 
-Locally, the same four steps:
+Locally, the same steps:
 
 ```
-python src/scrape.py        # -> data/events.json, data/review_queue.json
-python src/changes.py       # -> docs/changes.json   (run before committing the data)
-python src/viability.py     # -> docs/viability.json
-python src/build_site.py    # -> docs/
-python tests/test_site.py   # 152 browser checks
+export SUPABASE_SERVICE_KEY=...   # never committed; see SUPABASE.md
+python src/publish.py --pull      # database -> data/*.json
+python src/scrape.py              # -> data/events.json, data/review_queue.json
+python src/changes.py --old data/events.prev.json --out data/changes.json
+python src/viability.py           # -> data/viability.json
+python src/build_site.py          # -> docs/ (a shell: no data in it)
+python tests/test_site.py         # 181 browser checks, against a stand-in database
+python src/publish.py --push      # data/*.json -> database
 ```
 
 ## The Refresh button
@@ -38,6 +49,8 @@ the **Run it on GitHub instead** link, which needs no token.
 Anyone with the unlocked device can use a stored token, so on a shared machine use the
 link rather than saving one.
 
-## Accounts and sync
+## Accounts
 
-Optional, and off until `data/backend.json` is filled in. See [SUPABASE.md](SUPABASE.md).
+Everything is behind one. Signing in is what fetches the data, and an address has to be
+on the allowlist before it returns anything. See [SUPABASE.md](SUPABASE.md) for the
+setup, including the one secret this needs and where it goes.

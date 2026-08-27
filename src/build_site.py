@@ -208,189 +208,25 @@ def write_png(path, size, bleed=False):
     path.write_bytes(png)
 
 
-# ---------------------------------------------------------------- page pieces
-
-def day_cell(day):
-    # Whether a date is in the past is decided at runtime, not baked in here. Doing it
-    # at build time would make the page differ every day even when no event changed,
-    # and would leave a cached offline copy dimming the wrong days. The tier classes are
-    # the default lens; switching lens restyles the cells from the inlined payload.
-    tier = TIERS[day["tier"]]
-    d = date.fromisoformat(day["date"])
-    label = f"{d.strftime('%a %d %b %Y')}, {day['tier']}, score {day['score']}"
-    return (
-        f'<button type="button" class="day t-{day["tier"]}" data-date="{day["date"]}" '
-        f'data-tier="{day["tier"]}" data-dow="{esc(day["dow"])}" '
-        f'aria-label="{esc(label)}">'
-        f'<span class="dn">{d.day}</span>'
-        f'{icon(tier["icon"])}'
-        f'<span class="lb">{tier["label"]}</span></button>'
-    )
-
-
-def months_html(days):
-    groups = {}
-    for day in days:
-        d = date.fromisoformat(day["date"])
-        groups.setdefault((d.year, d.month), []).append(day)
-
-    panels = []
-    for (year, month), items in sorted(groups.items()):
-        first = date(year, month, 1)
-        cells = ['<div class="day pad" aria-hidden="true"></div>'] * first.weekday()
-        # A month at the edge of the window starts partway through.
-        cells += (['<div class="day pad" aria-hidden="true"></div>']
-                  * (date.fromisoformat(items[0]["date"]).day - 1))
-        cells += [day_cell(day) for day in items]
-        heads = "".join(f'<div class="hd">{d}</div>' for d in DOW_ORDER)
-        panels.append(
-            f'<section class="mo" data-month="{year}-{month:02d}" '
-            f'aria-label="{MONTH_NAMES[month - 1]} {year}">'
-            f'<h3>{MONTH_NAMES[month - 1]} {year}</h3>'
-            f'<div class="grid">{heads}{"".join(cells)}</div></section>')
-    return "".join(panels)
-
-
-def whats_on(day):
-    bits = []
-    if day["direct"]:
-        bits.append("Blocking: " + "; ".join(day["direct"]))
-    if day["concert"]:
-        bits.append("Competing: " + "; ".join(day["concert"]))
-    if day["other"]:
-        bits.append("Other comedy: " + "; ".join(day["other"]))
-    return bits
-
-
-# ---------------------------------------------------------------- events tab
-
-def event_month(e):
-    return (e.get("start") or "")[:7]
-
-
-def filter_options(events):
-    """The four multi-select facets, each as (value, label, count)."""
-    def tally(key):
-        seen = {}
-        for e in events:
-            value = key(e)
-            if value:
-                seen[value] = seen.get(value, 0) + 1
-        return seen
-
-    months = tally(event_month)
-    month_opts = [(m, f"{MONTH_NAMES[int(m[5:7]) - 1][:3]} {m[:4]}", months[m])
-                  for m in sorted(months)]
-    def plain(key):
-        counts = tally(lambda e: e.get(key))
-        return [(v, v, counts[v]) for v in sorted(counts)]
-    return {"month": month_opts, "artist": plain("artist"),
-            "category": plain("category"), "language": plain("language")}
-
-
-def facet_html(name, label, options):
-    boxes = "".join(
-        f'<label class="ms-opt"><input type="checkbox" data-facet="{name}" '
-        f'value="{esc(value)}"><span>{esc(text)}</span>'
-        f'<i>{count}</i></label>' for value, text, count in options)
-    return (f'<details class="ms" data-ms="{name}">'
-            f'<summary>{esc(label)}<span class="ms-badge" hidden></span></summary>'
-            f'<div class="ms-menu">{boxes}</div></details>')
-
-
-def events_html(events):
-    if not events:
-        return '<p class="muted">No events in the dataset.</p>'
-    rows = []
-    for e in sorted(events, key=lambda x: (x.get("start") or "", x.get("event") or "")):
-        when = e.get("start") or ""
-        try:
-            when = date.fromisoformat(when).strftime("%a %-d %b %Y")
-        except ValueError:
-            pass
-        if e.get("end"):
-            try:
-                when += " to " + date.fromisoformat(e["end"]).strftime("%-d %b")
-            except ValueError:
-                pass
-        price = f'from AED {e["price_from_aed"]}' if e.get("price_from_aed") else "price n/a"
-        language = e.get("language") or ""
-        meta = " &middot; ".join(filter(None, [
-            esc(e.get("city")), esc(e.get("category")),
-            esc(language) if language != "Not stated" else "", esc(price)]))
-        note = f'<p class="ev-note">{esc(e["notes"])}</p>' if e.get("notes") else ""
-        # Retained after coming off Platinumlist. For a date still ahead that is news:
-        # the show was pulled, sold out or cancelled.
-        if not e.get("listed", True):
-            seen = e.get("last_seen")
-            note = (f'<p class="ev-gone">No longer listed on Platinumlist'
-                    f'{" &middot; last seen " + esc(seen) if seen else ""}</p>') + note
-        rows.append(
-            f'<article class="ev" data-month="{esc(event_month(e))}" '
-            f'data-start="{esc(e.get("start"))}" data-end="{esc(e.get("end") or "")}" '
-            f'data-listed="{1 if e.get("listed", True) else 0}" '
-            f'data-artist="{esc(e.get("artist"))}" '
-            f'data-category="{esc(e.get("category"))}" '
-            f'data-language="{esc(language)}">'
-            f'<h4><a href="{esc(e.get("url"))}" rel="noopener noreferrer" '
-            f'target="_blank">{esc(e.get("event"))}</a></h4>'
-            f'<p class="ev-when">{esc(when)}'
-            f'{" &middot; " + esc(e["time"]) if e.get("time") else ""}</p>'
-            f'<p class="ev-where">{esc(e.get("venue")) or "Venue not listed"}</p>'
-            f'<p class="ev-meta">{meta}</p>{note}</article>')
-    return "".join(rows)
-
+# ----------------------------------------------------------- page pieces
+# Nothing here renders data any more. The events, the calendar and the checklists are
+# fetched from Supabase after somebody signs in and are drawn in the browser, because
+# a static page cannot be given data it is allowed to withhold: whatever it holds, it
+# has already handed over.
 
 # ---------------------------------------------------------------- checklist tab
 
-def choice(name, group, options, current, label=None):
-    """A single-choice dropdown built from the same parts as the multi-select facets.
+def checklist_html():
+    """The checklist shell: containers, no content.
 
-    A native <select> was the last control on the page rendering the operating system's
-    own menu, which is why it looked foreign beside everything else. Radio inputs are
-    kept, so this is still a real form control for keyboard and screen readers; only
-    the presentation is ours.
+    The picker, the setup fields and the tasks are all drawn in the browser from the
+    fetched documents. They used to be rendered here, which is how an artist fee and
+    two counterparty names came to sit in a public HTML file.
     """
-    rows = "".join(
-        f'<label class="ms-opt"><input type="radio" name="{esc(group)}" '
-        f'value="{esc(value)}"{" checked" if text == current or value == current else ""}>'
-        f'<span>{esc(text)}</span></label>' for value, text in options)
-    aria = f' aria-label="{esc(label)}"' if label else ""
-    return (f'<details class="ms ms-choice" data-choice="{esc(name)}">'
-            f'<summary{aria}><span class="ms-value">{esc(current)}</span>'
-            f'{icon("down", "ic ms-caret")}</summary>'
-            f'<div class="ms-menu">{rows}</div></details>')
-
-
-def checklist_html(checklists):
-    """The checklist shell only.
-
-    The tasks themselves are rendered in the browser from the inlined payload plus
-    whatever has been added locally. Rendering them here as well would mean two
-    code paths building the same row, and only one of them able to grow.
-    """
-    if not checklists:
-        return ('<p class="muted">No checklists yet. Import one with '
-                '<code>python src/import_checklist.py &lt;workbook.xlsx&gt;</code>.</p>')
-
-    picker = choice("checklist", "cl-which",
-                    [(c["id"], c["title"]) for c in checklists],
-                    checklists[0]["title"], "Which checklist")
-
-    # The workbook's Setup tab is meant to be filled in, so these are inputs rather
-    # than read-only text, saved alongside the task statuses.
-    setup = "".join(
-        f'<div class="cl-field" data-cl="{esc(c["id"])}" hidden>'
-        + "".join(f'<div class="cl-f"><b>{esc(f["label"])}</b>'
-                  f'<input type="text" data-field="{esc(f["label"])}" '
-                  f'value="{esc(f["value"])}" placeholder="Not set">'
-                  f'<i>{esc(f["note"])}</i></div>' for f in c.get("setup", []))
-        + '</div>' for c in checklists)
-
     return f"""
  <div class="cl-account" id="cl-account" hidden></div>
  <div class="cl-bar">
-  {picker}
+  <span id="cl-picker"></span>
   <label class="cl-date">Show date
    <input type="date" id="cl-date"></label>
   <button type="button" id="cl-export" class="icon-btn">Copy JSON</button>
@@ -405,7 +241,7 @@ def checklist_html(checklists):
  </details>
  <details class="cl-more">
   <summary>Show details and assumptions</summary>
-  {setup}
+  <div id="cl-setup"></div>
  </details>
 
  <details class="cl-more cl-add">
@@ -447,37 +283,6 @@ def checklist_html(checklists):
  <details class="cl-json"><summary>Checklist JSON</summary>
   <textarea id="cl-out" readonly rows="8"></textarea></details>
 """
-
-
-# ---------------------------------------------------------------- payload
-
-def encode(lenses):
-    """Inline payload for the page.
-
-    Three lenses over a year of dates repeats the same reason strings thousands of
-    times, so strings are pooled into a table and referenced by index. That is what
-    keeps the page a few hundred KB rather than well over a megabyte.
-    """
-    pool, index = [], {}
-
-    def sid(text):
-        if text not in index:
-            index[text] = len(pool)
-            pool.append(text)
-        return index[text]
-
-    days = {}
-    for name, scored in lenses.items():
-        for day in scored:
-            rec = days.setdefault(day["date"], {"d": day["dow"], "h": day["holiday"],
-                                                "L": {}})
-            rec["L"][name] = {
-                "t": day["tier"], "s": day["score"],
-                "o": [sid(x) for x in whats_on(day)],
-                "r": [sid(x) for x in day["reasons"]],
-                "b": [sid(x) for x in day["boosts"]],
-            }
-    return days, pool
 
 
 def icon_url(name):
@@ -531,8 +336,7 @@ def service_worker(digest):
 // the cache after the day let the first one's assets outlive it.
 const CACHE = 'events-tracker-{digest}';
 const ASSETS = ['./', './index.html', './manifest.webmanifest',
-                {icons}, {masks},
-                './viability.json'];
+                {icons}, {masks}];
 
 self.addEventListener('install', e => {{
   e.waitUntil(caches.open(CACHE)
@@ -895,6 +699,24 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
 .sync-dot.on{background:var(--good)}
 
+/* ---- the gate: what a signed-out visitor gets instead of the app ---- */
+/* The nav is hidden rather than disabled, because there is nothing behind it to
+   navigate to: the page is empty until the database has answered. */
+body.locked .side-nav,body.locked .nav,body.locked .data-bar,
+body.locked .filters{display:none}
+/* The painted controls are wrapped in a placeholder element so the browser has
+   somewhere to put them; display:contents keeps the flex row flat, otherwise all four
+   facets stack inside one flex item. */
+#facets,#cl-picker{display:contents}
+#gate{display:flex;justify-content:center;padding:28px 0 40px}
+.gate-card{max-width:460px;background:var(--surface-1);border:1px solid var(--ring);
+ border-radius:14px;padding:22px 22px 24px}
+.gate-card h2{margin:0 0 8px;font-size:17px}
+.gate-card p{margin:0 0 12px;font-size:13.5px;color:var(--ink-2);line-height:1.55}
+.gate-msg:empty{display:none}
+.gate-msg{background:var(--plane);border:1px solid var(--ring);border-radius:9px;
+ padding:9px 11px;font-size:12.5px}
+
 /* ---- data freshness and the refresh control ---- */
 .data-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 2px;
  font-size:12.5px;color:var(--ink-2)}
@@ -1092,13 +914,17 @@ JS = """
  // that kills every handler defined after it.
  var $ = function(id){ return document.getElementById(id); };
  var all = function(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); };
- var DAYS = window.__DAYS__ || {};
- var POOL = window.__POOL__ || [];
+ // Everything below starts empty. The page ships no data at all: it is fetched from
+ // the database once somebody signs in, and painted from what comes back.
+ var DAYS = {};          // date -> {d, h, L: {lens: {t, s, o, r, b, c}}}
+ var POOL = [];          // pooled reason strings, referenced by index
  var TIER = window.__TIERS__ || {};
- var LENSES = window.__LENSES__ || {};
- var CHECK = window.__CHECKLISTS__ || [];
+ var LENSES = {};        // lens name -> {label, blurb}
+ var CHECK = [];         // checklist documents
  var STATUS_LIST = window.__STATUSES__ || ['Not started'];
- var DEFAULT_LENS = window.__DEFAULT_LENS__ || 'standup';
+ var DEFAULT_LENS = 'standup';
+ var RAMADAN = null;
+ var STAMP = '';
  var text = function(i){ return POOL[i] || ''; };
  var svgIcon = function(name){
   return '<svg class="ic" aria-hidden="true" focusable="false"><use href="#i-' +
@@ -1144,18 +970,20 @@ JS = """
  });
 
  // ================================================================ calendar
- var cells = all('.day[data-tier]');
+ var cells = [];         // refilled by paint(), which builds the cells
  var countEl = $('count');
  var mode = 'all';
  var lens = DEFAULT_LENS;
 
- // Past dates are marked here rather than at build time, so the page is identical
- // whichever day it was built and a cached copy still marks the right days as gone.
- cells.forEach(function(el){
-  var past = el.dataset.date < TODAY;
-  el.dataset.past = past ? '1' : '0';
-  el.classList.toggle('past', past);
- });
+ // Past dates are marked when the cells are built rather than when the data was
+ // scored, so a copy painted from cache still marks the right days as gone.
+ function markPast(){
+  cells.forEach(function(el){
+   var past = el.dataset.date < TODAY;
+   el.dataset.past = past ? '1' : '0';
+   el.classList.toggle('past', past);
+  });
+ }
 
  function dayFor(iso){
   var rec = DAYS[iso];
@@ -1214,9 +1042,6 @@ JS = """
  Object.keys(filters).forEach(function(k){
   if (filters[k]) filters[k].addEventListener('click', function(){ applyFilter(k); });
  });
- all('[data-lens-opt]').forEach(function(b){
-  b.addEventListener('click', function(){ applyLens(b.dataset.lensOpt); });
- });
 
  // ---- detail sheet
  var sheet = $('sheet'), sheetBg = $('sheet-bg'), lastFocus = null;
@@ -1251,9 +1076,20 @@ JS = """
   }
   if (lastFocus && lastFocus.focus) lastFocus.focus();
  }
- cells.forEach(function(el){
-  el.addEventListener('click', function(){ openSheet(el.dataset.date); });
- });
+ // Painted elements are bound after each paint rather than at load: at load there
+ // are none, because the page arrives empty.
+ function bindPainted(){
+  cells.forEach(function(el){
+   el.addEventListener('click', function(){ openSheet(el.dataset.date); });
+  });
+  all('input[data-facet]').forEach(function(box){
+   box.addEventListener('change', evFilter);
+  });
+  all('[data-lens-opt]').forEach(function(b){
+   b.addEventListener('click', function(){ applyLens(b.dataset.lensOpt); });
+  });
+  bindHover();
+ }
  // One backdrop serves both dialogs, so dismissing has to close whichever is open.
  function closeDialogs(){ closeSheet(); closeAcct(); closeRun(); }
  sheetBg.addEventListener('click', closeDialogs);
@@ -1263,6 +1099,7 @@ JS = """
  });
 
  // ---- hover summary, pointer devices only
+ var bindHover = function(){};
  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
   var tip = $('tip');
   var showTip = function(el){
@@ -1284,12 +1121,14 @@ JS = """
    tip.style.top = y + 'px';
   };
   var hideTip = function(){ tip.classList.remove('on'); };
-  cells.forEach(function(el){
-   el.addEventListener('mouseenter', function(){ showTip(el); });
-   el.addEventListener('focus', function(){ showTip(el); });
-   el.addEventListener('mouseleave', hideTip);
-   el.addEventListener('blur', hideTip);
-  });
+  bindHover = function(){
+   cells.forEach(function(el){
+    el.addEventListener('mouseenter', function(){ showTip(el); });
+    el.addEventListener('focus', function(){ showTip(el); });
+    el.addEventListener('mouseleave', hideTip);
+    el.addEventListener('blur', hideTip);
+   });
+  };
  }
 
  var months = $('months');
@@ -1303,7 +1142,7 @@ JS = """
  if ($('mo-next')) $('mo-next').addEventListener('click', function(){ page(1); });
 
  // ================================================================ events tab
- var evs = all('.ev');
+ var evs = [];           // refilled by paint()
  var evCount = $('ev-count');
  // Nothing checked in a facet means that facet is not constraining. Within a facet the
  // checks are OR; across facets they are AND.
@@ -1348,9 +1187,6 @@ JS = """
    evCount.dataset.past = String(past);
   }
  }
- all('input[data-facet]').forEach(function(box){
-  box.addEventListener('change', evFilter);
- });
  if ($('ev-clear')) $('ev-clear').addEventListener('click', function(){
   all('input[data-facet]').forEach(function(b){ b.checked = false; });
   if ($('ev-past')) $('ev-past').checked = false;
@@ -1506,7 +1342,7 @@ JS = """
     if (!r.ok) return fail(r).then(function(m){ say(m, true); });
     return r.json().then(function(j){
      adopt(j); authMode = 'in'; say(''); closeAcct();
-     return pullAll();
+     return load();
     });
    })
    .catch(function(){ say('Could not reach the server.', true); });
@@ -1520,7 +1356,7 @@ JS = """
     return r.json().then(function(j){
      if (j.access_token) {           // email confirmation switched off: straight in
       adopt(j); authMode = 'in'; say(''); closeAcct();
-      return pullAll();
+      return load();
      }
      authMode = 'in';
      say('Account created. Confirm it from the email just sent, then sign in.');
@@ -1558,13 +1394,20 @@ JS = """
   // Best effort: the local session goes either way, so a failed revoke cannot strand
   // anyone signed in on their own device.
   api('/auth/v1/logout', {method: 'POST'}).catch(function(){});
-  setSession(null); authMode = 'in'; pendingRecovery = false; say('');
+  setSession(null); authMode = 'in'; pendingRecovery = false;
+  // The data goes with the session. Leaving a cached copy behind would mean signing
+  // out did nothing on a shared machine.
+  cacheClear();
+  DATA = null; DAYS = {}; CHECK = []; POOL = [];
+  closeAcct();
+  gate('');
+  say('');
  }
 
  function pull(id){
   return refreshIfStale().then(function(ok){
    if (!ok) return null;
-   return api('/rest/v1/checklist_state?select=data,updated_at&id=eq.' +
+   return api('/rest/v1/checklists?select=doc,updated_at&id=eq.' +
               encodeURIComponent(id))
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(rows){ return rows && rows.length ? rows[0] : null; });
@@ -1578,10 +1421,15 @@ JS = """
   clSave(id, state, true);
   return refreshIfStale().then(function(ok){
    if (!ok) return false;
-   return api('/rest/v1/checklist_state',
+   // The whole document goes back, definition and all, because this table is the
+   // only copy of it now. Sending just the state would blank the tasks.
+   var doc = meta(id);
+   doc = JSON.parse(JSON.stringify(doc));
+   doc.state = state;
+   return api('/rest/v1/checklists',
      {method: 'POST',
       headers: {'Prefer': 'resolution=merge-duplicates,return=minimal'},
-      body: [{id: id, data: state, updated_by: (session() || {}).email || ''}]})
+      body: [{id: id, doc: doc, updated_by: (session() || {}).email || ''}]})
     .then(function(r){
      syncNote = r.ok ? 'Synced just now'
                      : (r.status === 401 || r.status === 403
@@ -1613,7 +1461,8 @@ JS = """
     var mine = localState.updated_at || '';
     var theirs = row.updated_at || '';
     if (theirs > mine) {
-     clSave(c.id, Object.assign({}, row.data, {updated_at: theirs}), true);
+     clSave(c.id, Object.assign({}, (row.doc || {}).state || {},
+                                {updated_at: theirs}), true);
      syncNote = 'Updated from the server';
     } else if (mine && mine > theirs) {
      return push(c.id);
@@ -1805,7 +1654,7 @@ JS = """
  // ================================================================ checklist tab
  // Tasks are rendered here rather than in the page source, so an imported task and
  // one added in the browser travel the same path and look the same.
- var current = CHECK.length ? CHECK[0].id : null;
+ var current = null;
 
  function clKey(id){ return 'checklist:' + id; }
  function clState(id){
@@ -1831,10 +1680,15 @@ JS = """
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
  }
+ // Options are either plain strings, where the value is the label, or {value, text}
+ // pairs, which is what the checklist picker needs: it shows a title and carries an id.
  function choiceHtml(name, group, options, currentValue){
   var rows = options.map(function(o){
+   var value = o && o.value !== undefined ? o.value : o;
+   var label = o && o.text !== undefined ? o.text : o;
+   var on = value === currentValue || label === currentValue;
    return '<label class="ms-opt"><input type="radio" name="' + esc(group) + '" value="' +
-     esc(o) + '"' + (o === currentValue ? ' checked' : '') + '><span>' + esc(o) +
+     esc(value) + '"' + (on ? ' checked' : '') + '><span>' + esc(label) +
      '</span></label>';
   }).join('');
   return '<details class="ms ms-choice" data-choice="' + esc(name) + '">' +
@@ -1917,7 +1771,10 @@ JS = """
   var byWs = {};
   all('.tk').forEach(function(el){
    var n = el.dataset.n;
-   var status = statuses[n] || el.querySelector('input[type="radio"]:checked').value;
+   // A status the dropdown does not offer leaves nothing checked, and reading .value
+   // off nothing throws in the middle of a render. Fall back rather than break.
+   var picked = el.querySelector('input[type="radio"]:checked');
+   var status = statuses[n] || (picked ? picked.value : STATUS_LIST[0]);
    el.classList.toggle('done', status === 'Done');
 
    var due = dueDate(showDate, el.dataset.dminus);
@@ -2048,24 +1905,18 @@ JS = """
  ['cl-blockers', 'cl-open'].forEach(function(id){
   if ($(id)) $(id).addEventListener('change', renderChecklist);
  });
- all('.cl-field input[data-field]').forEach(function(inp){
-  inp.addEventListener('change', function(){
-   var owner = inp.closest('.cl-field').dataset.cl;
-   var state = clState(owner);
-   state.fields = state.fields || {};
-   state.fields[inp.dataset.field] = inp.value;
-   clSave(owner, state);
-   renderChecklist();
+ function bindSetupFields(){
+  all('.cl-field input[data-field]').forEach(function(inp){
+   inp.addEventListener('change', function(){
+    var owner = inp.closest('.cl-field').dataset.cl;
+    var state = clState(owner);
+    state.fields = state.fields || {};
+    state.fields[inp.dataset.field] = inp.value;
+    clSave(owner, state);
+    renderChecklist();
+   });
   });
- });
- // The checklist picker lives outside #cl-tasks, so it binds separately.
- var pickBox = document.querySelector('.ms-choice[data-choice="checklist"]');
- if (pickBox) pickBox.addEventListener('change', function(e){
-  if (!e.target || e.target.type !== 'radio') return;
-  current = e.target.value;
-  pickBox.open = false;
-  renderChecklist();
- });
+ }
  if ($('cl-export')) $('cl-export').addEventListener('click', function(){
   var out = $('cl-out');
   if (!out) return;
@@ -2089,7 +1940,6 @@ JS = """
  // and nowhere else, sent to api.github.com and nowhere else. Without one the button
  // still works, it just hands you off to the Actions page instead.
  var REPO = window.__REPO__ || {};
- var STAMP = window.__STAMP__ || '';
  var TOKEN_KEY = 'gh:token';
  var runSheet = $('run-sheet');
  var runTimer = null;
@@ -2118,6 +1968,8 @@ JS = """
  function renderStamp(){
   var el = $('data-when');
   if (!el || !STAMP) return;
+  var side = $('side-stamp');
+  if (side) side.innerHTML = 'Checked daily<br>data as of ' + esc(STAMP);
   var n = daysSince(STAMP);
   var when = n <= 0 ? 'today' : (n === 1 ? 'yesterday' : n + ' days ago');
   el.textContent = 'Listings last checked ' + when;
@@ -2270,6 +2122,243 @@ JS = """
  if ($('run-close')) $('run-close').addEventListener('click', closeRun);
  renderStamp();
 
+ // ================================================================ painting
+ // These five renderers are ports of what src/build_site.py used to emit. They moved
+ // into the browser when the data moved into the database: a static page cannot be
+ // given data it is allowed to withhold, because whatever it holds it has already
+ // handed to whoever asked for the page.
+ var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+               'August', 'September', 'October', 'November', 'December'];
+ var DOWS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+ function whatsOn(day){
+  var bits = [];
+  if ((day.direct || []).length) bits.push('Blocking: ' + day.direct.join('; '));
+  if ((day.concert || []).length) bits.push('Competing: ' + day.concert.join('; '));
+  if ((day.other || []).length) bits.push('Other comedy: ' + day.other.join('; '));
+  return bits;
+ }
+
+ // Three lenses over a year repeat the same reasons thousands of times, so strings
+ // are pooled and referenced by index, exactly as the build used to do it.
+ function prepare(viab){
+  var pool = [], index = {}, days = {};
+  function sid(t){
+   if (!(t in index)) { index[t] = pool.length; pool.push(t); }
+   return index[t];
+  }
+  var lenses = viab.lenses || {};
+  Object.keys(lenses).forEach(function(name){
+   (lenses[name] || []).forEach(function(day){
+    var rec = days[day.date] ||
+              (days[day.date] = {d: day.dow, h: day.holiday || '', L: {}});
+    rec.L[name] = {t: day.tier, s: day.score,
+                   o: whatsOn(day).map(sid),
+                   r: (day.reasons || []).map(sid),
+                   b: (day.boosts || []).map(sid),
+                   c: (day.direct || []).length > 0};
+   });
+  });
+  return {days: days, pool: pool};
+ }
+
+ function monthsHtml(){
+  var isos = Object.keys(DAYS).sort();
+  if (!isos.length) return '';
+  var groups = {}, order = [];
+  isos.forEach(function(iso){
+   var key = iso.slice(0, 7);
+   if (!groups[key]) { groups[key] = []; order.push(key); }
+   groups[key].push(iso);
+  });
+  var heads = DOWS.map(function(d){ return '<div class="hd">' + d + '</div>'; }).join('');
+  return order.map(function(key){
+   var year = Number(key.slice(0, 4)), month = Number(key.slice(5, 7));
+   var first = new Date(year, month - 1, 1);
+   // Monday-first, and a month at the edge of the window starts partway through.
+   var lead = (first.getDay() + 6) % 7;
+   var pad = '<div class="day pad" aria-hidden="true"></div>';
+   var cellsHtml = new Array(lead + Number(groups[key][0].slice(8)) - 1)
+                     .fill(pad).join('');
+   cellsHtml += groups[key].map(function(iso){
+    var rec = DAYS[iso], d = rec.L[lens] || rec.L[DEFAULT_LENS] || {t: 'weak', s: 0};
+    var t = TIER[d.t] || {icon: 'dash', label: d.t};
+    var when = new Date(iso + 'T00:00:00');
+    var label = when.toDateString() + ', ' + d.t + ', score ' + d.s;
+    return '<button type="button" class="day t-' + d.t + '" data-date="' + iso +
+      '" data-tier="' + d.t + '" data-dow="' + esc(rec.d) + '" aria-label="' +
+      esc(label) + '"><span class="dn">' + when.getDate() + '</span>' +
+      svgIcon(t.icon) + '<span class="lb">' + t.label + '</span></button>';
+   }).join('');
+   return '<section class="mo" data-month="' + key + '" aria-label="' +
+     MONTHS[month - 1] + ' ' + year + '"><h3>' + MONTHS[month - 1] + ' ' + year +
+     '</h3><div class="grid">' + heads + cellsHtml + '</div></section>';
+  }).join('');
+ }
+
+ function longDate(iso){
+  var d = new Date(iso + 'T00:00:00');
+  if (isNaN(d)) return iso;
+  return d.toDateString().replace(/^(\w{3}) (\w{3}) (\d+) (\d+)$/,
+                                  function(_, dow, mon, day, yr){
+   return dow + ' ' + Number(day) + ' ' + mon + ' ' + yr;
+  });
+ }
+
+ function eventsHtml(events){
+  if (!events.length) return '<p class="muted">No events in the dataset.</p>';
+  var sorted = events.slice().sort(function(a, b){
+   return (a.start || '').localeCompare(b.start || '') ||
+          (a.event || '').localeCompare(b.event || '');
+  });
+  return sorted.map(function(e){
+   var when = longDate(e.start || '');
+   if (e.end) {
+    var to = new Date(e.end + 'T00:00:00');
+    if (!isNaN(to)) {
+     when += ' to ' + to.getDate() + ' ' + to.toDateString().slice(4, 7);
+    }
+   }
+   var price = e.price_from_aed ? 'from AED ' + e.price_from_aed : 'price n/a';
+   var language = e.language || '';
+   var meta = [e.city, e.category, language === 'Not stated' ? '' : language, price]
+     .filter(Boolean).map(esc).join(' &middot; ');
+   var note = e.notes ? '<p class="ev-note">' + esc(e.notes) + '</p>' : '';
+   if (e.listed === false) {
+    note = '<p class="ev-gone">No longer listed on Platinumlist' +
+      (e.last_seen ? ' &middot; last seen ' + esc(e.last_seen) : '') + '</p>' + note;
+   }
+   return '<article class="ev" data-month="' + esc((e.start || '').slice(0, 7)) +
+     '" data-start="' + esc(e.start) + '" data-end="' + esc(e.end || '') +
+     '" data-listed="' + (e.listed === false ? 0 : 1) + '" data-artist="' +
+     esc(e.artist) + '" data-category="' + esc(e.category) + '" data-language="' +
+     esc(language) + '"><h4><a href="' + esc(e.url) + '" rel="noopener noreferrer" ' +
+     'target="_blank">' + esc(e.event) + '</a></h4><p class="ev-when">' + esc(when) +
+     (e.time ? ' &middot; ' + esc(e.time) : '') + '</p><p class="ev-where">' +
+     (esc(e.venue) || 'Venue not listed') + '</p><p class="ev-meta">' + meta +
+     '</p>' + note + '</article>';
+  }).join('');
+ }
+
+ function facetsHtml(events){
+  function tally(fn){
+   var seen = {};
+   events.forEach(function(e){
+    var v = fn(e);
+    if (v) seen[v] = (seen[v] || 0) + 1;
+   });
+   return seen;
+  }
+  function plain(key){
+   var counts = tally(function(e){ return e[key]; });
+   return Object.keys(counts).sort().map(function(v){
+    return [v, v, counts[v]];
+   });
+  }
+  var months = tally(function(e){ return (e.start || '').slice(0, 7); });
+  var opts = {
+   month: Object.keys(months).sort().map(function(m){
+    return [m, MONTHS[Number(m.slice(5, 7)) - 1].slice(0, 3) + ' ' + m.slice(0, 4),
+            months[m]];
+   }),
+   artist: plain('artist'), category: plain('category'), language: plain('language')
+  };
+  return [['month', 'Month'], ['artist', 'Artist'], ['category', 'Category'],
+          ['language', 'Language']].map(function(pair){
+   var boxes = (opts[pair[0]] || []).map(function(o){
+    return '<label class="ms-opt"><input type="checkbox" data-facet="' + pair[0] +
+      '" value="' + esc(o[0]) + '"><span>' + esc(o[1]) + '</span><i>' + o[2] +
+      '</i></label>';
+   }).join('');
+   return '<details class="ms" data-ms="' + pair[0] + '"><summary>' + pair[1] +
+     '<span class="ms-badge" hidden></span></summary><div class="ms-menu">' + boxes +
+     '</div></details>';
+  }).join('');
+ }
+
+ function lensesHtml(){
+  return Object.keys(LENSES).map(function(name){
+   return '<button type="button" data-lens-opt="' + esc(name) + '" aria-pressed="' +
+     (name === lens ? 'true' : 'false') + '">' +
+     esc((LENSES[name] || {}).label || name) + '</button>';
+  }).join('');
+ }
+
+ // Counted over the whole window for the lens in view, which is what the calendar
+ // above them is showing.
+ function statsHtml(){
+  var isos = Object.keys(DAYS), counts = {}, clash = 0, ramadan = 0;
+  isos.forEach(function(iso){
+   var d = DAYS[iso].L[lens] || DAYS[iso].L[DEFAULT_LENS];
+   if (!d) return;
+   counts[d.t] = (counts[d.t] || 0) + 1;
+   if (d.c) clash += 1;
+   if (RAMADAN && iso >= RAMADAN[0] && iso <= RAMADAN[1]) ramadan += 1;
+  });
+  var ram = RAMADAN
+    ? 'days lost to Ramadan (' + longDate(RAMADAN[0]).slice(4) + ' to ' +
+      longDate(RAMADAN[1]).slice(4) + ')'
+    : 'days lost to Ramadan';
+  return [[counts.prime || 0, 'prime dates to shortlist'],
+          [clash, 'nights taken by a competing act'],
+          [counts.blocked || 0, 'dates ruled out in total'],
+          [ramadan, ram]].map(function(pair){
+   return '<div class="stat"><b>' + pair[0] + '</b><span>' + esc(pair[1]) +
+     '</span></div>';
+  }).join('');
+ }
+
+ function paintChecklistShell(){
+  var picker = $('cl-picker'), setup = $('cl-setup');
+  if (picker) {
+   picker.innerHTML = CHECK.length
+     ? choiceHtml('checklist', 'cl-which',
+                  CHECK.map(function(c){ return {value: c.id, text: c.title}; }),
+                  (meta(current) || {}).title || '')
+     : '';
+   var box = picker.querySelector('.ms-choice[data-choice="checklist"]');
+   if (box) box.addEventListener('change', function(e){
+    if (!e.target || e.target.type !== 'radio') return;
+    current = e.target.value;
+    box.open = false;
+    renderChecklist();
+   });
+  }
+  if (setup) {
+   setup.innerHTML = CHECK.map(function(c){
+    return '<div class="cl-field" data-cl="' + esc(c.id) + '" hidden>' +
+      (c.setup || []).map(function(f){
+       return '<div class="cl-f"><b>' + esc(f.label) + '</b><input type="text" ' +
+         'data-field="' + esc(f.label) + '" value="' + esc(f.value) +
+         '" placeholder="Not set"><i>' + esc(f.note || '') + '</i></div>';
+      }).join('') + '</div>';
+   }).join('');
+   bindSetupFields();
+  }
+ }
+
+ function paint(){
+  var events = (DATA && DATA.viability && DATA.viability.events) || [];
+  if ($('facets')) $('facets').innerHTML = facetsHtml(events);
+  if ($('events')) $('events').innerHTML = eventsHtml(events);
+  if ($('lenses')) $('lenses').innerHTML = lensesHtml();
+  if (months) months.innerHTML = monthsHtml();
+  if ($('stats')) $('stats').innerHTML = statsHtml();
+  paintChecklistShell();
+
+  cells = all('.day[data-tier]');
+  evs = all('.ev');
+  bindPainted();
+  markPast();
+  applyLens(lens);
+  evFilter();
+  renderChecklist();
+  renderStamp();
+
+  var here = months && months.querySelector('[data-month="' + TODAY.slice(0, 7) + '"]');
+  if (here) months.scrollLeft = here.offsetLeft - months.offsetLeft;
+ }
+
  // ================================================================ theme
  $('theme').addEventListener('click', function(){
   var root = document.documentElement;
@@ -2281,11 +2370,147 @@ JS = """
   store.set('theme', next);
  });
 
+ // ================================================================ data
+ // The cache is a copy of what the last signed-in fetch returned, so the app opens
+ // instantly and still works on a train. It is wiped on sign-out: the next person to
+ // use this browser is not necessarily the last one.
+ var CACHE_KEY = 'data:v1';
+ var DATA = null;
+
+ function cacheRead(){
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); }
+  catch (e) { return null; }
+ }
+ function cacheWrite(data){
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+ }
+ function cacheClear(){
+  try {
+   localStorage.removeItem(CACHE_KEY);
+   Object.keys(localStorage).filter(function(k){
+    return k.indexOf('checklist:') === 0;
+   }).forEach(function(k){ localStorage.removeItem(k); });
+  } catch (e) {}
+ }
+
+ function useData(data){
+  if (!data || !data.viability) return false;
+  DATA = data;
+  var viab = data.viability;
+  var made = prepare(viab);
+  DAYS = made.days;
+  POOL = made.pool;
+  LENSES = viab.lens_meta || {};
+  RAMADAN = viab.ramadan || null;
+  DEFAULT_LENS = viab.default_lens || 'standup';
+  STAMP = viab.generated || '';
+  lens = LENSES[store.get('lens', '')] ? store.get('lens', '') : DEFAULT_LENS;
+  CHECK = data.checklists || [];
+  if (!current || !CHECK.filter(function(c){ return c.id === current; }).length) {
+   current = CHECK.length ? CHECK[0].id : null;
+  }
+  return true;
+ }
+
+ // Hiding the panels is not enough: what was painted is still in the document, and
+ // "signed out" has to mean the data is gone, not merely out of view.
+ function clearPainted(){
+  ['events', 'months', 'facets', 'stats', 'lenses', 'cl-tasks', 'cl-picker',
+   'cl-setup', 'cl-progress', 'cl-streams'].forEach(function(id){
+   var el = $(id);
+   if (el) el.innerHTML = '';
+  });
+  var out = $('cl-out');
+  if (out) out.value = '';
+  var when = $('data-when');
+  if (when) { when.textContent = ''; when.removeAttribute('title'); }
+  cells = [];
+  evs = [];
+ }
+
+ function gate(message){
+  clearPainted();
+  var g = $('gate');
+  if (g) g.hidden = false;
+  var m = $('gate-msg');
+  if (m) m.textContent = message || '';
+  document.body.classList.add('locked');
+  TABS.forEach(function(t){
+   var panel = $('panel-' + t);
+   if (panel) panel.hidden = true;
+  });
+ }
+
+ function unlock(){
+  var g = $('gate');
+  if (g) g.hidden = true;
+  document.body.classList.remove('locked');
+  showTab(store.get('tab', TABS[0]));
+ }
+
+ // One round trip for the dataset, one for the checklists. Both are refused by Row
+ // Level Security unless the signed-in address is on the allowlist, and an empty
+ // dataset from a successful request is exactly what that refusal looks like.
+ function fetchData(){
+  return refreshIfStale().then(function(ok){
+   if (!ok) return null;
+   return Promise.all([
+    api('/rest/v1/datasets?select=payload,generated&key=eq.viability'),
+    api('/rest/v1/checklists?select=id,doc,updated_at')
+   ]).then(function(rs){
+    var bad = rs.filter(function(r){ return !r.ok; })[0];
+    if (bad) {
+     if (isPaused(bad)) throw new Error('paused');
+     if (bad.status === 401 || bad.status === 403) throw new Error('denied');
+     throw new Error('http ' + bad.status);
+    }
+    return Promise.all(rs.map(function(r){ return r.json(); }));
+   }).then(function(bodies){
+    var rows = bodies[0] || [], docs = bodies[1] || [];
+    if (!rows.length) throw new Error('empty');
+    return {viability: rows[0].payload,
+            checklists: docs.map(function(d){ return d.doc; }),
+            fetched: new Date().toISOString()};
+   });
+  });
+ }
+
+ function load(){
+  if (!SYNC_ON) { gate('This build has no database configured.'); return; }
+  if (!session()) { gate(''); return; }
+
+  var cached = cacheRead();
+  if (useData(cached)) { unlock(); paint(); }
+
+  // The network catch is kept off the painting on purpose. Wrapped around both, a
+  // rendering bug reports itself as "could not reach the database", which is the kind
+  // of misdirection that costs an afternoon.
+  fetchData().catch(function(err){
+   var why = String(err && err.message || err);
+   var note = why === 'denied' || why === 'empty'
+     ? 'Signed in, but this address is not on the allowlist yet.'
+     : (why === 'paused' ? PAUSED : 'Could not reach the database.');
+   if (cached) { syncNote = note; renderAccount(); }
+   else gate(note);
+   return null;
+  }).then(function(data){
+   if (!data) {
+    if (!cached && !$('gate-msg').textContent) {
+     gate('That sign-in has expired. Sign in again.');
+    }
+    return;
+   }
+   cacheWrite(data);
+   useData(data);
+   unlock();
+   paint();
+   pullAll();
+  });
+ }
+
  // ================================================================ initial state
- applyLens(LENSES[store.get('lens', '')] ? store.get('lens', '') : DEFAULT_LENS);
- evFilter();
- renderChecklist();
  showTab(store.get('tab', TABS[0]));
+ gate('');
 
  if (SYNC_ON) {
   var arrived = adoptRedirect();
@@ -2295,12 +2520,10 @@ JS = """
   if (pendingRecovery) openAcct();
   if (session()) {
    (arrived ? whoAmI() : Promise.resolve((session() || {}).email))
-    .then(function(){ renderAccount(); return pullAll(); });
+    .then(function(){ renderAccount(); load(); });
   }
  }
-
- var panel = months.querySelector('[data-month="' + TODAY.slice(0, 7) + '"]');
- if (panel) months.scrollLeft = panel.offsetLeft - months.offsetLeft;
+ if ($('gate-in')) $('gate-in').addEventListener('click', openAcct);
 
  if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
@@ -2336,35 +2559,14 @@ def repo_info(backend):
             "branch": (backend or {}).get("github_branch") or "main"}
 
 
-def render(viab, cfg, stamp, checklists, backend=None, repo=None):
-    days = viab["days"]
-    events = viab.get("events", [])
-    lenses = viab.get("lenses") or {viab.get("default_lens", "standup"): days}
-    lens_meta = viab.get("lens_meta") or {}
-    default_lens = viab.get("default_lens", "standup")
+def render(cfg, backend=None, repo=None):
+    """The shell. Every figure, cell and row on it is drawn in the browser.
 
-    # Counted over the whole window rather than from today, so the headline numbers
-    # match what viability.py reports and do not drift as dates roll past.
-    counts = {}
-    for day in days:
-        counts[day["tier"]] = counts.get(day["tier"], 0) + 1
-    clash = len({d["date"] for d in days if d["direct"]})
+    What stays here is what is true regardless of the data: the tier legend, the
+    section furniture, and the caveats. The Ramadan dates in those caveats come from
+    data/config.json, which is the model rather than the dataset.
+    """
     ram_s, ram_e = cfg["ramadan"]
-    ram_days = sum(1 for d in days if ram_s <= d["date"] <= ram_e)
-
-    first, last = days[0]["date"], days[-1]["date"]
-    span = (f'{date.fromisoformat(first).strftime("%B %Y")} to '
-            f'{date.fromisoformat(last).strftime("%B %Y")}')
-
-    stats = [
-        (counts.get("prime", 0), "prime dates to shortlist"),
-        (clash, "nights taken by a competing act"),
-        (counts.get("blocked", 0), "dates ruled out in total"),
-        (ram_days, f'days lost to Ramadan ({date.fromisoformat(ram_s):%-d %b} to '
-                   f'{date.fromisoformat(ram_e):%-d %b %Y})'),
-    ]
-    stat_html = "".join(f'<div class="stat"><b>{n}</b><span>{esc(t)}</span></div>'
-                        for n, t in stats)
 
     legend = "".join(
         f'<span class="lg-item t-{t}"><i style="background:{bg};border-color:{bc}"></i>'
@@ -2377,22 +2579,7 @@ def render(viab, cfg, stamp, checklists, backend=None, repo=None):
             ("blocked", "var(--crit-bg)", "var(--crit)"),
         ])
 
-    lens_buttons = "".join(
-        f'<button type="button" data-lens-opt="{esc(name)}" '
-        f'aria-pressed="{"true" if name == default_lens else "false"}">'
-        f'{esc(lens_meta.get(name, {}).get("label", name))}</button>'
-        for name in lenses)
-
-    facets = filter_options(events)
-    facet_bar = "".join(facet_html(name, label, facets[name]) for name, label in [
-        ("month", "Month"), ("artist", "Artist"),
-        ("category", "Category"), ("language", "Language")])
-
-    payload, pool = encode(lenses)
     tier_js = {k: {"icon": v["icon"], "label": v["label"]} for k, v in TIERS.items()}
-    checklist_js = [{"id": c["id"], "title": c["title"], "subtitle": c.get("subtitle", ""),
-                     "show_date": c.get("show_date"), "setup": c.get("setup", []),
-                     "tasks": c["tasks"]} for c in checklists]
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -2429,7 +2616,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
    {icon("checklist", "nv-ic")}<span>Checklist</span></button>
  </nav>
  <div class="side-foot">
-  <span class="side-stamp">Checked daily<br>data as of {esc(stamp)}</span>
+  <span class="side-stamp" id="side-stamp">Checked daily</span>
  </div>
 </aside>
 
@@ -2447,21 +2634,33 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 
 <div class="wrap">
 
+ <!-- --------------------------------------------------------------- gate -->
+ <section id="gate" hidden>
+  <div class="gate-card">
+   <h2>Sign in to see the tracker</h2>
+   <p>The listings, the scored calendar and the checklists are held in a database,
+    not in this page. Signing in is what fetches them, and an address has to be on
+    the allowlist before it returns anything.</p>
+   <p class="gate-msg" id="gate-msg" role="status" aria-live="polite"></p>
+   <button type="button" class="btn-primary" id="gate-in">Sign in</button>
+  </div>
+ </section>
+
  <!-- ------------------------------------------------------------- events -->
  <section id="panel-events" hidden>
   <div class="data-bar">
-   <span class="data-when" id="data-when">Data as of {esc(stamp)}</span>
+   <span class="data-when" id="data-when"></span>
    <button type="button" id="refresh" class="icon-btn refresh-btn" hidden>
     {icon("refresh")}<span>Refresh now</span></button>
    <span class="data-msg" id="data-msg" role="status" aria-live="polite"></span>
   </div>
   <div class="filters">
-   {facet_bar}
+   <span id="facets"></span>
    <label class="cl-toggle"><input type="checkbox" id="ev-past"> Show past</label>
    <button type="button" id="ev-clear" class="chip-clear">Clear filters</button>
    <span class="count" id="ev-count" role="status" aria-live="polite"></span>
   </div>
-  <div class="events">{events_html(events)}</div>
+  <div class="events" id="events"></div>
  </section>
 
  <!-- ----------------------------------------------------------- calendar -->
@@ -2472,7 +2671,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
     <button type="button" id="f-wknd" aria-pressed="false">Fri+Sat</button>
     <button type="button" id="f-prime" aria-pressed="false">Prime</button>
    </div>
-   <div class="seg" role="group" aria-label="What are you staging">{lens_buttons}</div>
+   <div class="seg" role="group" aria-label="What are you staging" id="lenses"></div>
    <span class="count" id="count" role="status" aria-live="polite"></span>
   </div>
   <p class="muted" style="font-size:12.5px;margin:2px 0 0" id="lens-blurb"></p>
@@ -2488,12 +2687,12 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
     <button type="button" id="mo-next" class="icon-btn"
      aria-label="Next month">{icon("right")}</button>
    </div>
-   <div class="months" id="months">{months_html(days)}</div>
+   <div class="months" id="months"></div>
    <div class="legend">{legend}</div>
   </section>
 
   <h2>At a glance <small>over the whole window, for the default lens</small></h2>
-  <div class="stats">{stat_html}</div>
+  <div class="stats" id="stats"></div>
 
   <section class="limits">
    <h2>What this does not know</h2>
@@ -2526,7 +2725,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 
  <!-- ---------------------------------------------------------- checklist -->
  <section id="panel-checklist" hidden>
-  {checklist_html(checklists)}
+  {checklist_html()}
  </section>
 </div>
 </main>
@@ -2563,17 +2762,11 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 </div>
 
 <script>
-window.__DAYS__ = {json.dumps(payload, ensure_ascii=False, separators=(",", ":"))};
-window.__POOL__ = {json.dumps(pool, ensure_ascii=False, separators=(",", ":"))};
+// Configuration only. Every line of data arrives from the database after sign-in.
 window.__TIERS__ = {json.dumps(tier_js, ensure_ascii=False)};
-window.__LENSES__ = {json.dumps(lens_meta, ensure_ascii=False)};
-window.__DEFAULT_LENS__ = {json.dumps(default_lens)};
-window.__CHECKLISTS__ = {json.dumps(checklist_js, ensure_ascii=False,
-                                    separators=(",", ":"))};
 window.__STATUSES__ = {json.dumps(STATUSES, ensure_ascii=False)};
 window.__BACKEND__ = {json.dumps(backend or {}, ensure_ascii=False)};
 window.__REPO__ = {json.dumps(repo or {}, ensure_ascii=False)};
-window.__STAMP__ = {json.dumps(stamp)};
 </script>
 <script>{JS}</script>
 </body>
@@ -2583,28 +2776,13 @@ window.__STAMP__ = {json.dumps(stamp)};
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--viability", default=str(ROOT / "docs" / "viability.json"))
-    ap.add_argument("--checklists", default=str(ROOT / "data" / "checklists.json"))
     ap.add_argument("--backend", default=str(ROOT / "data" / "backend.json"))
     ap.add_argument("--out-dir", default=str(ROOT / "docs"))
     ap.add_argument("--force-icons", action="store_true",
                     help="re-rasterise the app icons even if they already exist")
     args = ap.parse_args()
 
-    src = Path(args.viability)
-    if not src.exists():
-        print(f"missing {src}; run python src/viability.py first")
-        return 1
-    viab = json.loads(src.read_text())
     cfg = json.loads((ROOT / "data" / "config.json").read_text())
-    if not viab.get("days"):
-        print("viability.json has no days; refusing to build an empty calendar")
-        return 1
-
-    checklists = []
-    cl_path = Path(args.checklists)
-    if cl_path.exists():
-        checklists = json.loads(cl_path.read_text()).get("checklists", [])
 
     # Empty values mean local-only, which is the state the app ships in.
     backend = {"supabase_url": "", "supabase_anon_key": ""}
@@ -2614,13 +2792,14 @@ def main():
         raw_backend = json.loads(be_path.read_text())
         backend = {k: (raw_backend.get(k) or "").strip() for k in backend}
 
-    stamp = viab.get("generated", date.today().isoformat())
+    # The page no longer varies with the data, so its cache stamp is the build date
+    # and a rebuild only ships when the shell itself changes.
+    stamp = date.today().isoformat()
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
     repo = repo_info(raw_backend)
-    (out / "index.html").write_text(
-        render(viab, cfg, stamp, checklists, backend, repo), encoding="utf-8")
+    (out / "index.html").write_text(render(cfg, backend, repo), encoding="utf-8")
     (out / "manifest.webmanifest").write_text(manifest(stamp))
     # The icons are a fixed mark, independent of the data, and rasterising them in pure
     # Python costs about 13 seconds. Regenerate only when missing or asked.
@@ -2653,12 +2832,9 @@ def main():
     (out / ".nojekyll").write_text("")
 
     page = (out / "index.html").stat().st_size
-    tasks = sum(len(c["tasks"]) for c in checklists)
-    print(f"  checklist sync: "
-          f"{'Supabase ' + backend['supabase_url'] if backend['supabase_url'] else 'local only (data/backend.json not filled in)'}")
-    print(f"built {out/'index.html'} ({page // 1024} KB), {len(viab['days'])} days, "
-          f"{len(viab.get('events', []))} events, {len(viab.get('lenses') or {})} lenses, "
-          f"{len(checklists)} checklists ({tasks} tasks)")
+    print(f"built {out/'index.html'} ({page // 1024} KB): shell only, no data")
+    print(f"  data source: "
+          f"{backend['supabase_url'] or 'NOT CONFIGURED (data/backend.json is empty, the app will show nothing)'}")
     print(f"  manifest, service worker written; cache stamp {stamp}; "
           f"{drawn or 'no'} icons drawn (version {ICON_VERSION})")
     print(f"  refresh button: "

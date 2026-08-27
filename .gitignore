@@ -1,3 +1,17 @@
 .cache/
 __pycache__/
 *.pyc
+
+# The dataset and the checklists live in Supabase now, not here. These are working
+# copies written by a run and read by the next step, and one of them carries an artist
+# fee and two counterparties, which is exactly what put them in a public page before.
+data/events.json
+data/events.prev.json
+data/review_queue.json
+data/review_queue.prev.json
+data/viability.json
+data/changes.json
+data/checklists.json
+data/checklists.local.json
+docs/viability.json
+docs/changes.json
