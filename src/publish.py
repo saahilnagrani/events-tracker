@@ -48,7 +48,7 @@ def pull(log=print):
     return 0
 
 
-def push(log=print):
+def push(force=False, log=print):
     pushed = 0
     for name, path in backend.DATASETS.items():
         if not path.exists():
@@ -58,6 +58,22 @@ def push(log=print):
         generated = None
         if isinstance(payload, dict):
             generated = payload.get("generated")
+
+        # The event list only ever grows: a show that comes off Platinumlist is kept
+        # with listed=false rather than dropped. So a smaller list means something
+        # upstream lost the history rather than the market shrinking, and pushing it
+        # would make that loss permanent. It has happened once: the first run against
+        # an empty database had nothing to carry forward and stored only what was on
+        # sale that morning, which quietly discarded seven archived events.
+        if name == "events" and not force:
+            stored, _ = backend.get_dataset(name)
+            if stored and len(payload) < len(stored):
+                log(f"  REFUSING to push {name}: {len(payload)} events would replace "
+                    f"{len(stored)} already stored.")
+                log("  The dataset retains delisted events, so it should never shrink.")
+                log("  If this is deliberate, re-run with --push --force.")
+                return 1
+
         backend.put_dataset(name, payload, generated or date.today().isoformat(), log)
         pushed += 1
     if not pushed:
@@ -97,6 +113,8 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--pull", action="store_true")
     ap.add_argument("--push", action="store_true")
+    ap.add_argument("--force", action="store_true",
+                    help="push even if the event list has shrunk")
     ap.add_argument("--seed-checklists", metavar="FILE")
     ap.add_argument("--dump-checklists", metavar="FILE")
     args = ap.parse_args()
@@ -111,7 +129,7 @@ def main():
         if args.pull:
             return pull()
         if args.push:
-            return push()
+            return push(force=args.force)
         if args.seed_checklists:
             return seed_checklists(args.seed_checklists)
         if args.dump_checklists:

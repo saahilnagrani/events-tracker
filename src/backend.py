@@ -32,13 +32,22 @@ class BackendError(RuntimeError):
     pass
 
 
-def config(need_service_key=True):
-    """(url, key). The URL may come from data/backend.json; the key never does."""
-    url = os.environ.get("SUPABASE_URL", "").strip()
-    if not url:
-        path = ROOT / "data" / "backend.json"
-        if path.exists():
-            url = (json.loads(path.read_text()).get("supabase_url") or "").strip()
+def config(need_service_key=True, log=print):
+    """(url, key). The URL may come from data/backend.json; the key never does.
+
+    SUPABASE_URL wins when it is set, which is what makes a one-off against another
+    project possible. It is also how you end up pulling from one project and pushing
+    to another without noticing, so a disagreement is said out loud.
+    """
+    env_url = os.environ.get("SUPABASE_URL", "").strip()
+    file_url = ""
+    path = ROOT / "data" / "backend.json"
+    if path.exists():
+        file_url = (json.loads(path.read_text()).get("supabase_url") or "").strip()
+    url = env_url or file_url
+    if env_url and file_url and env_url.rstrip("/") != file_url.rstrip("/"):
+        log(f"  NOTE: SUPABASE_URL ({env_url}) overrides data/backend.json "
+            f"({file_url}), which is the project the published app reads.")
     key = os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
     if not url:
         raise BackendError("no SUPABASE_URL, and data/backend.json has no supabase_url")
