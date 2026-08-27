@@ -32,6 +32,18 @@ ROOT = backend.ROOT
 
 
 def pull(log=print):
+    events = backend.get_events()
+    if events:
+        backend.EVENTS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        backend.EVENTS_FILE.write_text(
+            json.dumps(events, indent=1, ensure_ascii=False) + "\n")
+        prev = backend.EVENTS_FILE.with_name("events.prev.json")
+        prev.write_text(backend.EVENTS_FILE.read_text())
+        listed = sum(1 for e in events if e.get("listed", True))
+        log(f"  pulled {len(events)} events ({listed} still listed) -> events.json")
+    else:
+        log("  events: nothing stored yet")
+
     for name, path in backend.DATASETS.items():
         payload, generated = backend.get_dataset(name)
         if payload is None:
@@ -40,9 +52,9 @@ def pull(log=print):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(payload, indent=1, ensure_ascii=False) + "\n")
         log(f"  pulled {name} ({generated or 'no date'}) -> {path.name}")
-        # The scraper overwrites data/events.json in place, so the diff needs its own
-        # copy taken before that happens.
-        if name in ("events", "review_queue"):
+        # The scraper overwrites its inputs in place, so the diff needs its own copy
+        # taken before that happens.
+        if name == "review_queue":
             prev = path.with_name(path.stem + ".prev.json")
             prev.write_text(path.read_text())
     return 0
@@ -50,6 +62,25 @@ def pull(log=print):
 
 def push(force=False, log=print):
     pushed = 0
+    if backend.EVENTS_FILE.exists():
+        events = json.loads(backend.EVENTS_FILE.read_text())
+        # An upsert cannot delete, so a run that lost its history no longer erases
+        # anything; it just fails to mention the rest. Saying so is still worth it,
+        # because that run's viability payload will be missing them.
+        stored = backend.get_events()
+        if len(events) < len(stored):
+            missing = len(stored) - len(events)
+            log(f"  NOTE: this run carries {len(events)} events against {len(stored)} "
+                f"stored; {missing} will keep their existing rows.")
+            if not force:
+                log("  Refusing, because the calendar built from this run is missing "
+                    "them too. Re-run with --push --force if that is intended.")
+                return 1
+        backend.put_events(events, log)
+        pushed += 1
+    else:
+        log("  events: no events.json to push")
+
     for name, path in backend.DATASETS.items():
         if not path.exists():
             log(f"  {name}: no {path.name} to push")
@@ -58,22 +89,6 @@ def push(force=False, log=print):
         generated = None
         if isinstance(payload, dict):
             generated = payload.get("generated")
-
-        # The event list only ever grows: a show that comes off Platinumlist is kept
-        # with listed=false rather than dropped. So a smaller list means something
-        # upstream lost the history rather than the market shrinking, and pushing it
-        # would make that loss permanent. It has happened once: the first run against
-        # an empty database had nothing to carry forward and stored only what was on
-        # sale that morning, which quietly discarded seven archived events.
-        if name == "events" and not force:
-            stored, _ = backend.get_dataset(name)
-            if stored and len(payload) < len(stored):
-                log(f"  REFUSING to push {name}: {len(payload)} events would replace "
-                    f"{len(stored)} already stored.")
-                log("  The dataset retains delisted events, so it should never shrink.")
-                log("  If this is deliberate, re-run with --push --force.")
-                return 1
-
         backend.put_dataset(name, payload, generated or date.today().isoformat(), log)
         pushed += 1
     if not pushed:

@@ -114,6 +114,11 @@ jobs:
       - name: Build site
         run: python src/build_site.py
 
+      # Cheap and first: a mismatch between the scraper's fields and the table's
+      # columns writes nulls into the database, and nothing downstream would notice.
+      - name: Check the events mapping
+        run: python tests/test_events_mapping.py
+
       # The page is a shell, so this proves the shell still works against a stand-in
       # database. It gates publishing rather than reporting after the fact.
       - name: Smoke-test the built page
