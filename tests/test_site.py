@@ -230,6 +230,18 @@ def main():
                               .map(x => x.dataset.added).sort().slice(-1)[0]))"""))
             check("the badge is a word, not just a colour",
                   ctx.eval_on_selector(".ev-new", "el => el.textContent.trim()") == "NEW")
+            check("the count and its controls are on their own line, below the dropdowns",
+                  ctx.evaluate("""() => {
+                      const filters = document.querySelector('#panel-events .filters');
+                      const meta = document.querySelector('#panel-events .filters-meta');
+                      if (!filters || !meta) return false;
+                      const a = filters.getBoundingClientRect();
+                      const b = meta.getBoundingClientRect();
+                      return b.top >= a.bottom - 1
+                        && meta.contains(document.getElementById('ev-count'))
+                        && meta.contains(document.getElementById('ev-past'))
+                        && meta.contains(document.getElementById('ev-clear'))
+                        && !filters.contains(document.getElementById('ev-count')); }"""))
             check("the count says how many are new",
                   "new" in ctx.inner_text("#ev-count"), ctx.inner_text("#ev-count"))
 

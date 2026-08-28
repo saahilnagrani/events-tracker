@@ -699,6 +699,18 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
 .sync-dot.on{background:var(--good)}
 
+.filters-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+ margin:8px 0 2px;font-size:12.5px;color:var(--ink-2)}
+/* The count reads first, and the controls sit together at the end of the line. */
+.filters-meta .count{margin-left:0}
+.filters-meta .cl-toggle{margin-left:auto}
+.filters-meta .chip-clear{padding:4px 2px}
+/* On a phone the three of them do not fit on one line, and pushing the last one to
+   the right strands it alone below. The count takes the first line, the two controls
+   share the second. */
+.filters-meta .count{flex-basis:100%}
+.filters-meta .cl-toggle{margin-left:0}
+
 /* A label, not a tier: green, blue and red already mean prime, good and blocked on
    this page, so "new" borrows the neutral badge instead of a fourth meaning for a
    colour. The word carries it either way. */
@@ -783,6 +795,9 @@ body.locked .filters{display:none}
 .tk[data-added="1"] .tk-n::after{content:" new";color:var(--good);font-weight:700}
 @media (min-width:700px){
  .cl-add-row{grid-template-columns:repeat(4,1fr)}
+ /* Room for one line again: count left, controls right. */
+ .filters-meta .count{flex-basis:auto}
+ .filters-meta .cl-toggle{margin-left:auto}
 }
 
 .cl-json textarea{width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
@@ -2809,9 +2824,14 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
   <div class="filters">
    <span id="facets"></span>
    <span id="ev-sort"></span>
+  </div>
+  <!-- What the filters did, and the two controls that undo them, on their own line:
+       the row above is a set of dropdowns and scrolls sideways on a phone, which is
+       no place for the count you are trying to read. -->
+  <div class="filters-meta">
+   <span class="count" id="ev-count" role="status" aria-live="polite"></span>
    <label class="cl-toggle"><input type="checkbox" id="ev-past"> Show past</label>
    <button type="button" id="ev-clear" class="chip-clear">Clear filters</button>
-   <span class="count" id="ev-count" role="status" aria-live="polite"></span>
   </div>
   <div class="events" id="events"></div>
  </section>
