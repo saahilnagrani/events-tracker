@@ -843,6 +843,19 @@ def main():
                   == shifted.inner_text("#data-when").strip())
             shifted.close()
 
+            # The time has to survive without the column, because a page painted from
+            # its cache never sees the row: it has the data and would otherwise have
+            # lost the hour it was gathered.
+            payload_only = FakeBackend(row_timestamp=False)
+            if payload_only.viability.get("generated_at"):
+                bare, _ = open_app(browser, url, backend=payload_only,
+                                   viewport={"width": 1440, "height": 900})
+                check("the payload's own stamp is enough for a time",
+                      bool(re.search(r"\d{2}:\d{2}$",
+                                     bare.inner_text("#data-when").strip())),
+                      bare.inner_text("#data-when"))
+                bare.close()
+
             print("\nwhen the database will not answer")
             for label, backend, expect in [
                     ("paused", FakeBackend(paused=True), "paused"),

@@ -12,7 +12,7 @@ a weight, expect those counts to move.
 Run:  python src/viability.py
 """
 import json, sys
-from datetime import date, timedelta
+from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -197,6 +197,11 @@ def main():
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps({
         "generated": date.today().isoformat(),
+        # The moment this ran, in UTC, so the page can say when rather than only
+        # which day. It rides inside the payload on purpose: a timestamp that lives
+        # in a database column only arrives on a successful fetch, and a page painted
+        # from its cache would have the data but not the time it was gathered.
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "default_lens": default,
         "lens_meta": {n: {k: v for k, v in lens_config(cfg, n).items()
                           if k in ("label", "blurb")} for n in names},

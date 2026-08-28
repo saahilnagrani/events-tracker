@@ -1852,7 +1852,12 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
  // two facts, and the reader has to work out whether they agree.
  function renderStamp(){
   if (!STAMP) return;
-  var written = (DATA && DATA.updated_at) || '';
+  // The payload's own stamp first: it travels with the data, so a page painted from
+  // cache still knows when the run happened. The row's updated_at is the fallback for
+  // a payload written before the run started recording it, and the date alone is the
+  // last resort rather than a wrong time.
+  var written = (DATA && DATA.viability && DATA.viability.generated_at) ||
+                (DATA && DATA.updated_at) || '';
   var text = 'Listings last checked ' +
              (written ? whenText(written) : whenText(STAMP, true));
   var n = daysSince(STAMP);
