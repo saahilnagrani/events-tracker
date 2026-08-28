@@ -215,6 +215,68 @@ def main():
                 check(f"{facet} facet is present", ctx.eval_on_selector_all(
                     f'input[data-facet="{facet}"]', "els => els.length") > 1)
 
+            print("\nnew badges and sorting")
+            # The fixture marks two upcoming events as added in this run, which is
+            # what the badge and the "recently added" order are for.
+            marked = ctx.eval_on_selector_all(
+                '.ev[data-new="1"]', "els => els.map(e => e.dataset.added)")
+            stamp = ctx.evaluate("() => window.__TEST_STAMP__ || null")
+            check("the badge marks what the latest run added", len(marked) == 2,
+                  f"{len(marked)} marked")
+            check("and only those: nothing older carries it",
+                  ctx.eval_on_selector_all(
+                      ".ev", """els => els.every(e =>
+                          (e.dataset.new === '1') === (e.dataset.added === els
+                              .map(x => x.dataset.added).sort().slice(-1)[0]))"""))
+            check("the badge is a word, not just a colour",
+                  ctx.eval_on_selector(".ev-new", "el => el.textContent.trim()") == "NEW")
+            check("the count says how many are new",
+                  "new" in ctx.inner_text("#ev-count"), ctx.inner_text("#ev-count"))
+
+            def first_rows(n=4):
+                return ctx.eval_on_selector_all(
+                    ".ev", """els => els.filter(e => !e.hidden).slice(0, %d)
+                        .map(e => [e.dataset.added, e.dataset.start,
+                                   e.querySelector('.ev-meta').textContent])""" % n)
+
+            def pick(value):
+                ctx.click("#ev-sort .ms-choice summary")
+                ctx.wait_for_timeout(120)
+                ctx.click(f'#ev-sort input[value="{value}"]')
+                ctx.wait_for_timeout(250)
+
+            by_date = first_rows()
+            check("by default the list is in event-date order",
+                  [r[1] for r in by_date] == sorted(r[1] for r in by_date))
+            pick("added")
+            by_added = first_rows()
+            check("recently added puts this run's arrivals first",
+                  by_added[0][0] > by_added[-1][0], f"{by_added[0][0]} then {by_added[-1][0]}")
+            check("the control shows which order is in force",
+                  "added" in ctx.inner_text("#ev-sort .ms-value").lower(),
+                  ctx.inner_text("#ev-sort .ms-value"))
+            pick("price")
+            prices = ctx.eval_on_selector_all(
+                ".ev", """els => els.filter(e => !e.hidden).map(e => {
+                    const m = /from AED ([\d.]+)/.exec(e.querySelector('.ev-meta').textContent);
+                    return m ? Number(m[1]) : null; })""")
+            priced = [p for p in prices if p is not None]
+            check("cheapest first is actually ascending",
+                  priced == sorted(priced), str(priced[:5]))
+            # "price not published" is not free, so those belong at the end.
+            check("events with no price sort last, not first",
+                  all(p is None for p in prices[len(priced):]),
+                  f"{len(priced)} priced, {len(prices) - len(priced)} without")
+            check("sorting does not disturb the filters",
+                  int(ctx.get_attribute("#ev-count", "data-count")) == total)
+            ctx.reload(wait_until="load")
+            ctx.wait_for_selector(".ev", state="attached", timeout=8000)
+            ctx.wait_for_timeout(300)
+            check("the chosen order survives a reload",
+                  "cheapest" in ctx.inner_text("#ev-sort .ms-value").lower(),
+                  ctx.inner_text("#ev-sort .ms-value"))
+            pick("date")
+
             open_calendar(ctx)
             print("\nfilters")
             base = count_of(ctx)

@@ -343,6 +343,13 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
 .sync-dot.on{background:var(--good)}
 
+/* A label, not a tier: green, blue and red already mean prime, good and blocked on
+   this page, so "new" borrows the neutral badge instead of a fourth meaning for a
+   colour. The word carries it either way. */
+.ev-new{display:inline-block;background:var(--ink);color:var(--surface-1);
+ border-radius:20px;font-size:9.5px;font-weight:700;letter-spacing:.06em;
+ padding:2px 6px;margin-left:7px;vertical-align:2px}
+
 /* ---- the gate: what a signed-out visitor gets instead of the app ---- */
 /* The nav is hidden rather than disabled, because there is nothing behind it to
    navigate to: the page is empty until the database has answered. */
@@ -351,7 +358,7 @@ body.locked .filters{display:none}
 /* The painted controls are wrapped in a placeholder element so the browser has
    somewhere to put them; display:contents keeps the flex row flat, otherwise all four
    facets stack inside one flex item. */
-#facets,#cl-picker{display:contents}
+#facets,#ev-sort,#cl-picker{display:contents}
 #gate{display:flex;justify-content:center;padding:28px 0 40px}
 .gate-card{max-width:460px;background:var(--surface-1);border:1px solid var(--ring);
  border-radius:14px;padding:22px 22px 24px}
@@ -605,6 +612,7 @@ body.locked .filters{display:none}
   </div>
   <div class="filters">
    <span id="facets"></span>
+   <span id="ev-sort"></span>
    <label class="cl-toggle"><input type="checkbox" id="ev-past"> Show past</label>
    <button type="button" id="ev-clear" class="chip-clear">Clear filters</button>
    <span class="count" id="ev-count" role="status" aria-live="polite"></span>
@@ -1051,8 +1059,13 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
   });
   if (evCount) {
    var hidden = showPast ? 0 : past;
+   var fresh = evs.filter(function(el){
+    return !el.hidden && el.dataset.new === '1';
+   }).length;
    evCount.textContent = shown + (shown === 1 ? ' event' : ' events') +
+     (fresh ? ' · ' + fresh + ' new' : '') +
      (hidden ? ' · ' + hidden + ' past hidden' : '');
+   evCount.dataset.new = String(fresh);
    evCount.dataset.count = String(shown);
    evCount.dataset.past = String(past);
   }
@@ -1561,8 +1574,15 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
      esc(value) + '"' + (on ? ' checked' : '') + '><span>' + esc(label) +
      '</span></label>';
   }).join('');
+  // The summary shows the label, not the value. With plain-string options they are
+  // the same thing; with {value, text} pairs the raw value leaks out, which is how a
+  // sort control came back from a reload reading "price".
+  var shown = currentValue;
+  options.forEach(function(o){
+   if (o && o.value !== undefined && o.value === currentValue) shown = o.text;
+  });
   return '<details class="ms ms-choice" data-choice="' + esc(name) + '">' +
-    '<summary><span class="ms-value">' + esc(currentValue) + '</span>' +
+    '<summary><span class="ms-value">' + esc(shown) + '</span>' +
     '<svg class="ic ms-caret" aria-hidden="true"><use href="#i-down"></use></svg>' +
     '</summary><div class="ms-menu">' + rows + '</div></details>';
  }
@@ -2097,12 +2117,55 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
   });
  }
 
+ // Three orders, because three different questions get asked of this list: when is
+ // it on, what has just appeared, and what is cheap.
+ var SORTS = [
+  {value: 'date', text: 'By event date'},
+  {value: 'added', text: 'Recently added'},
+  {value: 'price', text: 'Cheapest first'}
+ ];
+ var sortBy = store.get('ev-sort', 'date');
+
+ function byDate(a, b){
+  return (a.start || '').localeCompare(b.start || '') ||
+         (a.event || '').localeCompare(b.event || '');
+ }
+
+ function sortEvents(events){
+  var list = events.slice();
+  if (sortBy === 'added') {
+   // Newest first, and an event with no first_seen sorts last rather than first:
+   // it predates the field, so it is certainly not new.
+   return list.sort(function(a, b){
+    var x = a.first_seen || '', y = b.first_seen || '';
+    if (x !== y) return (y || '0').localeCompare(x || '0');
+    return byDate(a, b);
+   });
+  }
+  if (sortBy === 'price') {
+   // "From AED 85" beats "price not published", so the unpriced go last instead of
+   // leading the list at zero.
+   return list.sort(function(a, b){
+    var x = a.price_from_aed, y = b.price_from_aed;
+    if (x === y || (x == null && y == null)) return byDate(a, b);
+    if (x == null) return 1;
+    if (y == null) return -1;
+    return x - y;
+   });
+  }
+  return list.sort(byDate);
+ }
+
+ // New in the most recent check, rather than new today: the run is at 07:00 Dubai,
+ // and a badge keyed to the wall clock would vanish at midnight from listings nobody
+ // had looked at yet.
+ function isNew(e){
+  return !!e.first_seen && (e.first_seen === STAMP || e.first_seen === TODAY);
+ }
+
  function eventsHtml(events){
   if (!events.length) return '<p class="muted">No events in the dataset.</p>';
-  var sorted = events.slice().sort(function(a, b){
-   return (a.start || '').localeCompare(b.start || '') ||
-          (a.event || '').localeCompare(b.event || '');
-  });
+  var sorted = sortEvents(events);
   return sorted.map(function(e){
    var when = longDate(e.start || '');
    if (e.end) {
@@ -2120,12 +2183,16 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
     note = '<p class="ev-gone">No longer listed on Platinumlist' +
       (e.last_seen ? ' &middot; last seen ' + esc(e.last_seen) : '') + '</p>' + note;
    }
+   var fresh = isNew(e) && e.listed !== false;
    return '<article class="ev" data-month="' + esc((e.start || '').slice(0, 7)) +
      '" data-start="' + esc(e.start) + '" data-end="' + esc(e.end || '') +
      '" data-listed="' + (e.listed === false ? 0 : 1) + '" data-artist="' +
      esc(e.artist) + '" data-category="' + esc(e.category) + '" data-language="' +
-     esc(language) + '"><h4><a href="' + esc(e.url) + '" rel="noopener noreferrer" ' +
-     'target="_blank">' + esc(e.event) + '</a></h4><p class="ev-when">' + esc(when) +
+     esc(language) + '" data-added="' + esc(e.first_seen || '') +
+     '" data-new="' + (fresh ? 1 : 0) + '"><h4><a href="' + esc(e.url) +
+     '" rel="noopener noreferrer" target="_blank">' + esc(e.event) + '</a>' +
+     (fresh ? '<span class="ev-new">NEW</span>' : '') +
+     '</h4><p class="ev-when">' + esc(when) +
      (e.time ? ' &middot; ' + esc(e.time) : '') + '</p><p class="ev-where">' +
      (esc(e.venue) || 'Venue not listed') + '</p><p class="ev-meta">' + meta +
      '</p>' + note + '</article>';
@@ -2229,9 +2296,37 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
   }
  }
 
+ // Re-rendering the list rather than reordering nodes: the rows carry the filter's
+ // data attributes, so one code path builds them and evFilter decides what shows.
+ function renderEvents(){
+  var events = (DATA && DATA.viability && DATA.viability.events) || [];
+  if ($('events')) $('events').innerHTML = eventsHtml(events);
+  evs = all('.ev');
+  evFilter();
+ }
+
+ function sortHtml(){
+  var current = SORTS.filter(function(o){ return o.value === sortBy; })[0] || SORTS[0];
+  return choiceHtml('ev-sort', 'ev-sort-opt', SORTS, current.value);
+ }
+
  function paint(){
   var events = (DATA && DATA.viability && DATA.viability.events) || [];
   if ($('facets')) $('facets').innerHTML = facetsHtml(events);
+  if ($('ev-sort')) {
+   $('ev-sort').innerHTML = sortHtml();
+   var box = $('ev-sort').querySelector('.ms-choice');
+   if (box) box.addEventListener('change', function(e){
+    if (!e.target || e.target.type !== 'radio') return;
+    sortBy = e.target.value;
+    store.set('ev-sort', sortBy);
+    box.open = false;
+    var label = box.querySelector('.ms-value');
+    var picked = SORTS.filter(function(o){ return o.value === sortBy; })[0];
+    if (label && picked) label.textContent = picked.text;
+    renderEvents();
+   });
+  }
   if ($('events')) $('events').innerHTML = eventsHtml(events);
   if ($('lenses')) $('lenses').innerHTML = lensesHtml();
   if (months) months.innerHTML = monthsHtml();
