@@ -26,9 +26,25 @@ TOKEN = {
 
 class FakeBackend:
     def __init__(self, viability=None, checklists=None, allowed=True, paused=False,
-                 published=True, row_timestamp=True):
+                 published=True, row_timestamp=True, new_events=2):
         if viability is None:
             viability = json.loads((ROOT / "data" / "viability.json").read_text())
+        # A checkout's dataset predates first_seen, and a badge for events added in
+        # the latest run cannot be tested against a dataset where nothing was. Two
+        # listed events are stamped as added in this run; the rest are left alone,
+        # which is also how the real data will look for its first few days.
+        viability = json.loads(json.dumps(viability))
+        stamped = 0
+        today = viability.get("generated") or ""
+        for event in viability.get("events", []):
+            # Upcoming ones, because a past event is hidden by default and a badge
+            # nobody can see proves nothing.
+            upcoming = (event.get("end") or event.get("start") or "") >= today
+            if stamped < new_events and event.get("listed", True) and upcoming:
+                event["first_seen"] = today
+                stamped += 1
+            else:
+                event["first_seen"] = "2026-08-17"
         # published=False is the state of a fresh database: the schema is there, the
         # checklists are seeded, and no run has written a dataset yet.
         self.published = published
