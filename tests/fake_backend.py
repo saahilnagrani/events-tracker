@@ -36,10 +36,12 @@ class FakeBackend:
         viability = json.loads(json.dumps(viability))
         stamped = 0
         today = viability.get("generated") or ""
+        # Upcoming against the real clock, not the payload's date. A checkout's
+        # dataset ages, and stamping a show that has since happened marks something
+        # the page hides by default, which proves nothing about the badge.
+        now = dt.date.today().isoformat()
         for event in viability.get("events", []):
-            # Upcoming ones, because a past event is hidden by default and a badge
-            # nobody can see proves nothing.
-            upcoming = (event.get("end") or event.get("start") or "") >= today
+            upcoming = (event.get("end") or event.get("start") or "") >= now
             if stamped < new_events and event.get("listed", True) and upcoming:
                 event["first_seen"] = today
                 stamped += 1
