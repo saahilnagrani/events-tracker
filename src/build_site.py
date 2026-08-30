@@ -271,7 +271,7 @@ def checklist_html():
  </details>
 
  <div class="filters">
-  <details class="ms" data-ms="workstream">
+  <details class="ms" data-ms="workstream" data-label="Workstream">
    <summary>Workstream<span class="ms-badge" hidden></span>{icon("down", "ic ms-caret")}
    </summary>
    <div class="ms-menu" id="cl-ws-menu"></div>
@@ -618,10 +618,41 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
 .ms[open]>summary{border-color:var(--ink)}
 .ms-badge{background:var(--ink);color:var(--surface-1);border-radius:20px;
  font-size:10.5px;font-weight:700;padding:1px 6px}
+/* On a phone this is a sheet, not a dropdown: it opens at the bottom, where the
+   thumb is, which is also the far end of the screen from the chip you tapped. It
+   therefore has to announce itself. A scrim dims the page behind it, it rises rather
+   than appearing, and it says which filter it is. Without those three it read as more
+   page and people could not find it. */
 .ms-menu{position:fixed;z-index:35;left:10px;right:10px;
- bottom:calc(72px + env(safe-area-inset-bottom));max-height:52vh;overflow:auto;
- background:var(--surface-1);border:1px solid var(--ring);border-radius:12px;padding:6px;
- box-shadow:0 -8px 34px rgba(0,0,0,.24)}
+ bottom:calc(72px + env(safe-area-inset-bottom));max-height:56vh;overflow:auto;
+ background:var(--sheet);border:1px solid var(--ring);border-radius:16px;
+ padding:0 8px 10px;box-shadow:0 -10px 40px rgba(0,0,0,.3)}
+.ms[open]>.ms-menu{animation:ms-rise .16s ease-out}
+@keyframes ms-rise{from{transform:translateY(14px);opacity:0}
+                   to{transform:none;opacity:1}}
+.ms-scrim{position:fixed;inset:0;z-index:34;background:rgba(0,0,0,.42);border:0;
+ padding:0;animation:ms-fade .16s ease-out}
+/* The chips and the line under them stay above the scrim: moving from Month to
+   Artist is one tap rather than close-then-open, Clear filters stays reachable, and
+   the count updates in front of you as you tick. What dims is the content you are
+   filtering, which is also what makes the sheet and the row read as one thing. */
+body.ms-open .filters,body.ms-open .filters-meta{position:relative;z-index:36}
+@keyframes ms-fade{from{opacity:0}to{opacity:1}}
+/* The heading sticks, so a long list still says what it belongs to. */
+.ms-head{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:10px;
+ background:var(--sheet);padding:10px 4px 8px;border-bottom:1px solid var(--ring);
+ margin-bottom:4px}
+.ms-head b{font-size:13.5px}
+.ms-head .ms-done{margin-left:auto;font-size:12.5px;font-weight:600;background:none;
+ border:0;color:var(--ink);padding:4px 2px;min-height:auto}
+.ms-grab{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:38px;
+ height:4px;border-radius:4px;background:var(--grid)}
+/* The chip you tapped fills in, so the sheet is visibly tied to it. */
+.ms[open]>summary{background:var(--ink);color:var(--surface-1);border-color:var(--ink)}
+.ms[open]>summary .ms-caret{color:var(--surface-1)}
+@media (prefers-reduced-motion:reduce){
+ .ms[open]>.ms-menu,.ms-scrim{animation:none}
+}
 .ms-opt{display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:8px;
  font-size:13px;cursor:pointer}
 .ms-opt:hover{background:var(--plane)}
@@ -882,7 +913,13 @@ body.locked .filters{display:none}
 
  .filters{flex-wrap:wrap;overflow:visible;margin-left:0;margin-right:0;padding:2px 0}
  .ms-menu{position:absolute;top:calc(100% + 4px);bottom:auto;left:0;right:auto;
-  min-width:210px;max-height:290px;box-shadow:0 12px 34px rgba(0,0,0,.16)}
+  min-width:210px;max-height:290px;padding:6px;border-radius:12px;
+  background:var(--surface-1);box-shadow:0 12px 34px rgba(0,0,0,.16)}
+ /* A dropdown that opens under the control it belongs to needs neither a title
+    telling you what you just clicked nor a scrim to find it. */
+ .ms-head,.ms-grab{display:none}
+ .ms[open]>summary{background:var(--surface-1);color:var(--ink);border-color:var(--ink)}
+ .ms[open]>summary .ms-caret{color:var(--muted)}
  .cl-progress{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
  .tk-task{font-size:14px}
 
@@ -1118,7 +1155,9 @@ JS = """
  sheetBg.addEventListener('click', closeDialogs);
  $('sheet-close').addEventListener('click', closeSheet);
  document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape') closeDialogs();
+  if (e.key !== 'Escape') return;
+  if (document.querySelector('details.ms[open]')) { closeMenus(); return; }
+  closeDialogs();
  });
 
  // ---- hover summary, pointer devices only
@@ -1221,6 +1260,69 @@ JS = """
   evFilter();
  });
  if ($('ev-past')) $('ev-past').addEventListener('change', evFilter);
+ // ---- the filter and sort sheets
+ // On a phone these open at the bottom, far from the chip that was tapped, so they
+ // are dressed as sheets: a scrim behind, a heading saying which filter this is, and
+ // a way out that is not "tap the tiny chip again". On a laptop the same markup is an
+ // anchored dropdown and none of this shows.
+ var sheetish = function(){ return !matchMedia('(min-width: 700px)').matches; };
+
+ function closeMenus(){
+  all('details.ms[open]').forEach(function(d){ d.open = false; });
+ }
+
+ function scrim(on){
+  var el = $('ms-scrim');
+  if (on && !el) {
+   el = document.createElement('button');
+   el.id = 'ms-scrim';
+   el.type = 'button';
+   el.className = 'ms-scrim';
+   el.setAttribute('aria-label', 'Close');
+   el.addEventListener('click', closeMenus);
+   document.body.appendChild(el);
+  } else if (!on && el) {
+   el.remove();
+  }
+ }
+
+ // Re-rendering a list can remove an open menu without any toggle event firing, and
+ // a scrim left behind after its sheet has gone dims the page and swallows every tap.
+ // So the scrim is derived from what is actually open, and re-derived after a paint.
+ function syncScrim(){
+  var open = !!document.querySelector('details.ms[open]');
+  scrim(sheetish() && open);
+  document.body.classList.toggle('ms-open', sheetish() && open);
+ }
+
+ function dressMenu(box){
+  var menu = box.querySelector('.ms-menu');
+  if (!menu || menu.querySelector('.ms-head')) return;
+  var head = document.createElement('div');
+  head.className = 'ms-head';
+  head.innerHTML = '<span class="ms-grab"></span><b>' +
+    esc(box.dataset.label || 'Choose') + '</b>' +
+    '<button type="button" class="ms-done">Done</button>';
+  head.querySelector('.ms-done').addEventListener('click', function(){
+   box.open = false;
+  });
+  menu.insertBefore(head, menu.firstChild);
+ }
+
+ // The toggle event does not bubble, so this listens in the capture phase rather
+ // than binding every menu as it is painted.
+ document.addEventListener('toggle', function(e){
+  var box = e.target;
+  if (!box || !box.classList || !box.classList.contains('ms')) return;
+  if (box.open) {
+   dressMenu(box);
+   // One at a time: two open sheets stacked at the same corner of the screen is
+   // worse than none.
+   all('details.ms[open]').forEach(function(d){ if (d !== box) d.open = false; });
+  }
+  syncScrim();
+ }, true);
+
  // A click outside an open facet menu closes it.
  document.addEventListener('click', function(e){
   all('details.ms[open]').forEach(function(d){
@@ -1710,7 +1812,7 @@ JS = """
  }
  // Options are either plain strings, where the value is the label, or {value, text}
  // pairs, which is what the checklist picker needs: it shows a title and carries an id.
- function choiceHtml(name, group, options, currentValue){
+ function choiceHtml(name, group, options, currentValue, label){
   var rows = options.map(function(o){
    var value = o && o.value !== undefined ? o.value : o;
    var label = o && o.text !== undefined ? o.text : o;
@@ -1726,7 +1828,8 @@ JS = """
   options.forEach(function(o){
    if (o && o.value !== undefined && o.value === currentValue) shown = o.text;
   });
-  return '<details class="ms ms-choice" data-choice="' + esc(name) + '">' +
+  return '<details class="ms ms-choice" data-choice="' + esc(name) + '" data-label="' +
+    esc(label || name) + '">' +
     '<summary><span class="ms-value">' + esc(shown) + '</span>' +
     '<svg class="ic ms-caret" aria-hidden="true"><use href="#i-down"></use></svg>' +
     '</summary><div class="ms-menu">' + rows + '</div></details>';
@@ -1750,7 +1853,7 @@ JS = """
    '<div class="tk-head"><span class="tk-n">' + esc(t.n) + '</span>' +
    '<div class="tk-body"><p class="tk-task">' + esc(t.task) + '</p>' +
    (t.why ? '<p class="tk-why">' + esc(t.why) + '</p>' : '') + '</div>' +
-   choiceHtml('status', 'st-' + id + '-' + t.n, STATUS_LIST, status) +
+   choiceHtml('status', 'st-' + id + '-' + t.n, STATUS_LIST, status, 'Status') +
    '</div><div class="tk-meta"><span class="tk-ws">' + esc(t.workstream) + '</span>' +
    '<span>' + esc(t.owner || 'Unassigned') + '</span>' +
    '<span class="tk-off">' + esc(off) + '</span><span class="tk-due"></span>' +
@@ -1872,6 +1975,8 @@ JS = """
   }
   var badge = document.querySelector('.ms[data-ms="workstream"] .ms-badge');
   if (badge) { badge.textContent = wanted.length; badge.hidden = !wanted.length; }
+  // The task rows were just rebuilt, taking any open status sheet with them.
+  syncScrim();
  }
 
  // Delegated, because the rows are replaced on every render.
@@ -2374,9 +2479,9 @@ JS = """
       '" value="' + esc(o[0]) + '"><span>' + esc(o[1]) + '</span><i>' + o[2] +
       '</i></label>';
    }).join('');
-   return '<details class="ms" data-ms="' + pair[0] + '"><summary>' + pair[1] +
-     '<span class="ms-badge" hidden></span></summary><div class="ms-menu">' + boxes +
-     '</div></details>';
+   return '<details class="ms" data-ms="' + pair[0] + '" data-label="' + pair[1] +
+     '"><summary>' + pair[1] + '<span class="ms-badge" hidden></span></summary>' +
+     '<div class="ms-menu">' + boxes + '</div></details>';
   }).join('');
  }
 
@@ -2418,7 +2523,7 @@ JS = """
    picker.innerHTML = CHECK.length
      ? choiceHtml('checklist', 'cl-which',
                   CHECK.map(function(c){ return {value: c.id, text: c.title}; }),
-                  (meta(current) || {}).title || '')
+                  (meta(current) || {}).title || '', 'Which checklist')
      : '';
    var box = picker.querySelector('.ms-choice[data-choice="checklist"]');
    if (box) box.addEventListener('change', function(e){
@@ -2448,11 +2553,12 @@ JS = """
   if ($('events')) $('events').innerHTML = eventsHtml(events);
   evs = all('.ev');
   evFilter();
+  syncScrim();
  }
 
  function sortHtml(){
   var current = SORTS.filter(function(o){ return o.value === sortBy; })[0] || SORTS[0];
-  return choiceHtml('ev-sort', 'ev-sort-opt', SORTS, current.value);
+  return choiceHtml('ev-sort', 'ev-sort-opt', SORTS, current.value, 'Sort by');
  }
 
  function paint(){

@@ -215,6 +215,45 @@ def main():
                 check(f"{facet} facet is present", ctx.eval_on_selector_all(
                     f'input[data-facet="{facet}"]', "els => els.length") > 1)
 
+            print("\nfilter sheets on a phone")
+            # These open at the bottom, far from the chip that was tapped, so they
+            # have to announce themselves: dim the page, say which filter this is,
+            # and offer a way out that is not the chip again.
+            ctx.click('details.ms[data-ms="category"] summary')
+            ctx.wait_for_timeout(300)
+            check("opening a filter dims the page behind it",
+                  ctx.is_visible("#ms-scrim"))
+            check("the sheet says which filter it is",
+                  ctx.inner_text('.ms[data-ms="category"] .ms-head b') == "Category")
+            check("the chip you tapped is visibly the open one",
+                  ctx.eval_on_selector('.ms[data-ms="category"] summary',
+                                       "el => getComputedStyle(el).backgroundColor")
+                  != ctx.eval_on_selector('.ms[data-ms="month"] summary',
+                                          "el => getComputedStyle(el).backgroundColor"))
+            check("the chips stay above the scrim, so switching is one tap",
+                  ctx.eval_on_selector("""#panel-events .filters""",
+                      """el => {
+                          const mid = el.getBoundingClientRect();
+                          const at = document.elementFromPoint(mid.left + 30,
+                                                               mid.top + mid.height / 2);
+                          return el.contains(at); }"""))
+            ctx.click('details.ms[data-ms="month"] summary')
+            ctx.wait_for_timeout(250)
+            check("and only one sheet is ever open",
+                  ctx.eval_on_selector_all("details.ms[open]",
+                                           "els => els.map(e => e.dataset.ms)") == ["month"])
+            ctx.click(".ms[open] .ms-done")
+            ctx.wait_for_timeout(250)
+            check("Done closes it and takes the dimming with it",
+                  ctx.eval_on_selector_all("details.ms[open]", "e => e.length") == 0
+                  and ctx.eval_on_selector_all("#ms-scrim", "e => e.length") == 0)
+            ctx.click('details.ms[data-ms="category"] summary')
+            ctx.wait_for_timeout(250)
+            ctx.click("#ms-scrim")
+            ctx.wait_for_timeout(250)
+            check("tapping the dimmed area closes it too",
+                  ctx.eval_on_selector_all("details.ms[open]", "e => e.length") == 0)
+
             print("\nnew badges and sorting")
             # The fixture marks two upcoming events as added in this run, which is
             # what the badge and the "recently added" order are for.
@@ -500,6 +539,27 @@ def main():
                                      : 'nothing visible';
                       document.getElementById('tab-calendar').click();
                       return out; }""") == "grid")
+            # The same markup is a plain dropdown on a laptop: it opens under the
+            # control, so it needs neither a title nor a scrim to be found.
+            desk.click("#tab-events")
+            desk.wait_for_timeout(150)
+            desk.click('details.ms[data-ms="category"] summary')
+            desk.wait_for_timeout(250)
+            check("a laptop gets a dropdown, not a dimmed sheet",
+                  desk.eval_on_selector_all("#ms-scrim", "e => e.length") == 0
+                  and desk.eval_on_selector('.ms[data-ms="category"] .ms-head',
+                                            "el => getComputedStyle(el).display") == "none")
+            check("and it opens under the control it belongs to",
+                  desk.evaluate("""() => {
+                      const box = document.querySelector('.ms[data-ms="category"]');
+                      const menu = box.querySelector('.ms-menu');
+                      const a = box.getBoundingClientRect();
+                      const b = menu.getBoundingClientRect();
+                      return b.top > a.top && Math.abs(b.left - a.left) < 40; }"""))
+            desk.keyboard.press("Escape")
+            desk.wait_for_timeout(150)
+            desk.click("#tab-calendar")
+            desk.wait_for_timeout(150)
             desk.hover(".day.t-blocked")
             desk.wait_for_timeout(250)
             check("hovering a date shows a summary without clicking",
@@ -566,6 +626,12 @@ def main():
             ctx.click('.tk[data-n="1"] .ms-choice summary')
             ctx.click('.tk[data-n="1"] .ms-choice input[value="Done"]')
             ctx.wait_for_timeout(250)
+            # Picking a status rebuilds the task list, which removes the open sheet
+            # without a toggle event. A scrim left behind dims the page and swallows
+            # every tap after it.
+            check("picking a status leaves nothing dimming the page",
+                  ctx.eval_on_selector_all("#ms-scrim", "e => e.length") == 0
+                  and ctx.eval_on_selector_all("details.ms[open]", "e => e.length") == 0)
             check("marking a task done moves the progress figure",
                   ctx.inner_text(".cl-cell") != before,
                   f"{before.split(chr(10))[0]} -> {ctx.inner_text('.cl-cell').split(chr(10))[0]}")
