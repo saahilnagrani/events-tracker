@@ -737,8 +737,27 @@ def main():
             first = ctx.eval_on_selector(
                 ".mo:first-of-type", "el => el.querySelector('.day:not(.pad)').dataset.date")
             check("the current month starts on the 1st", first.endswith("-01"), first)
-            check("dates already gone are marked past",
-                  ctx.eval_on_selector_all(".day.past", "els => els.length") > 0)
+            # The window starts on the 1st of the current month, so on the 1st there
+            # is nothing behind us and no cell can be past. Asserting one exists made
+            # the pipeline red on 1 September, on the same commit that was green on
+            # 31 August. What has to hold every day is the rule, not the count:
+            # everything before today is marked, everything from today on is not.
+            marking = ctx.evaluate("""() => {
+                const today = new Date();
+                const iso = today.getFullYear() + '-' +
+                    String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(today.getDate()).padStart(2, '0');
+                const cells = Array.from(document.querySelectorAll('.day[data-date]'));
+                return {
+                  wrong: cells.filter(c =>
+                      c.classList.contains('past') !== (c.dataset.date < iso)).length,
+                  behind: cells.filter(c => c.dataset.date < iso).length,
+                  marked: cells.filter(c => c.classList.contains('past')).length }; }""")
+            check("every date before today is marked past, and no other",
+                  marking["wrong"] == 0,
+                  f"{marking['marked']} marked, {marking['behind']} behind today")
+            if not marking["behind"]:
+                print("        (first of the month: nothing is behind us to mark)")
 
             ctx.click("#tab-events")
             ctx.wait_for_timeout(150)
