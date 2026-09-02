@@ -50,6 +50,19 @@ the **Run it on GitHub instead** link, which needs no token.
 Anyone with the unlocked device can use a stored token, so on a shared machine use the
 link rather than saving one.
 
+## The demo page
+
+`docs/demo/` is a second build for handing to someone who is evaluating this. It opens
+with no sign-in, carries the real listings and the real scored calendar, and an invented
+checklist in place of the real ones. It is rebuilt by the daily run, so it stays current.
+
+<https://saahilnagrani.github.io/events-tracker/demo/>
+
+It is the only output that inlines any data, and what it inlines is scraped public
+listings plus fiction. The build refuses to produce it if the checklist file holds
+anything other than the sample, and the smoke test greps the built page for the real
+checklist's fee and counterparties.
+
 ## Accounts
 
 Everything is behind one. Signing in is what fetches the data, and an address has to be

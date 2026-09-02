@@ -758,6 +758,9 @@ body.locked .filters{display:none}
    somewhere to put them; display:contents keeps the flex row flat, otherwise all four
    facets stack inside one flex item. */
 #facets,#ev-sort,#cl-picker{display:contents}
+.demo-note{margin:12px 0 0;padding:9px 12px;border-radius:10px;font-size:12.5px;
+ color:var(--ink-2);background:var(--info-bg);border:1px solid var(--info)}
+.demo-note b{color:var(--ink)}
 #gate{display:flex;justify-content:center;padding:28px 0 40px}
 .gate-card{max-width:460px;background:var(--surface-1);border:1px solid var(--ring);
  border-radius:14px;padding:22px 22px 24px}
@@ -2783,9 +2786,28 @@ JS = """
 
  // ================================================================ initial state
  showTab(store.get('tab', TABS[0]));
- gate('');
 
- if (SYNC_ON) {
+ // The demo build carries its data, so there is nothing to fetch and nobody to be.
+ // Everything below that talks to a database is skipped rather than disabled: with
+ // no backend configured there is nothing for it to talk to anyway.
+ var DEMO = window.__DEMO__ || null;
+ if (DEMO) {
+  ['acct', 'refresh'].forEach(function(id){
+   if ($(id)) $(id).hidden = true;
+  });
+  var hint = $('cl-hint');
+  if (hint) {
+   hint.innerHTML = 'Sample data. Tick things off if you like: it is kept in this ' +
+     'browser and goes no further.';
+  }
+  useData({viability: DEMO.viability, checklists: DEMO.checklists || []});
+  unlock();
+  paint();
+ } else {
+  gate('');
+ }
+
+ if (SYNC_ON && !DEMO) {
   var arrived = adoptRedirect();
   renderAccount();
   // A reset link lands signed in with a password nobody knows; open the dialog on the
@@ -2798,7 +2820,7 @@ JS = """
  }
  if ($('gate-in')) $('gate-in').addEventListener('click', openAcct);
 
- if ('serviceWorker' in navigator) {
+ if ('serviceWorker' in navigator && !DEMO) {
   window.addEventListener('load', function(){
    navigator.serviceWorker.register('./sw.js').catch(function(){});
   });
@@ -2808,6 +2830,29 @@ JS = """
 
 
 # ---------------------------------------------------------------- page
+
+def asset(name, demo=False):
+    """Where an icon is from the page asking for it.
+
+    The demo lives one directory down and shares the icons rather than duplicating
+    them, so it reaches up. Everything stays relative: this is a project site, and an
+    absolute path would work locally and 404 in production.
+    """
+    return ("../" + icon_url(name)[2:]) if demo else icon_url(name)
+
+
+def demo_payload(demo):
+    """The demo page carries its data, because there is nothing to sign in to.
+
+    This is the one build that inlines anything, and what it inlines is deliberate:
+    the real listings and the real scored calendar, which are scraped public
+    information, and an invented checklist. The real checklists are never in a page.
+    """
+    if not demo:
+        return ""
+    return ("window.__DEMO__ = "
+            + json.dumps(demo, ensure_ascii=False, separators=(",", ":")) + ";")
+
 
 def repo_info(backend):
     """Which repository the refresh button should ask to run the workflow.
@@ -2832,7 +2877,7 @@ def repo_info(backend):
             "branch": (backend or {}).get("github_branch") or "main"}
 
 
-def render(cfg, backend=None, repo=None):
+def render(cfg, backend=None, repo=None, demo=None):
     """The shell. Every figure, cell and row on it is drawn in the browser.
 
     What stays here is what is true regardless of the data: the tier legend, the
@@ -2861,9 +2906,10 @@ def render(cfg, backend=None, repo=None):
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Events Tracker</title>
 <meta name="description" content="Events Tracker: every comedy and desi event on sale in Dubai and Abu Dhabi, which dates are viable for staging a show, and checklists for the shows you are running.">
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="{icon_url('icon-192.png')}" type="image/png">
-<link rel="apple-touch-icon" href="{icon_url('icon-maskable-192.png')}">
+{'<meta name="robots" content="noindex">' if demo else ''}
+{'' if demo else '<link rel="manifest" href="./manifest.webmanifest">'}
+<link rel="icon" href="{asset('icon-192.png', demo)}" type="image/png">
+<link rel="apple-touch-icon" href="{asset('icon-maskable-192.png', demo)}">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f9f9f7">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0d0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2906,6 +2952,10 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 </header>
 
 <div class="wrap">
+{'''
+ <p class="demo-note"><b>Demo.</b> The events and the calendar are the real thing,
+  refreshed every morning. The checklist is invented sample data, and nothing you
+  change here leaves your browser.</p>''' if demo else ''}
 
  <!-- --------------------------------------------------------------- gate -->
  <section id="gate" hidden>
@@ -3046,6 +3096,7 @@ window.__TIERS__ = {json.dumps(tier_js, ensure_ascii=False)};
 window.__STATUSES__ = {json.dumps(STATUSES, ensure_ascii=False)};
 window.__BACKEND__ = {json.dumps(backend or {}, ensure_ascii=False)};
 window.__REPO__ = {json.dumps(repo or {}, ensure_ascii=False)};
+{demo_payload(demo)}
 </script>
 <script>{JS}</script>
 </body>
@@ -3109,6 +3160,29 @@ def main():
     # Pages would otherwise run the output through Jekyll, which strips files and
     # directories beginning with an underscore.
     (out / ".nojekyll").write_text("")
+
+    # The demo is built from the same source with its data folded in: real listings,
+    # real calendar, invented checklist. It is the only output that carries data, and
+    # it carries nothing anyone could not already see on Platinumlist.
+    demo_src = ROOT / "data" / "demo_checklist.json"
+    viab_src = ROOT / "data" / "viability.json"
+    demo_dir = out / "demo"
+    if demo_src.exists() and viab_src.exists():
+        demo = {"viability": json.loads(viab_src.read_text()),
+                "checklists": json.loads(demo_src.read_text()).get("checklists", [])}
+        leak = [c for c in demo["checklists"] if c["id"] != "demo-diwali-comedy-night"]
+        if leak:
+            print(f"  refusing to build the demo: unexpected checklist {leak[0]['id']}")
+            return 1
+        demo_dir.mkdir(parents=True, exist_ok=True)
+        (demo_dir / "index.html").write_text(
+            render(cfg, {}, {}, demo), encoding="utf-8")
+        size = (demo_dir / "index.html").stat().st_size
+        print(f"built {demo_dir/'index.html'} ({size // 1024} KB): "
+              f"{len(demo['viability'].get('events', []))} real events, "
+              f"{sum(len(c['tasks']) for c in demo['checklists'])} sample tasks")
+    else:
+        print("  no demo built (needs data/demo_checklist.json and data/viability.json)")
 
     page = (out / "index.html").stat().st_size
     print(f"built {out/'index.html'} ({page // 1024} KB): shell only, no data")
