@@ -3174,13 +3174,25 @@ def main():
         if leak:
             print(f"  refusing to build the demo: unexpected checklist {leak[0]['id']}")
             return 1
-        demo_dir.mkdir(parents=True, exist_ok=True)
-        (demo_dir / "index.html").write_text(
-            render(cfg, {}, {}, demo), encoding="utf-8")
-        size = (demo_dir / "index.html").stat().st_size
-        print(f"built {demo_dir/'index.html'} ({size // 1024} KB): "
-              f"{len(demo['viability'].get('events', []))} real events, "
-              f"{sum(len(c['tasks']) for c in demo['checklists'])} sample tasks")
+        # The demo carries its data, so it is only as fresh as the payload on disk.
+        # In a run that payload was just scraped; on a laptop it is whatever was left
+        # from last time, and rebuilding from it would publish a demo that says an
+        # older date than the app beside it. So a stale payload leaves the existing
+        # page alone rather than replacing a current one with an older one.
+        stamp_on_disk = demo["viability"].get("generated")
+        page = demo_dir / "index.html"
+        stale = stamp_on_disk != date.today().isoformat()
+        if stale and page.exists():
+            print(f"  demo left as it is: data/viability.json is from "
+                  f"{stamp_on_disk}, not today. The daily run rebuilds it.")
+        else:
+            demo_dir.mkdir(parents=True, exist_ok=True)
+            page.write_text(render(cfg, {}, {}, demo), encoding="utf-8")
+            size = page.stat().st_size
+            print(f"built {page} ({size // 1024} KB): "
+                  f"{len(demo['viability'].get('events', []))} real events, "
+                  f"{sum(len(c['tasks']) for c in demo['checklists'])} sample tasks"
+                  + (f"  (from a {stamp_on_disk} payload)" if stale else ""))
     else:
         print("  no demo built (needs data/demo_checklist.json and data/viability.json)")
 

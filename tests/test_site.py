@@ -1167,6 +1167,16 @@ def main():
                           f"({needle})", needle not in demo_src)
                 check("search engines are told to leave it alone",
                       'name="robots" content="noindex"' in demo_src)
+                # The demo bakes its data in, the app fetches it live, and the two
+                # sitting side by side must not report different days. A local build
+                # from a stale payload is what makes them diverge, so the build skips
+                # rather than downgrading a current page, and this pins the agreement.
+                payload = json.loads((ROOT / "data" / "viability.json").read_text())
+                baked = re.search(r'"generated":"(\d{4}-\d{2}-\d{2})"', demo_src)
+                check("the demo's data is the payload it was built from",
+                      bool(baked) and baked.group(1) == payload["generated"],
+                      f"page {baked.group(1) if baked else '?'} "
+                      f"vs payload {payload['generated']}")
 
                 dpage = browser.new_page(viewport={"width": 1440, "height": 900})
                 dead = []
