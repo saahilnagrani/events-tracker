@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Events Tracker</title>
 <meta name="description" content="Events Tracker: every comedy and desi event on sale in Dubai and Abu Dhabi, which dates are viable for staging a show, and checklists for the shows you are running.">
+
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png?v=3" type="image/png">
 <link rel="apple-touch-icon" href="./icon-maskable-192.png?v=3">
@@ -402,6 +403,9 @@ body.locked .filters{display:none}
    somewhere to put them; display:contents keeps the flex row flat, otherwise all four
    facets stack inside one flex item. */
 #facets,#ev-sort,#cl-picker{display:contents}
+.demo-note{margin:12px 0 0;padding:9px 12px;border-radius:10px;font-size:12.5px;
+ color:var(--ink-2);background:var(--info-bg);border:1px solid var(--info)}
+.demo-note b{color:var(--ink)}
 #gate{display:flex;justify-content:center;padding:28px 0 40px}
 .gate-card{max-width:460px;background:var(--surface-1);border:1px solid var(--ring);
  border-radius:14px;padding:22px 22px 24px}
@@ -642,6 +646,7 @@ body.locked .filters{display:none}
 
 <div class="wrap">
 
+
  <!-- --------------------------------------------------------------- gate -->
  <section id="gate" hidden>
   <div class="gate-card">
@@ -840,6 +845,7 @@ window.__TIERS__ = {"prime": {"icon": "check", "label": "PRIME"}, "good": {"icon
 window.__STATUSES__ = ["Not started", "In progress", "Done", "Not needed"];
 window.__BACKEND__ = {"supabase_url": "https://dwqgjokitoimkjyqgenm.supabase.co", "supabase_anon_key": "sb_publishable_I3CMGxGXPc3kviggzn2pjA_V-JCTqz3"};
 window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.yml", "branch": "main"};
+
 </script>
 <script>
 (function(){
@@ -2658,9 +2664,28 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
 
  // ================================================================ initial state
  showTab(store.get('tab', TABS[0]));
- gate('');
 
- if (SYNC_ON) {
+ // The demo build carries its data, so there is nothing to fetch and nobody to be.
+ // Everything below that talks to a database is skipped rather than disabled: with
+ // no backend configured there is nothing for it to talk to anyway.
+ var DEMO = window.__DEMO__ || null;
+ if (DEMO) {
+  ['acct', 'refresh'].forEach(function(id){
+   if ($(id)) $(id).hidden = true;
+  });
+  var hint = $('cl-hint');
+  if (hint) {
+   hint.innerHTML = 'Sample data. Tick things off if you like: it is kept in this ' +
+     'browser and goes no further.';
+  }
+  useData({viability: DEMO.viability, checklists: DEMO.checklists || []});
+  unlock();
+  paint();
+ } else {
+  gate('');
+ }
+
+ if (SYNC_ON && !DEMO) {
   var arrived = adoptRedirect();
   renderAccount();
   // A reset link lands signed in with a password nobody knows; open the dialog on the
@@ -2673,7 +2698,7 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
  }
  if ($('gate-in')) $('gate-in').addEventListener('click', openAcct);
 
- if ('serviceWorker' in navigator) {
+ if ('serviceWorker' in navigator && !DEMO) {
   window.addEventListener('load', function(){
    navigator.serviceWorker.register('./sw.js').catch(function(){});
   });

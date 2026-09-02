@@ -1150,6 +1150,58 @@ def main():
                   json.dumps(edit_fake.writes)[:60])
             edit.close()
 
+            print("\nthe demo page")
+            # A page to hand to someone who is evaluating: the real listings and the
+            # real calendar, an invented checklist, and no way in to anything else.
+            demo_file = DOCS / "demo" / "index.html"
+            if not check("the demo page is built", demo_file.exists()):
+                pass
+            else:
+                demo_src = demo_file.read_text()
+                real = json.loads((ROOT / "data" / "demo_checklist.json").read_text())
+                check("it carries only the invented checklist",
+                      [c["id"] for c in real["checklists"]] == ["demo-diwali-comedy-night"])
+                # The one thing that must never be true of this file.
+                for needle in ("Ranjit", "Sifat", "200,000", "Facilitation"):
+                    check(f"the demo page carries nothing of the real checklist "
+                          f"({needle})", needle not in demo_src)
+                check("search engines are told to leave it alone",
+                      'name="robots" content="noindex"' in demo_src)
+
+                dpage = browser.new_page(viewport={"width": 1440, "height": 900})
+                dead = []
+                dpage.on("pageerror", lambda e: dead.append(str(e)))
+                dpage.on("console", lambda m: dead.append(m.text)
+                         if m.type == "error" else None)
+                # No backend is routed at all: if the demo asks a database for
+                # anything, the request fails and the check below notices.
+                dpage.route("**/*.supabase.co/**", lambda r: r.abort())
+                dpage.goto(url + "demo/", wait_until="load")
+                dpage.wait_for_timeout(600)
+                check("it opens with no sign-in at all",
+                      not dpage.is_visible("#gate")
+                      and dpage.eval_on_selector_all(".ev", "e => e.length") > 0
+                      and dpage.eval_on_selector_all(".day[data-tier]",
+                                                     "e => e.length") > 0)
+                check("it says it is a demo, and which half is invented",
+                      "sample" in dpage.inner_text(".demo-note").lower())
+                check("no account button and no way to trigger a run",
+                      not dpage.is_visible("#acct") and not dpage.is_visible("#refresh"))
+                dpage.click("#tab-checklist")
+                dpage.wait_for_timeout(300)
+                check("the checklist is the sample one",
+                      "sample" in dpage.inner_text("#cl-picker .ms-value").lower(),
+                      dpage.inner_text("#cl-picker .ms-value"))
+                check("and it still works: ticking one moves the figure",
+                      (lambda before: (
+                          dpage.click('.tk[data-n="9"] .ms-choice summary'),
+                          dpage.click('.tk[data-n="9"] .ms-choice input[value="Done"]'),
+                          dpage.wait_for_timeout(250),
+                          dpage.inner_text(".cl-cell") != before)[-1])(
+                              dpage.inner_text(".cl-cell")))
+                check("the demo raises no page errors", not dead, "; ".join(dead[:2]))
+                dpage.close()
+
             print("\nconsole")
             real = [e for e in errors if "favicon" not in e.lower()]
             check("no console or page errors", not real, "; ".join(real[:3]))
