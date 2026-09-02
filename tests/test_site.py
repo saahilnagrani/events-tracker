@@ -1173,8 +1173,11 @@ def main():
                 # rather than downgrading a current page, and this pins the agreement.
                 payload = json.loads((ROOT / "data" / "viability.json").read_text())
                 baked = re.search(r'"generated":"(\d{4}-\d{2}-\d{2})"', demo_src)
-                check("the demo's data is the payload it was built from",
-                      bool(baked) and baked.group(1) == payload["generated"],
+                # The rule is that the page never carries older data than the
+                # payload it was built from. Equal is the normal case; newer happens
+                # when a run has published since this checkout last scored anything.
+                check("the demo's data is not older than the payload here",
+                      bool(baked) and baked.group(1) >= payload["generated"],
                       f"page {baked.group(1) if baked else '?'} "
                       f"vs payload {payload['generated']}")
 
@@ -1194,7 +1197,7 @@ def main():
                       and dpage.eval_on_selector_all(".day[data-tier]",
                                                      "e => e.length") > 0)
                 check("it says it is a demo, and which half is invented",
-                      "sample" in dpage.inner_text(".demo-note").lower())
+                      "mock" in dpage.inner_text(".demo-note").lower())
                 check("no account button and no way to trigger a run",
                       not dpage.is_visible("#acct") and not dpage.is_visible("#refresh"))
                 dpage.click("#tab-checklist")

@@ -2953,9 +2953,8 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 
 <div class="wrap">
 {'''
- <p class="demo-note"><b>Demo.</b> The events and the calendar are the real thing,
-  refreshed every morning. The checklist is invented sample data, and nothing you
-  change here leaves your browser.</p>''' if demo else ''}
+ <p class="demo-note"><b>Demo.</b> Events and calendar tabs have real events data,
+  refreshed every day. Checklist tab has mock data.</p>''' if demo else ''}
 
  <!-- --------------------------------------------------------------- gate -->
  <section id="gate" hidden>
@@ -3179,12 +3178,19 @@ def main():
         # from last time, and rebuilding from it would publish a demo that says an
         # older date than the app beside it. So a stale payload leaves the existing
         # page alone rather than replacing a current one with an older one.
-        stamp_on_disk = demo["viability"].get("generated")
+        # The rule is only "never go backwards". A build whose payload is older than
+        # the one already in the page would publish a demo dated before the app beside
+        # it; a build with the same payload is a template change and should ship.
+        stamp_on_disk = demo["viability"].get("generated") or ""
         page = demo_dir / "index.html"
-        stale = stamp_on_disk != date.today().isoformat()
-        if stale and page.exists():
-            print(f"  demo left as it is: data/viability.json is from "
-                  f"{stamp_on_disk}, not today. The daily run rebuilds it.")
+        baked = ""
+        if page.exists():
+            found = re.search(r'"generated":"(\d{4}-\d{2}-\d{2})"', page.read_text())
+            baked = found.group(1) if found else ""
+        stale = bool(baked) and stamp_on_disk < baked
+        if stale:
+            print(f"  demo left as it is: data/viability.json is from {stamp_on_disk}, "
+                  f"older than the {baked} data already in the page.")
         else:
             demo_dir.mkdir(parents=True, exist_ok=True)
             page.write_text(render(cfg, {}, {}, demo), encoding="utf-8")
@@ -3192,7 +3198,8 @@ def main():
             print(f"built {page} ({size // 1024} KB): "
                   f"{len(demo['viability'].get('events', []))} real events, "
                   f"{sum(len(c['tasks']) for c in demo['checklists'])} sample tasks"
-                  + (f"  (from a {stamp_on_disk} payload)" if stale else ""))
+                  + (f"  (payload {stamp_on_disk})"
+                     if stamp_on_disk != date.today().isoformat() else ""))
     else:
         print("  no demo built (needs data/demo_checklist.json and data/viability.json)")
 
