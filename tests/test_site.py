@@ -1215,13 +1215,18 @@ def main():
                 dpage = browser.new_page(viewport={"width": 1440, "height": 900})
                 dead = []
                 dpage.on("pageerror", lambda e: dead.append(str(e)))
-                # The analytics beacon is third-party and blockable: it fails to
-                # load in this sandbox, and it fails for any visitor running an ad
-                # blocker. Neither is the demo being broken, so it is not counted.
+                # The analytics beacon never phones home from a test. Left alone it
+                # counts every CI run as a visit to the demo, which is the one number
+                # this page exists to report honestly. Blocked, it logs an error, and
+                # so does an ad blocker on a real visit: neither is the demo being
+                # broken, so beacon noise is not counted either. The host is matched
+                # in the message as well as the location, because a CORS complaint
+                # names the page rather than the request it is about.
+                dpage.route("**cloudflareinsights.com/**", lambda r: r.abort())
                 dpage.on("console", lambda m: dead.append(
                     f"{m.text} [{(m.location or {}).get('url', '')}]")
-                    if m.type == "error"
-                    and "cloudflareinsights" not in (m.location or {}).get("url", "")
+                    if m.type == "error" and "cloudflareinsights" not in
+                    f"{m.text} {(m.location or {}).get('url', '')}"
                     else None)
                 # No backend is routed at all: if the demo asks a database for
                 # anything, the request fails and the check below notices.
