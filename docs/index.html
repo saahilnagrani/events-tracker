@@ -2038,6 +2038,13 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
   if (again) again.addEventListener('click', function(){ location.reload(); });
  }
 
+ // Every failure here ends with the same offer, because the button failing is not
+ // a reason to be stuck: the workflow can always be started on GitHub by hand.
+ function runInstead(){
+  return ' <a href="' + actionsUrl() + '" target="_blank" rel="noopener">'
+       + 'Run it on GitHub instead</a>';
+ }
+
  function startRun(){
   busy(true);
   msg('Asking GitHub to run the scrape...');
@@ -2047,16 +2054,30 @@ window.__REPO__ = {"slug": "saahilnagrani/events-tracker", "workflow": "daily.ym
    .then(function(r){
     if (r.status === 204) { msg('Started. It takes about three minutes.'); watchRun(at); return; }
     busy(false);
-    if (r.status === 401) { msg('GitHub rejected that token.', true); openRun(); return; }
+    if (r.status === 401) {
+     msg('GitHub rejected that token.', true, runInstead()); openRun(); return;
+    }
     if (r.status === 403) {
-     msg('That token is not allowed to start workflows.', true); openRun(); return;
+     msg('That token is not allowed to start workflows.', true, runInstead());
+     openRun(); return;
     }
     if (r.status === 404) {
-     msg('GitHub cannot see this repository with that token.', true); openRun(); return;
+     msg('GitHub cannot see this repository with that token.', true, runInstead());
+     openRun(); return;
     }
-    msg('GitHub refused the request (' + r.status + ').', true);
+    msg('GitHub refused the request (' + r.status + ').', true, runInstead());
    })
-   .catch(function(){ busy(false); msg('Could not reach GitHub.', true); });
+   // A rejected fetch carries no status, so this cannot say which of the
+   // possibilities it was. It can say what the browser does know, and it can
+   // always leave the way out on screen rather than a dead end.
+   .catch(function(err){
+    busy(false);
+    var why = navigator.onLine === false
+     ? 'This device is offline.'
+     : 'Something stopped the request: an extension, the network, or GitHub itself.';
+    msg('Could not reach GitHub. ' + why
+        + (err && err.message ? ' (' + err.message + ')' : ''), true, runInstead());
+   });
  }
 
  // Polls the workflow rather than trusting the 204: a dispatch that starts and then
