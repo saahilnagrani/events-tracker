@@ -142,11 +142,49 @@ def parse_cards(html):
     return out
 
 
+# Words that only appear on a page that is refusing to serve the listing.
+CHALLENGE = ("queue-it", "queue.platinumlist", "just a moment", "attention required",
+             "access denied", "are you a robot", "captcha", "verify you are human")
+
+
+def why_empty(r):
+    """Say why a listing came back with no cards.
+
+    A block and a redesign both read as "0 cards", and the log could not tell them
+    apart, which cost a morning. So when a listing is empty this reports what actually
+    arrived: the status, where it landed, how big it was, its title, and how much of
+    the grid markup survived. A challenge page is small and oddly titled; a redesign is
+    a full-size listing page with the cards renamed underneath it.
+    """
+    tree = HTMLParser(r.text)
+    node = tree.css_first("title")
+    title = " ".join(node.text().split())[:90] if node else "(no title)"
+    items = len(tree.css(".event-grid-item"))
+    gridish = len(tree.css("[class*=event-grid]"))
+    low = f"{title} {r.url}".lower()
+    if r.status_code != 200:
+        verdict = "not a 200"
+    elif any(word in low for word in CHALLENGE):
+        verdict = "a challenge or waiting-room page, not the listing"
+    elif items:
+        verdict = f"{items} cards, but none carry a.event-grid-item__title any more"
+    elif gridish:
+        verdict = "grid markup is there but .event-grid-item is gone: renamed"
+    elif len(r.text) < 50_000:
+        verdict = "too small to be a listing: probably blocked"
+    else:
+        verdict = "a full page with no event grid in it at all"
+    return (f"    ^ {verdict}\n"
+            f"      HTTP {r.status_code}, {len(r.text) // 1024} KB, "
+            f"{items} event-grid-item, {gridish} event-grid-ish, landed on {r.url}\n"
+            f"      title: {title}")
+
+
 def crawl_listings(session, delay, log=print):
     """Walk every listing URL to exhaustion. Returns {url: {...card, city, categories}}."""
     found = {}
     for city, category, base in LISTINGS:
-        total = 0
+        total, empty = 0, None
         for page in range(1, MAX_PAGES + 1):
             url = base if page == 1 else f"{base}?page={page}"
             r = fetch(session, url, delay)
@@ -158,6 +196,9 @@ def crawl_listings(session, delay, log=print):
                 break
             cards = parse_cards(r.text)
             if not cards:
+                # Only worth explaining on the first page; later pages run out normally.
+                if page == 1:
+                    empty = r
                 break
             for c in cards:
                 rec = found.setdefault(c["url"], {**c, "city": city, "categories": set()})
@@ -168,6 +209,8 @@ def crawl_listings(session, delay, log=print):
                         rec[k] = c[k]
             total += len(cards)
         log(f"  {city:9s} {base.split('.net')[1]:22s} {total:3d} cards")
+        if empty is not None:
+            log(why_empty(empty))
     return found
 
 
