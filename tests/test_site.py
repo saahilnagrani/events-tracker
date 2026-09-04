@@ -31,7 +31,9 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from fake_backend import FakeBackend  # noqa: E402
+import build_site  # noqa: E402  (for constants the built page has to agree with)
 
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
@@ -1167,6 +1169,13 @@ def main():
                           f"({needle})", needle not in demo_src)
                 check("search engines are told to leave it alone",
                       'name="robots" content="noindex"' in demo_src)
+                # Measuring the demo is the point; measuring the signed-in app is a
+                # decision nobody made, and a beacon is one line away from both.
+                check("the demo carries the Cloudflare beacon",
+                      build_site.CF_BEACON_TOKEN in demo_src
+                      and "static.cloudflareinsights.com" in demo_src)
+                check("the app carries no beacon at all",
+                      "cloudflareinsights" not in (DOCS / "index.html").read_text())
                 # The demo bakes its data in, the app fetches it live, and the two
                 # sitting side by side must not report different days. A local build
                 # from a stale payload is what makes them diverge, so the build skips
@@ -1184,8 +1193,14 @@ def main():
                 dpage = browser.new_page(viewport={"width": 1440, "height": 900})
                 dead = []
                 dpage.on("pageerror", lambda e: dead.append(str(e)))
-                dpage.on("console", lambda m: dead.append(m.text)
-                         if m.type == "error" else None)
+                # The analytics beacon is third-party and blockable: it fails to
+                # load in this sandbox, and it fails for any visitor running an ad
+                # blocker. Neither is the demo being broken, so it is not counted.
+                dpage.on("console", lambda m: dead.append(
+                    f"{m.text} [{(m.location or {}).get('url', '')}]")
+                    if m.type == "error"
+                    and "cloudflareinsights" not in (m.location or {}).get("url", "")
+                    else None)
                 # No backend is routed at all: if the demo asks a database for
                 # anything, the request fails and the check below notices.
                 dpage.route("**/*.supabase.co/**", lambda r: r.abort())
