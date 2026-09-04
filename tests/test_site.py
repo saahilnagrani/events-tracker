@@ -169,7 +169,12 @@ def main():
 
             ctx, ctx_fake = open_app(browser, url,
                                      viewport={"width": 390, "height": 780})
-            ctx.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
+            # api.github.com is blocked on purpose further down, to exercise the
+            # refresh button's failure path; that block is the test, not a fault.
+            ctx.on("console", lambda m: errors.append(m.text)
+                   if m.type == "error"
+                   and "api.github.com" not in (m.location or {}).get("url", "")
+                   else None)
             ctx.on("pageerror", lambda e: errors.append(str(e)))
 
             print("\ntabs")
@@ -964,6 +969,23 @@ def main():
             check("Escape closes it and clears the backdrop",
                   not ctx.is_visible("#run-sheet")
                   and not ctx.is_visible("#sheet-bg"))
+
+            # And the failure path. A blocked request said only "Could not reach
+            # GitHub", which is a dead end on the one screen that has an obvious way
+            # out of it.
+            ctx.route("**://api.github.com/**", lambda r: r.abort())
+            ctx.evaluate("() => localStorage.setItem('gh:token', 'not-a-real-token')")
+            ctx.click("#refresh")
+            ctx.wait_for_timeout(500)
+            check("a blocked request says so rather than nothing",
+                  "could not reach github" in ctx.inner_text("#data-msg").lower(),
+                  ctx.inner_text("#data-msg"))
+            check("and still offers running it on GitHub by hand",
+                  ctx.is_visible('#data-msg a[href*="/actions/workflows/"]'))
+            check("the button is not left spinning",
+                  not ctx.eval_on_selector("#refresh", "el => el.disabled"))
+            ctx.evaluate("() => localStorage.removeItem('gh:token')")
+            ctx.unroute("**://api.github.com/**")
             open_calendar(ctx)
 
             print("\nsync backend")
