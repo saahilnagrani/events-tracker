@@ -2841,6 +2841,28 @@ def asset(name, demo=False):
     return ("../" + icon_url(name)[2:]) if demo else icon_url(name)
 
 
+# Cloudflare Web Analytics, on the demo page and nowhere else.
+#
+# The token is public by design: it ships inside every page it measures, and it grants
+# nothing but the right to be counted. Both demos sit on saahilnagrani.github.io, and
+# Cloudflare groups by hostname, so one token covers them and the dashboard tells them
+# apart by path: /events-tracker/demo/ against /expense-tracker/.
+#
+# The app is deliberately left out. It is the half behind a sign-in, and pointing a
+# third-party script at a page someone is signed in to is a different decision from
+# counting opens of a link that was handed out.
+CF_BEACON_TOKEN = "f6e02d956efb4bc9bd8ce9fc66639777"
+
+
+def beacon(demo):
+    """Cloudflare's snippet, verbatim, for the demo build only."""
+    if not demo:
+        return ""
+    return ("<script type=\"module\" src=\"https://static.cloudflareinsights.com"
+            "/beacon.min.js\" data-cf-beacon='{\"token\": \"%s\"}'></script>"
+            % CF_BEACON_TOKEN)
+
+
 def demo_payload(demo):
     """The demo page carries its data, because there is nothing to sign in to.
 
@@ -2920,6 +2942,7 @@ try{{var t=localStorage.getItem('theme');
 if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}}catch(e){{}}
 </script>
 <style>{CSS}</style>
+{beacon(demo)}
 </head>
 <body>
 {sprite()}
