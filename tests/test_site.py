@@ -877,11 +877,12 @@ def main():
             check("there is exactly one theme-color tag to keep in step",
                   ctx.eval_on_selector_all('meta[name="theme-color"]',
                                            "els => els.length") == 1)
-            # A manifest holds one colour and cannot follow a theme; what it must not
-            # do is disagree with the palette it names.
-            check("the manifest's launch colour is one the app actually uses",
-                  json.loads(Path(DOCS / "manifest.webmanifest").read_text())
-                  ["theme_color"] in ("#f9f9f7", "#0d0d0d"))
+            # Absence is the fix, not an oversight. Installed on Android the manifest
+            # colour beats the page's meta tag, and a manifest cannot follow a theme,
+            # so any value here paints one palette's bar over the other palette's app.
+            check("the manifest names no theme colour to override the page with",
+                  "theme_color" not in
+                  json.loads(Path(DOCS / "manifest.webmanifest").read_text()))
 
             print("\ninstallability and offline")
             man = json.loads(Path(DOCS / "manifest.webmanifest").read_text())
