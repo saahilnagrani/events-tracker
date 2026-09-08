@@ -1,10 +1,23 @@
-name: Daily scrape and publish
+name: Scrape and publish
 
-# 03:00 UTC is 07:00 in Dubai. Scheduled runs only fire from the repository's default
-# branch, so this stays dormant until the branch is merged.
+# 07:07 and 19:07 in Dubai, which is UTC+4. Twice, because a scrape that comes back
+# blocked leaves the data stale until someone notices: on 8 September the morning run
+# got one event where it expects sixty, refused to write, and nothing moved until it
+# was re-run by hand. An evening run recovers from that on its own, and picks up
+# whatever went on sale during the working day.
+#
+# Minute 7, not 0. GitHub queues scheduled runs on shared capacity and the top of the
+# hour is where everyone piles up: at "0 3" this fired between four and seven hours
+# late, every single day, which is why the timestamp read half past eleven. An odd
+# minute is not a guarantee, since GitHub promises nothing about schedule timing, but
+# it is most of the difference. A dispatch does not queue at all.
+#
+# Scheduled runs only fire from the repository's default branch, so this stays dormant
+# until the branch is merged.
 on:
   schedule:
-    - cron: "0 3 * * *"
+    - cron: "7 3 * * *"
+    - cron: "7 15 * * *"
   workflow_dispatch:
 
 permissions:
@@ -173,7 +186,7 @@ jobs:
         if: always()
         run: |
           {
-            echo "## Daily scrape"
+            echo "## Scrape"
             if [ -f data/changes.json ]; then
               python -c "import json;c=json.load(open('data/changes.json'));s=c['summary'];print('Dataset ' + c['generated'] + ': ' + (', '.join(f'{s[k]} {l}' for k,l in [('added','added'),('removed','removed'),('changed','changed'),('dates_lost','dates lost'),('dates_gained','dates gained')] if s[k]) or 'no change'))"
             else
