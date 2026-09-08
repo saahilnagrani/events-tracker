@@ -9,14 +9,25 @@
 
 <link rel="icon" href="../icon-192.png?v=3" type="image/png">
 <link rel="apple-touch-icon" href="../icon-maskable-192.png?v=3">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f9f9f7">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0d0d">
+<meta name="theme-color" content="#f9f9f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <script>
-// Applied before first paint so a stored choice does not flash the other palette.
-try{var t=localStorage.getItem('theme');
-if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}
+// Both applied before first paint: a stored choice must not flash the other palette,
+// and the status bar must not flash the other colour under it.
+//
+// One meta tag set from the theme in force, rather than two keyed to the OS. Keyed to
+// the OS they ignore the in-app toggle, and an installed app in dark mode was painting
+// the bar near-white while the phone drew white icons on it: nothing visible at all.
+(function(){
+ var t=null;
+ try{t=localStorage.getItem('theme');}catch(e){}
+ if(t!=='dark'&&t!=='light')t=null;
+ if(t)document.documentElement.setAttribute('data-theme',t);
+ var dark=t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+ var m=document.querySelector('meta[name="theme-color"]');
+ if(m)m.setAttribute('content',dark?'#0d0d0d':'#f9f9f7');
+})();
 </script>
 <style>
 :root{
@@ -849,6 +860,7 @@ body.locked .filters{display:none}
 <script>
 // Configuration only. Every line of data arrives from the database after sign-in.
 window.__TIERS__ = {"prime": {"icon": "check", "label": "PRIME"}, "good": {"icon": "dot", "label": "GOOD"}, "weak": {"icon": "dash", "label": "LOW"}, "poor": {"icon": "dash", "label": "LOW"}, "blocked": {"icon": "cross", "label": "BLOCKED"}};
+window.__BAR__ = {"light": "#f9f9f7", "dark": "#0d0d0d"};
 window.__STATUSES__ = ["Not started", "In progress", "Done", "Not needed"];
 window.__BACKEND__ = {};
 window.__REPO__ = {};
@@ -867,6 +879,8 @@ window.__DEMO__ = {"viability":{"generated":"2026-09-08","generated_at":"2026-09
  var DAYS = {};          // date -> {d, h, L: {lens: {t, s, o, r, b, c}}}
  var POOL = [];          // pooled reason strings, referenced by index
  var TIER = window.__TIERS__ || {};
+ // Emitted by the build so the toggle, the head script and the manifest cannot drift.
+ var BAR = window.__BAR__ || {};
  var LENSES = {};        // lens name -> {label, blurb}
  var CHECK = [];         // checklist documents
  var STATUS_LIST = window.__STATUSES__ || ['Not started'];
@@ -2512,14 +2526,32 @@ window.__DEMO__ = {"viability":{"generated":"2026-09-08","generated_at":"2026-09
  }
 
  // ================================================================ theme
+ var OS_DARK = matchMedia('(prefers-color-scheme: dark)');
+
+ function themeIsDark(){
+  var cur = document.documentElement.getAttribute('data-theme');
+  return cur ? cur === 'dark' : OS_DARK.matches;
+ }
+
+ // The strip behind the phone's status bar is painted by the browser from this tag,
+ // and the head sets it before the first paint. It has to keep up afterwards, or the
+ // toggle leaves a bar the wrong colour above a page that changed underneath it.
+ function paintBar(){
+  var m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute('content', themeIsDark() ? BAR.dark : BAR.light);
+ }
+
  $('theme').addEventListener('click', function(){
-  var root = document.documentElement;
-  var cur = root.getAttribute('data-theme');
-  var dark = cur ? cur === 'dark'
-                 : matchMedia('(prefers-color-scheme: dark)').matches;
-  var next = dark ? 'light' : 'dark';
-  root.setAttribute('data-theme', next);
+  var next = themeIsDark() ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
   store.set('theme', next);
+  paintBar();
+ });
+
+ // With no stored choice the page follows the OS, so the bar has to follow it too
+ // when it changes while the app is open.
+ OS_DARK.addEventListener('change', function(){
+  if (!document.documentElement.getAttribute('data-theme')) paintBar();
  });
 
  // ================================================================ data

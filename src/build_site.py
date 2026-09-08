@@ -106,6 +106,11 @@ def esc(s):
 # silhouette that specific still reads at the 48px a launcher draws. A calendar glyph
 # was here before and looked like every other calendar; a green tick before that looked
 # like a to-do app.
+# What the browser paints behind the phone's status bar. The same values as --plane
+# in each palette, because the bar sits directly above the page and any difference
+# reads as a seam. Kept here so the manifest, the meta tag and the toggle cannot drift.
+BAR = {"light": "#f9f9f7", "dark": "#0d0d0d"}
+
 ICON_VERSION = 3
 ICON_GOLD  = (232, 184, 84)     # the mark
 ICON_TOP   = (26, 26, 24)       # tile, top of the gradient
@@ -308,10 +313,10 @@ def manifest(stamp):
         "display": "standalone",
         "orientation": "portrait-primary",
         "background_color": "#f9f9f7",
-        # Matches the header rather than the tier green, so the installed app's status
-        # bar and splash are the app's own surface instead of a colour used for one
-        # meaning inside it.
-        "theme_color": "#f9f9f7",
+        # A manifest holds one colour and cannot follow a theme, so this is the
+        # launch splash only: the page overrides it with a meta tag that does know
+        # which palette is in force, before the first paint.
+        "theme_color": BAR["light"],
         "icons": [
             {"src": icon_url("icon-192.png"), "sizes": "192x192", "type": "image/png",
              "purpose": "any"},
@@ -986,6 +991,8 @@ JS = """
  var DAYS = {};          // date -> {d, h, L: {lens: {t, s, o, r, b, c}}}
  var POOL = [];          // pooled reason strings, referenced by index
  var TIER = window.__TIERS__ || {};
+ // Emitted by the build so the toggle, the head script and the manifest cannot drift.
+ var BAR = window.__BAR__ || {};
  var LENSES = {};        // lens name -> {label, blurb}
  var CHECK = [];         // checklist documents
  var STATUS_LIST = window.__STATUSES__ || ['Not started'];
@@ -2631,14 +2638,32 @@ JS = """
  }
 
  // ================================================================ theme
+ var OS_DARK = matchMedia('(prefers-color-scheme: dark)');
+
+ function themeIsDark(){
+  var cur = document.documentElement.getAttribute('data-theme');
+  return cur ? cur === 'dark' : OS_DARK.matches;
+ }
+
+ // The strip behind the phone's status bar is painted by the browser from this tag,
+ // and the head sets it before the first paint. It has to keep up afterwards, or the
+ // toggle leaves a bar the wrong colour above a page that changed underneath it.
+ function paintBar(){
+  var m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute('content', themeIsDark() ? BAR.dark : BAR.light);
+ }
+
  $('theme').addEventListener('click', function(){
-  var root = document.documentElement;
-  var cur = root.getAttribute('data-theme');
-  var dark = cur ? cur === 'dark'
-                 : matchMedia('(prefers-color-scheme: dark)').matches;
-  var next = dark ? 'light' : 'dark';
-  root.setAttribute('data-theme', next);
+  var next = themeIsDark() ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
   store.set('theme', next);
+  paintBar();
+ });
+
+ // With no stored choice the page follows the OS, so the bar has to follow it too
+ // when it changes while the app is open.
+ OS_DARK.addEventListener('change', function(){
+  if (!document.documentElement.getAttribute('data-theme')) paintBar();
  });
 
  // ================================================================ data
@@ -2962,14 +2987,25 @@ def render(cfg, backend=None, repo=None, demo=None):
 {'' if demo else '<link rel="manifest" href="./manifest.webmanifest">'}
 <link rel="icon" href="{asset('icon-192.png', demo)}" type="image/png">
 <link rel="apple-touch-icon" href="{asset('icon-maskable-192.png', demo)}">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f9f9f7">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0d0d">
+<meta name="theme-color" content="{BAR['light']}">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <script>
-// Applied before first paint so a stored choice does not flash the other palette.
-try{{var t=localStorage.getItem('theme');
-if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}}catch(e){{}}
+// Both applied before first paint: a stored choice must not flash the other palette,
+// and the status bar must not flash the other colour under it.
+//
+// One meta tag set from the theme in force, rather than two keyed to the OS. Keyed to
+// the OS they ignore the in-app toggle, and an installed app in dark mode was painting
+// the bar near-white while the phone drew white icons on it: nothing visible at all.
+(function(){{
+ var t=null;
+ try{{t=localStorage.getItem('theme');}}catch(e){{}}
+ if(t!=='dark'&&t!=='light')t=null;
+ if(t)document.documentElement.setAttribute('data-theme',t);
+ var dark=t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+ var m=document.querySelector('meta[name="theme-color"]');
+ if(m)m.setAttribute('content',dark?'{BAR['dark']}':'{BAR['light']}');
+}})();
 </script>
 <style>{CSS}</style>
 {beacon(demo)}
@@ -3145,6 +3181,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 <script>
 // Configuration only. Every line of data arrives from the database after sign-in.
 window.__TIERS__ = {json.dumps(tier_js, ensure_ascii=False)};
+window.__BAR__ = {json.dumps(BAR, ensure_ascii=False)};
 window.__STATUSES__ = {json.dumps(STATUSES, ensure_ascii=False)};
 window.__BACKEND__ = {json.dumps(backend or {}, ensure_ascii=False)};
 window.__REPO__ = {json.dumps(repo or {}, ensure_ascii=False)};
