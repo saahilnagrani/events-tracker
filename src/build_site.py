@@ -745,9 +745,13 @@ body.ms-open .filters,body.ms-open .filters-meta{position:relative;z-index:36}
 /* A label, not a tier: green, blue and red already mean prime, good and blocked on
    this page, so "new" borrows the neutral badge instead of a fourth meaning for a
    colour. The word carries it either way. */
-.ev-new{display:inline-block;background:var(--ink);color:var(--surface-1);
- border-radius:20px;font-size:9.5px;font-weight:700;letter-spacing:.06em;
- padding:2px 6px;margin-left:7px;vertical-align:2px}
+.ev-new,.ev-past{display:inline-block;border-radius:20px;font-size:9.5px;
+ font-weight:700;letter-spacing:.06em;padding:2px 6px;margin-left:7px;
+ vertical-align:2px}
+.ev-new{background:var(--ink);color:var(--surface-1)}
+/* --crit is the same red in both themes, so the text on it cannot follow the theme
+   the way the NEW badge's does. White holds 4.8:1 against it either way. */
+.ev-past{background:var(--crit);color:#fff}
 
 /* ---- the gate: what a signed-out visitor gets instead of the app ---- */
 /* The nav is hidden rather than disabled, because there is nothing behind it to
@@ -1214,10 +1218,11 @@ JS = """
  // An event counts as past once its last date has gone, so a run that started last
  // week but ends next month is still current. Past events stay in the dataset until
  // they drop off the listings, and are hidden unless asked for.
- function isPast(el){
-  var last = el.dataset.end || el.dataset.start || '';
+ function pastDate(start, end){
+  var last = end || start || '';
   return last !== '' && last < TODAY;
  }
+ function isPast(el){ return pastDate(el.dataset.start, el.dataset.end); }
  function evFilter(){
   var want = {};
   all('input[data-facet]').forEach(function(box){
@@ -2457,7 +2462,10 @@ JS = """
     note = '<p class="ev-gone">No longer listed on Platinumlist' +
       (e.last_seen ? ' &middot; last seen ' + esc(e.last_seen) : '') + '</p>' + note;
    }
-   var fresh = isNew(e) && e.listed !== false;
+   var over = pastDate(e.start, e.end);
+   // A show that has already happened is not news, whatever day the listing turned
+   // up, so the two badges cannot both appear on one row.
+   var fresh = isNew(e) && e.listed !== false && !over;
    return '<article class="ev" data-month="' + esc((e.start || '').slice(0, 7)) +
      '" data-start="' + esc(e.start) + '" data-end="' + esc(e.end || '') +
      '" data-listed="' + (e.listed === false ? 0 : 1) + '" data-artist="' +
@@ -2466,6 +2474,7 @@ JS = """
      '" data-new="' + (fresh ? 1 : 0) + '"><h4><a href="' + esc(e.url) +
      '" rel="noopener noreferrer" target="_blank">' + esc(e.event) + '</a>' +
      (fresh ? '<span class="ev-new">NEW</span>' : '') +
+     (over ? '<span class="ev-past">PAST</span>' : '') +
      '</h4><p class="ev-when">' + esc(when) +
      (e.time ? ' &middot; ' + esc(e.time) : '') + '</p><p class="ev-where">' +
      (esc(e.venue) || 'Venue not listed') + '</p><p class="ev-meta">' + meta +
