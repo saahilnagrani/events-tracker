@@ -119,6 +119,11 @@ jobs:
       - name: Check the events mapping
         run: python tests/test_events_mapping.py
 
+      # A card carries no year, and reading it as the current one was silently wrong
+      # for anything in the new year. Cheap, and it runs before anything is published.
+      - name: Check how card dates are read
+        run: python tests/test_scrape_dates.py
+
       # The page is a shell, so this proves the shell still works against a stand-in
       # database. It gates publishing rather than reporting after the fact.
       - name: Smoke-test the built page
