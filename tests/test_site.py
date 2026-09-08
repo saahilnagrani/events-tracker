@@ -852,7 +852,36 @@ def main():
                       attr == want_attr, str(attr))
                 check(f"OS {scheme}: {want_attr} palette actually paints",
                       after == want_bg, after)
+                # The strip behind the phone's status bar. Installed and in dark mode
+                # it was painted near-white while the phone drew white icons on it,
+                # because the tag was keyed to the OS and knew nothing of the toggle.
+                bar = pg.eval_on_selector(
+                    'meta[name="theme-color"]', "el => el.content")
+                want_bar = "#0d0d0d" if want_attr == "dark" else "#f9f9f7"
+                check(f"OS {scheme}: the status bar follows the toggle, not the OS",
+                      bar == want_bar, f"{bar}, want {want_bar}")
+                check(f"OS {scheme}: and it matches what the page paints",
+                      bar.lower() == "#%02x%02x%02x" % tuple(
+                          int(n) for n in after[4:-1].split(",")))
                 pg.close()
+
+            # Before the toggle is ever touched, and before the first paint: an
+            # installed app opens straight into the OS palette, and a bar that
+            # corrected itself a frame later would still flash the wrong colour.
+            for scheme, want_bar in (("dark", "#0d0d0d"), ("light", "#f9f9f7")):
+                pg, _ = open_app(browser, url, color_scheme=scheme)
+                check(f"OS {scheme}: an untouched app starts with the right bar",
+                      pg.eval_on_selector('meta[name="theme-color"]',
+                                          "el => el.content") == want_bar)
+                pg.close()
+            check("there is exactly one theme-color tag to keep in step",
+                  ctx.eval_on_selector_all('meta[name="theme-color"]',
+                                           "els => els.length") == 1)
+            # A manifest holds one colour and cannot follow a theme; what it must not
+            # do is disagree with the palette it names.
+            check("the manifest's launch colour is one the app actually uses",
+                  json.loads(Path(DOCS / "manifest.webmanifest").read_text())
+                  ["theme_color"] in ("#f9f9f7", "#0d0d0d"))
 
             print("\ninstallability and offline")
             man = json.loads(Path(DOCS / "manifest.webmanifest").read_text())
