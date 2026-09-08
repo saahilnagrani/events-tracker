@@ -59,6 +59,10 @@ PARSER_VERSION = 4
 
 MONTHS = {m: i for i, m in enumerate(
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1)}
+# The listing card writes the weekday in front of the date, and it is the only thing
+# on the card that says which year is meant. See pick_year.
+WEEKDAYS = {d: i for i, d in enumerate(
+    ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])}
 
 # Applied in order; first hit wins. Deliberately conservative: anything unmatched stays
 # "Not stated" rather than being guessed at.
@@ -301,26 +305,67 @@ def parse_detail(html):
 
 # ---------------------------------------------------------------- interpretation
 
-def parse_card_dates(label, year_hint):
+def pick_year(mon, day, weekday, today=None, log=print, label=""):
+    """Which year a bare day-and-month means.
+
+    This used to be "the current one", and that is wrong for every listing in the new
+    year: seen in September, "31 Jan" is next January, not the one eight months gone.
+    It put five 2027 shows in the dataset as 2026, where they were scored on the wrong
+    dates and, once past events were tagged, sat in the list marked PAST.
+
+    The weekday the card prints in front of the date settles it, and it is a fact
+    rather than a guess: 31 Jan is a Sunday in 2027 and a Saturday in 2026, so a card
+    reading "Sun 31 Jan" can only mean 2027. Where the weekday is missing or matches
+    nothing, the rule falls back to the earliest year that is not already over, since
+    Platinumlist sells tickets to shows that have not happened yet.
+    """
+    today = today or date.today()
+    ahead = []
+    # Three years of candidates, not more. A weekday matches one year in seven, so a
+    # wider net starts preferring a real weekday match in 2031 over the obvious answer
+    # next January, and nothing here sells tickets that far out.
+    for year in range(today.year, today.year + 3):
+        try:
+            cand = date(year, mon, day)
+        except ValueError:
+            continue                      # 29 Feb in a common year
+        if cand < today:
+            continue
+        ahead.append(cand)
+        if weekday is not None and cand.weekday() == weekday:
+            return cand
+    if weekday is not None and ahead:
+        # Worth saying: either the site changed how it writes dates, or it is wrong.
+        log(f"  ! no year in the next three matches the weekday on {label!r}; "
+            f"taking {ahead[0].isoformat()}")
+    return ahead[0] if ahead else date(today.year, mon, day)
+
+
+def parse_card_dates(label, year_hint, today=None, log=print):
     """'Fri 25 Sep - Sun 27 Sep' -> ('2026-09-25', '2026-09-27'). Single dates -> (d, None)."""
     if not label:
         return None, None
     parts = [p.strip() for p in label.split("-")]
     parsed = []
     for part in parts:
-        m = re.search(r"(\d{1,2})\s+([A-Za-z]{3})", part)
+        m = re.search(r"(?:([A-Za-z]{3})[a-z]*\s+)?(\d{1,2})\s+([A-Za-z]{3})", part)
         if not m:
             continue
-        day, mon = int(m.group(1)), MONTHS.get(m.group(2).title())
+        day, mon = int(m.group(2)), MONTHS.get(m.group(3).title())
+        weekday = WEEKDAYS.get((m.group(1) or "").title())
         if mon:
-            parsed.append((mon, day))
+            parsed.append((mon, day, weekday))
     if not parsed:
         return None, None
-    year = year_hint or date.today().year
-    start = date(year, parsed[0][0], parsed[0][1])
+    if year_hint:
+        # The detail page carried a real timestamp, so there is nothing to infer.
+        start = date(year_hint, parsed[0][0], parsed[0][1])
+    else:
+        start = pick_year(parsed[0][0], parsed[0][1], parsed[0][2], today, log, label)
     if len(parsed) < 2:
         return start.isoformat(), None
-    end_year = year + 1 if parsed[1][0] < parsed[0][0] else year
+    # A range that runs backwards through the months has crossed into the next year.
+    end_year = start.year + 1 if parsed[1][0] < parsed[0][0] else start.year
     return start.isoformat(), date(end_year, parsed[1][0], parsed[1][1]).isoformat()
 
 
@@ -492,6 +537,16 @@ def check(events, cfg, log=print):
     undated = [e for e in events if not e["start"]]
     if undated:
         problems.append(f"{len(undated)} events with no start date")
+    # A show still on sale cannot already have happened. When five 2027 listings were
+    # being stored as 2026 this was the visible symptom, and nothing was looking at it.
+    # Not fatal: a show that ran this morning is still listed for the rest of the day.
+    today = date.today().isoformat()
+    stale = [e for e in current if (e.get("end") or e["start"]) < today]
+    if stale:
+        log(f"  NOTE: {len(stale)} still on sale but dated in the past. A wrong year "
+            f"looks exactly like this.")
+        for e in stale[:5]:
+            log(f"    {e['start']}  {e['event'][:60]}")
     for p in problems:
         log(f"  FAIL: {p}")
     return problems
