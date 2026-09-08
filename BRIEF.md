@@ -28,7 +28,7 @@ because a busy night for Arabic comedy is not the same as a blocked night for hi
 | Hosting | GitHub Pages, public, now. Migrate to Cloudflare Pages later for privacy. |
 | Migration cost | Near zero. Cloudflare Pages builds from the same GitHub repo; point it at the repo and move DNS. No code changes. |
 | Cloudflare free limits | 500 builds/month, 1 concurrent, 20,000 files, 25 MiB/file, 100 custom domains. A daily build uses ~6% of the build quota. |
-| Schedule | Daily, 03:00 UTC (07:00 Dubai). |
+| Schedule | Twice daily, 03:07 and 15:07 UTC (07:07 and 19:07 Dubai). Minute 7 because the top of the hour queues: at 03:00 it ran four to seven hours late every day. |
 | Alerts | The workflow writes `docs/changes.json`. A separate scheduled task in the Claude app reads it each morning and only notifies when it is non-empty. Do NOT put SMTP credentials in the repo. |
 | Scope | All comedy and desi events, both cities, in both the list and the calendar. |
 | Mobile | Mobile-first. Agenda list is the default on small screens; the month grid is secondary. |

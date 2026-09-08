@@ -2123,8 +2123,8 @@ JS = """
   return Math.round((now - then) / 86400000);
  }
 
- // "27 Aug 2026, 13:39", in whatever zone the reader is in. The run happens at
- // 07:00 Dubai and the timestamp arrives in UTC, so anything that did not convert
+ // "27 Aug 2026, 13:39", in whatever zone the reader is in. The runs are at 07:07
+ // and 19:07 Dubai and the timestamp arrives in UTC, so anything that did not convert
  // would be four hours out for the only people who use this.
  function whenText(iso, dateOnly){
   var d = new Date(dateOnly ? iso + 'T00:00:00' : iso);
@@ -2149,7 +2149,7 @@ JS = """
   var text = 'Listings last checked ' +
              (written ? whenText(written) : whenText(STAMP, true));
   var n = daysSince(STAMP);
-  // A day behind is normal: the scrape runs at 07:00 Dubai. Two days is not.
+  // A day behind is normal: the last run may have been last evening. Two is not.
   [$('data-when'), $('side-stamp')].forEach(function(el){
    if (!el) return;
    el.textContent = text;
@@ -2445,9 +2445,10 @@ JS = """
   return list.sort(byDate);
  }
 
- // New in the most recent check, rather than new today: the run is at 07:00 Dubai,
- // and a badge keyed to the wall clock would vanish at midnight from listings nobody
- // had looked at yet.
+ // New in the most recent check, rather than new today: the runs are at 07:07 and
+ // 19:07 Dubai, and a badge keyed to the wall clock would vanish at midnight from
+ // listings nobody had looked at yet. Two runs a day do not double-count: first_seen
+ // is a date, so the evening run adds nothing the morning one already marked.
  function isNew(e){
   return !!e.first_seen && (e.first_seen === STAMP || e.first_seen === TODAY);
  }
@@ -2836,7 +2837,7 @@ JS = """
      unlock();
      paint();
      msg('No dataset has been published yet. Press Refresh now to run the scrape, ' +
-         'or wait for the 07:00 run.', true);
+         'or wait for the next scheduled one, at 07:07 or 19:07.', true);
      return pullAll();
     });
   });

@@ -16,7 +16,11 @@ The files under `data/` are working copies for the length of one run, and gitign
 
 ## How it runs
 
-`.github/workflows/daily.yml` fires at 03:00 UTC, which is 07:00 in Dubai. It pulls
+`.github/workflows/daily.yml` fires at 03:07 and 15:07 UTC, which is 07:07 and 19:07
+in Dubai. Twice, because a scrape that comes back blocked leaves the data stale until
+someone notices, and the evening run recovers from that by itself. Minute 7 rather than
+0 because GitHub queues scheduled runs and the top of the hour is where they pile up:
+at `0 3` this fired four to seven hours late, every day. It pulls
 yesterday's dataset out of Supabase, scrapes Platinumlist, diffs the two, rescores every
 date, rebuilds the shell, runs the browser smoke test, and only then writes the new
 dataset back. A failing smoke test stops the publish on purpose.
