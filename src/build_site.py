@@ -313,10 +313,13 @@ def manifest(stamp):
         "display": "standalone",
         "orientation": "portrait-primary",
         "background_color": "#f9f9f7",
-        # A manifest holds one colour and cannot follow a theme, so this is the
-        # launch splash only: the page overrides it with a meta tag that does know
-        # which palette is in force, before the first paint.
-        "theme_color": BAR["light"],
+        # No theme_color, deliberately. A manifest holds one colour and cannot follow
+        # a theme, and installed on Android that one colour wins: the app ran dark
+        # under a white strip, because the only value a manifest could carry was the
+        # light one. Absent, there is no default to win, and the status bar takes the
+        # page's own meta tag, which is rewritten before the first paint and again
+        # whenever the theme changes. background_color stays: it paints the launch
+        # splash, which is a different surface and cannot follow a theme either.
         "icons": [
             {"src": icon_url("icon-192.png"), "sizes": "192x192", "type": "image/png",
              "purpose": "any"},
