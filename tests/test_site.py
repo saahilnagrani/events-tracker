@@ -276,6 +276,30 @@ def main():
                               .map(x => x.dataset.added).sort().slice(-1)[0]))"""))
             check("the badge is a word, not just a colour",
                   ctx.eval_on_selector(".ev-new", "el => el.textContent.trim()") == "NEW")
+            # Past events are hidden by default, so the tag has to be asked for
+            # before it can be looked at.
+            ctx.check("#ev-past")
+            ctx.wait_for_timeout(250)
+            check("every past event carries the tag, and only those",
+                  ctx.eval_on_selector_all(".ev", """els => els.length > 0 && els.every(
+                      e => !!e.querySelector('.ev-past') ===
+                           ((e.dataset.end || e.dataset.start || '')
+                             < new Date().toISOString().slice(0, 10)))"""))
+            check("it is a word too, not just a colour",
+                  ctx.eval_on_selector(".ev-past", "el => el.textContent.trim()")
+                  == "PAST")
+            check("and it is red, distinct from the NEW badge",
+                  ctx.eval_on_selector(
+                      ".ev-past", "el => getComputedStyle(el).backgroundColor")
+                  != ctx.eval_on_selector(
+                      ".ev-new", "el => getComputedStyle(el).backgroundColor"))
+            # NEW says "look at this", which a show that has already happened is not.
+            check("nothing is both new and past at once",
+                  ctx.eval_on_selector_all(
+                      ".ev", """els => els.every(e => !(e.querySelector('.ev-new')
+                          && e.querySelector('.ev-past')))"""))
+            ctx.uncheck("#ev-past")
+            ctx.wait_for_timeout(250)
             check("the count and its controls are on their own line, below the dropdowns",
                   ctx.evaluate("""() => {
                       const filters = document.querySelector('#panel-events .filters');
