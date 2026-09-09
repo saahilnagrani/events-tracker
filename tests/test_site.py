@@ -222,6 +222,34 @@ def main():
                 check(f"{facet} facet is present", ctx.eval_on_selector_all(
                     f'input[data-facet="{facet}"]', "els => els.length") > 1)
 
+            # A show billed to two acts has to be findable under either. Keeping only
+            # the headliner is the same bug as keeping only the acts on a curated list,
+            # which is what left Trevor Noah out of this filter entirely.
+            from fake_backend import CO_BILL_ACTS
+            offered = ctx.eval_on_selector_all(
+                'input[data-facet="artist"]', "els => els.map(e => e.value)")
+            check("both halves of a co-billed show are offered separately",
+                  all(a in offered for a in CO_BILL_ACTS),
+                  f"missing {[a for a in CO_BILL_ACTS if a not in offered]}")
+            check("and the pair is not offered as one run-on name",
+                  "; ".join(CO_BILL_ACTS) not in offered)
+            # Opened once: clicking the summary again would close it, and the boxes
+            # inside an closed menu are not clickable.
+            ctx.click('details.ms[data-ms="artist"] summary')
+            ctx.wait_for_timeout(150)
+            for act in CO_BILL_ACTS:
+                ctx.click(f'input[data-facet="artist"][value="{act}"]')
+                ctx.wait_for_timeout(150)
+                check(f"filtering by {act} alone finds the show",
+                      int(ctx.get_attribute("#ev-count", "data-count")) == 1,
+                      ctx.get_attribute("#ev-count", "data-count"))
+                ctx.click(f'input[data-facet="artist"][value="{act}"]')
+                ctx.wait_for_timeout(120)
+            ctx.click("#ev-clear")
+            ctx.wait_for_timeout(120)
+            check("clearing after that restores every event",
+                  int(ctx.get_attribute("#ev-count", "data-count")) == total)
+
             print("\nfilter sheets on a phone")
             # These open at the bottom, far from the chip that was tapped, so they
             # have to announce themselves: dim the page, say which filter this is,
