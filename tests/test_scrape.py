@@ -1,5 +1,7 @@
 """
-Which year a listing card's bare day-and-month means.
+Two things the scraper reads off a page, both of which were quietly wrong.
+
+Which year a listing card's bare day-and-month means, and who is on.
 
 The card writes "Sun 31 Jan" and no year. Reading that as the current year is right
 for ten months of the calendar and silently wrong for the other two: seen in
@@ -10,7 +12,7 @@ The weekday in front of the date is what settles it. 31 Jan is a Sunday in 2027 
 Saturday in 2026, so the card can only mean one of them, and every case below is a
 real label from Platinumlist or an edge the parser has to survive.
 
-Run: python tests/test_scrape_dates.py
+Run: python tests/test_scrape.py
 """
 import sys
 from datetime import date
@@ -18,6 +20,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
+
+from selectolax.parser import HTMLParser  # noqa: E402
 
 import scrape  # noqa: E402
 
@@ -93,6 +97,39 @@ def main():
                 wrong.append(f"{label} -> {got}, want {want.isoformat()}")
     check("a weekday that names a real future date is always honoured",
           not wrong, "; ".join(wrong[:3]))
+
+    print("\nwho is on")
+    # The names come from the block the detail page publishes. Before this, the artist
+    # field held whatever matched a curated list of desi stand-up acts, so Trevor Noah
+    # at Dubai Opera was nameless and could not be picked out of the artist filter,
+    # along with seven in ten of the rest.
+    #
+    # The markup is the site's own, reduced to the parts that matter: the block is
+    # emitted twice per page, once per breakpoint, which is where the repeats come from.
+    page = """
+      <div class="artist-block"><div class="artist-block__list">
+        <div class="artist-block__item"><div class="artist-block__item-inner">
+          Trevor   Noah </div></div>
+        <div class="artist-block__item"><div class="artist-block__item-inner">
+          Alexander Merkul / \u0410\u043b\u0435\u043a\u0441\u0430\u043d\u0434\u0440 </div></div>
+      </div></div>
+      <div class="artist-block artist-block--mobile"><div class="artist-block__list">
+        <div class="artist-block__item"><div class="artist-block__item-inner">
+          Trevor Noah </div></div>
+        <div class="artist-block__item"><div class="artist-block__item-inner">
+          Alexander Merkul / \u0410\u043b\u0435\u043a\u0441\u0430\u043d\u0434\u0440 </div></div>
+      </div></div>"""
+    got = scrape.parse_artists(HTMLParser(page))
+    check("both acts are read off the page", got == ["Trevor Noah", "Alexander Merkul"],
+          str(got))
+    check("the block being rendered twice does not double the bill", len(got) == 2)
+    check("whitespace inside a name is collapsed", "Trevor Noah" in got)
+    check("a name given in two scripts keeps the first", "Alexander Merkul" in got)
+    check("a page with no block names nobody, rather than guessing",
+          scrape.parse_artists(HTMLParser("<div><h1>The Laughter Factory</h1></div>")) == [])
+    check("an empty block is not an empty name",
+          scrape.parse_artists(HTMLParser(
+              '<div class="artist-block__item-inner">  </div>')) == [])
 
     print(f"\n{checks - len(failures)}/{checks} checks passed")
     for f in failures:

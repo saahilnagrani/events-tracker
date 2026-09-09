@@ -24,6 +24,11 @@ TOKEN = {
 }
 
 
+# Invented, so an assertion about them cannot accidentally pass on a real name.
+CO_BILL_ACTS = ["Ada Testwallah", "Bo Sample"]
+CO_BILL = "; ".join(CO_BILL_ACTS)
+
+
 class FakeBackend:
     def __init__(self, viability=None, checklists=None, allowed=True, paused=False,
                  published=True, row_timestamp=True, new_events=2):
@@ -47,6 +52,14 @@ class FakeBackend:
                 stamped += 1
             else:
                 event["first_seen"] = "2026-08-17"
+        # One co-billed show, because the checked-in dataset predates the artist block
+        # and holds none. A show billed to two acts has to be findable under either,
+        # which is the whole complaint that put real names in this field.
+        for event in viability.get("events", []):
+            upcoming = (event.get("end") or event.get("start") or "") >= now
+            if event.get("listed", True) and upcoming:
+                event["artist"] = CO_BILL
+                break
         # published=False is the state of a fresh database: the schema is there, the
         # checklists are seeded, and no run has written a dataset yet.
         self.published = published

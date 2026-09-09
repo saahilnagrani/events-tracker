@@ -1244,7 +1244,9 @@ JS = """
   evs.forEach(function(el){
    var ok = true;
    for (var facet in want) {
-    if (want[facet].indexOf(el.dataset[facet] || '') < 0) { ok = false; break; }
+    var mine = facetValues(el.dataset[facet]);
+    var hit = mine.some(function(v){ return want[facet].indexOf(v) >= 0; });
+    if (!hit) { ok = false; break; }
    }
    if (ok && isPast(el)) {
     past++;
@@ -2493,12 +2495,17 @@ JS = """
   }).join('');
  }
 
+ // A show can be billed to more than one act, so a facet value is a list. Every other
+ // facet holds exactly one thing, which is this same code over a list of one.
+ function facetValues(v){
+  return String(v == null ? '' : v).split('; ').filter(Boolean);
+ }
+
  function facetsHtml(events){
   function tally(fn){
    var seen = {};
    events.forEach(function(e){
-    var v = fn(e);
-    if (v) seen[v] = (seen[v] || 0) + 1;
+    facetValues(fn(e)).forEach(function(v){ seen[v] = (seen[v] || 0) + 1; });
    });
    return seen;
   }

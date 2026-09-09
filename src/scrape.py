@@ -55,7 +55,7 @@ BACKOFF = [2, 4, 8, 16]
 
 # The cache stores parsed output, not raw HTML, so a change to parse_detail has to
 # invalidate it. Bump this whenever parse_detail's output shape or meaning changes.
-PARSER_VERSION = 4
+PARSER_VERSION = 5
 
 MONTHS = {m: i for i, m in enumerate(
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1)}
@@ -237,6 +237,28 @@ def webengage_iso(html):
     return None
 
 
+def parse_artists(tree):
+    """Who is on, from the block the detail page already publishes.
+
+    The Artists section is real markup with real names, and until this existed the
+    dataset only knew the acts on the curated desi list: Trevor Noah played Dubai Opera
+    and could not be picked out of the artist filter, along with about seven in ten of
+    the others.
+
+    The block is rendered twice per page, once for each breakpoint, so names repeat and
+    are deduplicated in order. A name given in two scripts is split at the slash and the
+    first is kept, since a filter wants one label per act rather than a transliteration
+    pair.
+    """
+    names, seen = [], set()
+    for node in tree.css(".artist-block__item-inner"):
+        name = " ".join(node.text().split()).split(" / ")[0].strip()
+        if name and name.lower() not in seen:
+            seen.add(name.lower())
+            names.append(name)
+    return names
+
+
 def parse_detail(html):
     t = HTMLParser(html)
     out = {}
@@ -250,6 +272,8 @@ def parse_detail(html):
 
     h1 = t.css_first("h1")
     out["title"] = " ".join(h1.text().split()) if h1 else None
+
+    out["artists"] = parse_artists(t)
 
     # Works for both markup variants: venues with their own Platinumlist page and
     # venues that only render a geo-anchor.
@@ -439,7 +463,17 @@ def build(session, cards, artists, cache, args, log=print):
             continue
 
         old = previous.get(url, {})
-        artist = match_artist(title, artists) or old.get("artist") or ""
+        # The page's own Artists block first. The curated list is an allowlist of desi
+        # stand-up acts, written to decide what competes with what, and using it to name
+        # the performer left every act outside it nameless. It still answers for a page
+        # that publishes no block at all.
+        billed = detail.get("artists") or []
+        # Joined rather than reduced to the headliner: a co-billed show is two acts,
+        # and keeping one of them is the same bug this is fixing. The page splits on
+        # the same separator, and the column stays one text field, so nothing in the
+        # database has to change. Nowhere renders this string; it is a filter value.
+        artist = ("; ".join(billed) if billed
+                  else match_artist(title, artists) or old.get("artist") or "")
         category = ("Comedy + Desi" if len(card["categories"]) > 1
                     else next(iter(card["categories"])))
 
