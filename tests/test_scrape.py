@@ -21,7 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from selectolax.parser import HTMLParser  # noqa: E402
+from selectolax.lexbor import LexborHTMLParser as HTMLParser  # noqa: E402
 
 import scrape  # noqa: E402
 

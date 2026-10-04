@@ -31,7 +31,11 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import requests
-from selectolax.parser import HTMLParser
+# selectolax 1.0 deleted the Modest backend this used to import, and the daily run
+# died on the import the morning it shipped. Lexbor is its replacement and follows
+# the HTML5 parsing rules properly; the handful of methods used here are the same,
+# so it is aliased rather than renamed at thirty call sites.
+from selectolax.lexbor import LexborHTMLParser as HTMLParser
 
 ROOT = Path(__file__).resolve().parent.parent
 

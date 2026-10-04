@@ -1,2 +1,4 @@
 requests>=2.31
-selectolax>=0.3.21
+# 1.0 is the release that removed the Modest backend. Pinned at or above it so a
+# checkout cannot quietly run the parser the scraper no longer imports.
+selectolax>=1.0
