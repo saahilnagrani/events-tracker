@@ -250,6 +250,102 @@ def main():
             check("clearing after that restores every event",
                   int(ctx.get_attribute("#ev-count", "data-count")) == total)
 
+            print("\nnatural language search")
+            # Assertions are relational rather than fixed counts: the fixture is the
+            # real dataset, so a number baked in here would rot within a week.
+            def q(text):
+                ctx.fill("#ev-q", text)
+                ctx.wait_for_timeout(180)
+                return ctx.eval_on_selector_all(
+                    ".ev", """els => els.filter(e => !e.hidden).map(e => ({
+                        cat: e.dataset.category, lang: e.dataset.language,
+                        city: e.dataset.city, price: e.dataset.price,
+                        start: e.dataset.start, end: e.dataset.end}))""")
+
+            check("the events tab carries a search box", ctx.is_visible("#ev-q"))
+            everything = int(ctx.get_attribute("#ev-count", "data-count"))
+
+            # A compound value is the whole point: the categories in the data are
+            # Comedy, Desi and Comedy + Desi, and typing "comedy" has to find the
+            # third one too or the obvious query hides real shows.
+            comedy = q("comedy")
+            check("a bare word narrows the list", 0 < len(comedy) < everything,
+                  f"{everything} -> {len(comedy)}")
+            check("every row it keeps is a comedy row",
+                  all("Comedy" in r["cat"] for r in comedy))
+            check("and it includes the compound category, not just the exact one",
+                  any(r["cat"] == "Comedy + Desi" for r in comedy))
+            check("the reading line says what it understood",
+                  "Comedy" in ctx.inner_text("#ev-read"), ctx.inner_text("#ev-read"))
+
+            hindi = q("hindi")
+            check("a language matches its compound too, Hindi & English included",
+                  hindi and all("Hindi" in r["lang"] for r in hindi)
+                  and any(r["lang"] != "Hindi" for r in hindi),
+                  str(sorted({r["lang"] for r in hindi})))
+
+            under = q("under 100")
+            check("a price clause is read as a price",
+                  under and all(r["price"] and float(r["price"]) <= 100
+                                for r in under),
+                  str(sorted({r["price"] for r in under}))[:60])
+            over = q("over 300")
+            check("and so is the other direction",
+                  over and all(r["price"] and float(r["price"]) >= 300 for r in over))
+
+            # A month with no year means the next one still to come, the same rule
+            # the scraper uses for a listing card that prints no year.
+            dec = q("december")
+            check("a month name is read as a date window",
+                  dec and all(((r["end"] or r["start"])[:7].endswith("-12")
+                               or r["start"][:7].endswith("-12")) for r in dec),
+                  str(sorted({r["start"][:7] for r in dec})))
+
+            combined = q("comedy in dubai")
+            check("two things in one phrase are both applied",
+                  combined and all("Comedy" in r["cat"] and r["city"] == "Dubai"
+                                   for r in combined))
+            check("filler words are ignored, so the phrase equals the keywords",
+                  len(combined) == len(q("comedy dubai")))
+
+            # Nothing on screen has two causes and they need opposite responses.
+            nonsense = q("qwertyuiop")
+            check("a query that matches nothing says so", not nonsense
+                  and "nothing matches" in ctx.inner_text("#ev-read").lower(),
+                  ctx.inner_text("#ev-read"))
+
+            # The search and the chips are ANDed: doing both means asking for both.
+            # Note the two read a category differently on purpose. The chips are the
+            # values themselves, and Comedy + Desi is its own checkbox, so ticking
+            # Desi means exactly Desi. A typed word has no such list in front of it,
+            # so "comedy" means anything comedy, compounds included.
+            q("under 100")
+            ctx.click('details.ms[data-ms="category"] summary')
+            ctx.click('input[data-facet="category"][value="Comedy"]')
+            ctx.wait_for_timeout(180)
+            both = ctx.eval_on_selector_all(
+                ".ev", """els => els.filter(e => !e.hidden)
+                    .map(e => [e.dataset.category, e.dataset.price])""")
+            check("a ticked facet and a typed query narrow together",
+                  both and all(c == "Comedy" and pr and float(pr) <= 100
+                               for c, pr in both),
+                  str(sorted({c for c, _ in both})))
+            ctx.click("#ev-clear")
+            ctx.wait_for_timeout(180)
+            check("Clear filters empties the search box as well",
+                  ctx.input_value("#ev-q") == ""
+                  and int(ctx.get_attribute("#ev-count", "data-count")) == everything)
+
+            q("comedy")
+            check("the box offers its own clear button once there is something in it",
+                  ctx.is_visible("#ev-q-clear"))
+            ctx.click("#ev-q-clear")
+            ctx.wait_for_timeout(180)
+            check("and that button restores the full list",
+                  ctx.input_value("#ev-q") == ""
+                  and int(ctx.get_attribute("#ev-count", "data-count")) == everything
+                  and ctx.is_hidden("#ev-read"))
+
             print("\nfilter sheets on a phone")
             # These open at the bottom, far from the chip that was tapped, so they
             # have to announce themselves: dim the page, say which filter this is,

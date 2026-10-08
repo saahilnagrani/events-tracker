@@ -74,6 +74,7 @@ ICONS = {
     "dot":      '<circle cx="12" cy="12" r="4.6" fill="currentColor" stroke="none"/>',
     "dash":     '<path d="M7 12h10"/>',
     "cross":    '<path d="M6 6l12 12M18 6L6 18"/>',
+    "search":   '<circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8L21 21"/>',
 }
 
 
@@ -738,6 +739,27 @@ body.ms-open .filters,body.ms-open .filters-meta{position:relative;z-index:36}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
 .sync-dot.on{background:var(--good)}
 
+.ev-search{position:relative;display:flex;align-items:center;margin:0 0 10px}
+.ev-search-ic{position:absolute;left:11px;display:flex;color:var(--muted);
+ pointer-events:none}
+.ev-search-ic svg{width:17px;height:17px}
+.ev-search input{width:100%;padding:9px 34px 9px 35px;font:inherit;font-size:14px;
+ color:var(--ink);background:var(--surface-1);border:1px solid var(--grid);
+ border-radius:10px;-webkit-appearance:none;appearance:none}
+.ev-search input::placeholder{color:var(--muted)}
+.ev-search input:focus{outline:none;border-color:var(--ink);
+ box-shadow:0 0 0 3px var(--ring)}
+/* Safari draws its own clear button on type=search, which would sit on top of ours. */
+.ev-search input::-webkit-search-decoration,
+.ev-search input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+.ev-search-x{position:absolute;right:6px;display:flex;align-items:center;
+ justify-content:center;width:26px;height:26px;padding:0;color:var(--muted);
+ background:none;border:0;border-radius:50%;cursor:pointer}
+.ev-search-x:hover{color:var(--ink);background:var(--plane)}
+.ev-search-x svg{width:15px;height:15px}
+.ev-read{margin:-4px 0 10px;font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.ev-read b{font-weight:600;color:var(--ink)}
+.ev-read .ev-read-miss{color:var(--muted)}
 .filters-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
  margin:8px 0 2px;font-size:12.5px;color:var(--ink-2)}
 /* The count reads first, and the controls sit together at the end of the line. */
@@ -1240,6 +1262,11 @@ JS = """
    (want[box.dataset.facet] = want[box.dataset.facet] || []).push(box.value);
   });
   var showPast = $('ev-past') && $('ev-past').checked;
+  // The typed query narrows the same list the chips narrow, and the two are ANDed:
+  // ticking Dubai and then searching "punjabi" asks for both, which is what someone
+  // who just did both things means.
+  var typed = ($('ev-q') && $('ev-q').value || '').trim();
+  var query = typed ? parseQuery(typed) : null;
   var shown = 0, past = 0;
   evs.forEach(function(el){
    var ok = true;
@@ -1248,6 +1275,7 @@ JS = """
     var hit = mine.some(function(v){ return want[facet].indexOf(v) >= 0; });
     if (!hit) { ok = false; break; }
    }
+   if (ok && query && !matchesQuery(el, query)) ok = false;
    if (ok && isPast(el)) {
     past++;
     if (!showPast) ok = false;
@@ -1273,12 +1301,37 @@ JS = """
    evCount.dataset.count = String(shown);
    evCount.dataset.past = String(past);
   }
+  var read = $('ev-read');
+  if (read) {
+   var html = query ? readingHtml(query, shown, showPast ? 0 : past) : '';
+   read.innerHTML = html;
+   read.hidden = !html;
+  }
+  var x = $('ev-q-clear');
+  if (x) x.hidden = !typed;
  }
  if ($('ev-clear')) $('ev-clear').addEventListener('click', function(){
   all('input[data-facet]').forEach(function(b){ b.checked = false; });
   if ($('ev-past')) $('ev-past').checked = false;
+  if ($('ev-q')) $('ev-q').value = '';
   evFilter();
  });
+ if ($('ev-search')) {
+  // Filtering a few hundred rows is instant, so it runs on every keystroke rather
+  // than making you press anything.
+  $('ev-q').addEventListener('input', evFilter);
+  $('ev-search').addEventListener('submit', function(e){ e.preventDefault(); });
+  // Escape clears rather than only blurring, which is what every other search box
+  // on a phone does.
+  $('ev-q').addEventListener('keydown', function(e){
+   if (e.key === 'Escape' && $('ev-q').value) { $('ev-q').value = ''; evFilter(); }
+  });
+  $('ev-q-clear').addEventListener('click', function(){
+   $('ev-q').value = '';
+   $('ev-q').focus();
+   evFilter();
+  });
+ }
  if ($('ev-past')) $('ev-past').addEventListener('change', evFilter);
  // ---- the filter and sort sheets
  // On a phone these open at the bottom, far from the chip that was tapped, so they
@@ -2410,6 +2463,221 @@ JS = """
 
  // Three orders, because three different questions get asked of this list: when is
  // it on, what has just appeared, and what is cheap.
+ // ================================================================ search
+ // A typed question, read in the browser. Nothing is sent anywhere: the dataset is
+ // behind a sign-in precisely so it is not handed to third parties, and a sentence
+ // like "punjabi comedy in dubai under 100 next month" is four facet taps and a
+ // price, all of which the rows already carry.
+ //
+ // The vocabularies are read off the data rather than written down here, so a new
+ // language or city in the dataset is searchable the day it appears.
+ var VOCAB = {city: [], category: [], language: []};
+ var MONTH_WORDS = MONTHS.map(function(m){ return m.toLowerCase(); });
+ // Words that carry no meaning here. Dropped so "comedy in dubai" does not demand a
+ // literal "in", and so a stray filler word cannot empty the list.
+ var STOP = ('in at on of the a an for with to and or any all show shows event events '
+           + 'me find search get please tickets ticket').split(' ');
+
+ // Both painters refill the row list, and the search needs two things built from it:
+ // a text blob per row and the vocabularies. Keeping that in one function is what
+ // stops a second painter from quietly producing rows that match nothing.
+ function collectEvs(){
+  evs = all('.ev');
+  evs.forEach(function(el){
+   // textContent already carries the title, venue, dates and the meta line; the
+   // artist is only ever an attribute, so it is the one thing that has to be added.
+   el._hay = (el.textContent + ' ' + (el.dataset.artist || ''))
+     .toLowerCase().replace(/\s+/g, ' ');
+  });
+  buildVocab();
+ }
+
+ function buildVocab(){
+  VOCAB = {city: [], category: [], language: []};
+  evs.forEach(function(el){
+   ['city', 'category', 'language'].forEach(function(k){
+    facetValues(el.dataset[k]).forEach(function(v){
+     if (v && VOCAB[k].indexOf(v) < 0) VOCAB[k].push(v);
+    });
+   });
+  });
+ }
+
+ function iso(d){
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
+         String(d.getDate()).padStart(2, '0');
+ }
+
+ // A month with no year means the next one still to come, the same rule the scraper
+ // uses for a listing card that prints no year.
+ function monthWindow(monthIndex, year){
+  var now = new Date(TODAY + 'T00:00:00');
+  var y = year || now.getFullYear();
+  if (!year && monthIndex < now.getMonth()) y += 1;
+  return {from: iso(new Date(y, monthIndex, 1)),
+          to: iso(new Date(y, monthIndex + 1, 0)),
+          label: MONTHS[monthIndex] + ' ' + y};
+ }
+
+ function relativeWindow(words){
+  var now = new Date(TODAY + 'T00:00:00');
+  var day = now.getDay();                       // 0 Sun .. 6 Sat
+  function plus(n){ var d = new Date(now); d.setDate(d.getDate() + n); return d; }
+  if (words === 'today')    return {from: TODAY, to: TODAY, label: 'today'};
+  if (words === 'tomorrow') return {from: iso(plus(1)), to: iso(plus(1)),
+                                    label: 'tomorrow'};
+  // The weekend is Friday to Sunday here rather than Saturday to Sunday: this is a
+  // Gulf audience and Friday night is the night.
+  if (words === 'this weekend' || words === 'weekend' || words === 'next weekend') {
+   var toFri = (5 - day + 7) % 7;
+   if (words === 'next weekend') toFri += 7;
+   return {from: iso(plus(toFri)), to: iso(plus(toFri + 2)),
+           label: words === 'next weekend' ? 'next weekend' : 'this weekend'};
+  }
+  if (words === 'this week') return {from: TODAY, to: iso(plus(6 - day)),
+                                     label: 'this week'};
+  if (words === 'next week') return {from: iso(plus(7 - day)), to: iso(plus(13 - day)),
+                                     label: 'next week'};
+  if (words === 'this month') {
+   return {from: TODAY, to: iso(new Date(now.getFullYear(), now.getMonth() + 1, 0)),
+           label: 'this month'};
+  }
+  if (words === 'next month') return monthWindow((now.getMonth() + 1) % 12,
+    now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear());
+  return null;
+ }
+
+ // The phrases are tried longest first so "next weekend" is not read as "weekend",
+ // and each one is cut out of the string before the next pass, so a word can only be
+ // understood once.
+ var WHEN_PHRASES = ['this weekend', 'next weekend', 'this month', 'next month',
+                     'this week', 'next week', 'tomorrow', 'today', 'weekend'];
+
+ function parseQuery(raw){
+  var q = ' ' + String(raw || '').toLowerCase().replace(/[,"'`]/g, ' ')
+                 .replace(/\\s+/g, ' ') + ' ';
+  var out = {text: [], city: [], category: [], language: [], min: null, max: null,
+             from: null, to: null, when: null, isNew: false, said: []};
+  function eat(re){
+   var m = q.match(re);
+   if (m) q = q.replace(m[0], ' ');
+   return m;
+  }
+
+  // Price, before anything else eats the number.
+  if (eat(/\\bfree\\b/)) { out.max = 0; out.said.push('free'); }
+  var cheap = eat(/\\b(?:under|below|less than|cheaper than|up to|max)\\s*(?:aed\\s*)?(\\d+)/);
+  if (cheap) { out.max = Number(cheap[1]); out.said.push('under AED ' + cheap[1]); }
+  var dear = eat(/\\b(?:over|above|more than|from|at least|min)\\s*(?:aed\\s*)?(\\d+)/);
+  if (dear) { out.min = Number(dear[1]); out.said.push('over AED ' + dear[1]); }
+
+  // When.
+  var win = null;
+  for (var i = 0; i < WHEN_PHRASES.length && !win; i++) {
+   if (eat(new RegExp('\\\\b' + WHEN_PHRASES[i] + '\\\\b'))) {
+    win = relativeWindow(WHEN_PHRASES[i]);
+   }
+  }
+  if (!win) {
+   for (var m = 0; m < MONTH_WORDS.length && !win; m++) {
+    var full = MONTH_WORDS[m], abbr = full.slice(0, 3);
+    var hit = eat(new RegExp('\\\\b(?:' + full + '|' + abbr + ')\\\\b\\\\s*(\\\\d{4})?'));
+    if (hit) win = monthWindow(m, hit[1] ? Number(hit[1]) : null);
+   }
+  }
+  if (!win) {
+   var yr = eat(/\\b(20\\d\\d)\\b/);
+   if (yr) win = {from: yr[1] + '-01-01', to: yr[1] + '-12-31', label: yr[1]};
+  }
+  if (win) { out.from = win.from; out.to = win.to; out.when = win.label;
+             out.said.push(win.label); }
+
+  if (eat(/\\bnew\\b/)) { out.isNew = true; out.said.push('new'); }
+
+  // City, category and language, matched on the values the data actually holds.
+  ['city', 'category', 'language'].forEach(function(kind){
+   VOCAB[kind].slice().sort(function(a, b){ return b.length - a.length; })
+    .forEach(function(value){
+     // "Comedy + Desi" and "Hindi & English" are values with punctuation in them;
+     // matching on the first word of each would make "comedy" ambiguous, so the
+     // whole value is matched and the categories fall out of the free text instead.
+     var word = value.toLowerCase();
+     if (out[kind].indexOf(value) < 0 &&
+         eat(new RegExp('\\\\b' + word.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&') + '\\\\b'))) {
+      out[kind].push(value);
+      out.said.push(value);
+     }
+    });
+  });
+
+  q.split(' ').forEach(function(w){
+   w = w.trim();
+   if (w && STOP.indexOf(w) < 0) out.text.push(w);
+  });
+  return out;
+ }
+
+ function matchesQuery(el, p){
+  if (p.max !== null) {
+   var price = el.dataset.price === '' ? null : Number(el.dataset.price);
+   if (price === null || price > p.max) return false;
+  }
+  if (p.min !== null) {
+   var lo = el.dataset.price === '' ? null : Number(el.dataset.price);
+   if (lo === null || lo < p.min) return false;
+  }
+  if (p.from) {
+   // An event matches a window if its run overlaps it, not only if it starts in it.
+   var start = el.dataset.start || '';
+   var end = el.dataset.end || start;
+   if (!start || start > p.to || end < p.from) return false;
+  }
+  if (p.isNew && el.dataset.new !== '1') return false;
+  var ok = true;
+  // City is matched exactly: Dubai and Abu Dhabi are different places. Category and
+  // language are matched on containment either way, because the values are compounds
+  // and nobody types them whole. "comedy" has to find Comedy + Desi and "hindi" has
+  // to find Hindi & English, or the obvious query returns nothing while eight real
+  // shows sit in the list.
+  if (p.city.length) {
+   ok = facetValues(el.dataset.city).some(function(v){
+    return p.city.indexOf(v) >= 0;
+   });
+  }
+  ['category', 'language'].forEach(function(kind){
+   if (!ok || !p[kind].length) return;
+   var mine = facetValues(el.dataset[kind]).map(function(v){ return v.toLowerCase(); });
+   ok = mine.some(function(v){
+    return p[kind].some(function(w){
+     w = w.toLowerCase();
+     return v.indexOf(w) >= 0 || w.indexOf(v) >= 0;
+    });
+   });
+  });
+  if (!ok) return false;
+  // Every word has to appear somewhere, so adding a word always narrows.
+  return p.text.every(function(w){ return (el._hay || '').indexOf(w) >= 0; });
+ }
+
+ function readingHtml(p, shown, hiddenPast){
+  if (!p.said.length && !p.text.length) return '';
+  var bits = p.said.map(function(s){ return '<b>' + esc(s) + '</b>'; });
+  if (p.text.length) {
+   bits.push('text matching <b>' + esc(p.text.join(' ')) + '</b>');
+  }
+  var line = 'Reading that as ' + bits.join(' &middot; ');
+  // Nothing on screen has two causes and they need opposite responses: rephrase, or
+  // tick Show past. Saying "nothing matches" when there are matches is a lie.
+  if (!shown && hiddenPast) {
+   line += '. <span class="ev-read-miss">' + hiddenPast +
+     (hiddenPast === 1 ? ' match has' : ' matches have') +
+     ' already happened \u2014 tick Show past.</span>';
+  } else if (!shown) {
+   line += '. <span class="ev-read-miss">Nothing matches all of it.</span>';
+  }
+  return line;
+ }
+
  var SORTS = [
   {value: 'date', text: 'By event date'},
   {value: 'added', text: 'Recently added'},
@@ -2483,7 +2751,9 @@ JS = """
      '" data-start="' + esc(e.start) + '" data-end="' + esc(e.end || '') +
      '" data-listed="' + (e.listed === false ? 0 : 1) + '" data-artist="' +
      esc(e.artist) + '" data-category="' + esc(e.category) + '" data-language="' +
-     esc(language) + '" data-added="' + esc(e.first_seen || '') +
+     esc(language) + '" data-city="' + esc(e.city || '') + '" data-price="' +
+     (e.price_from_aed == null ? '' : e.price_from_aed) +
+     '" data-added="' + esc(e.first_seen || '') +
      '" data-new="' + (fresh ? 1 : 0) + '"><h4><a href="' + esc(e.url) +
      '" rel="noopener noreferrer" target="_blank">' + esc(e.event) + '</a>' +
      (fresh ? '<span class="ev-new">NEW</span>' : '') +
@@ -2602,7 +2872,7 @@ JS = """
  function renderEvents(){
   var events = (DATA && DATA.viability && DATA.viability.events) || [];
   if ($('events')) $('events').innerHTML = eventsHtml(events);
-  evs = all('.ev');
+  collectEvs();
   evFilter();
   syncScrim();
  }
@@ -2636,7 +2906,7 @@ JS = """
   paintChecklistShell();
 
   cells = all('.day[data-tier]');
-  evs = all('.ev');
+  collectEvs();
   bindPainted();
   markPast();
   applyLens(lens);
@@ -3076,6 +3346,22 @@ def render(cfg, backend=None, repo=None, demo=None):
     {icon("refresh")}<span>Refresh now</span></button>
    <span class="data-msg" id="data-msg" role="status" aria-live="polite"></span>
   </div>
+  <!-- Typed questions rather than four dropdowns: "punjabi comedy in dubai under
+       100 next month" is one line where the chips are four taps. It reads the
+       phrasing in the browser and narrows the same list the facets narrow. -->
+  <form class="ev-search" id="ev-search" role="search" autocomplete="off">
+   <span class="ev-search-ic" aria-hidden="true">{icon("search")}</span>
+   <input id="ev-q" type="search" inputmode="search" autocomplete="off"
+          aria-label="Search events"
+          aria-describedby="ev-read"
+          placeholder="try: punjabi comedy in dubai under 100 next month">
+   <button type="button" id="ev-q-clear" class="ev-search-x" hidden
+           aria-label="Clear the search">{icon("close")}</button>
+  </form>
+  <!-- What it made of what you typed. Guessing at a sentence is only trustworthy if
+       it shows its work: without this, a query that quietly matched nothing and a
+       query that was misread look identical. -->
+  <p class="ev-read" id="ev-read" role="status" aria-live="polite" hidden></p>
   <div class="filters">
    <span id="facets"></span>
    <span id="ev-sort"></span>
