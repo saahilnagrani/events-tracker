@@ -15,3 +15,4 @@ data/checklists.json
 data/checklists.local.json
 docs/viability.json
 docs/changes.json
+data/superseded.json

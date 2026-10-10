@@ -185,6 +185,32 @@ def put_events(events, log=print):
         f"({sum(1 for e in events if e.get('listed', True))} still listed)")
 
 
+def delete_events(urls, log=print):
+    """Remove rows whose listing moved to a different URL.
+
+    The only deletion anywhere in this module, and it exists for one reason: a show
+    whose Platinumlist URL changed is in the table twice, and the table has no other
+    way to lose a row. The survivor has already taken on the earliest first_seen, so
+    nothing about when the show entered the market is lost with the row.
+
+    One request per URL rather than an `in` list: a URL is user-visible text in a
+    query string, and a delete is not the place to find out that something in it
+    needed escaping.
+    """
+    url, key = config()
+    gone = 0
+    for raw in urls:
+        where = requests.utils.quote(raw, safe="")
+        r = call("DELETE", f"/rest/v1/events?url=eq.{where}", key, url=url,
+                 headers={"Prefer": "return=representation"})
+        hit = len(r.json() or []) if r.content else 0
+        gone += hit
+        if not hit:
+            log(f"  nothing stored at {raw[-56:]}, already gone")
+    log(f"  removed {gone} row(s) whose listing had moved")
+    return gone
+
+
 def get_checklists():
     url, key = config()
     r = call("GET", "/rest/v1/checklists?select=id,doc,updated_at", key, url=url)

@@ -421,10 +421,59 @@ def looks_desi(text, artists):
     return any(k in low for k in artists["desi_keywords"])
 
 
-def is_recurring(url):
-    """Recurring series use a slug with no numeric id and advertise only the next date."""
+# "/event-tickets/108618/some-long-slug" -> 108618. Platinumlist is migrating these
+# to "/event-tickets/short-slug", which has no id in it, and the old URL redirects to
+# the new one. That migration is why the same show could appear twice: the table is
+# keyed by URL, so a moved listing arrived as a new event and the old URL was kept as
+# "no longer listed". The id is the thing that does not move.
+def url_event_id(url):
     parts = url.rstrip("/").split("/")
-    return not (len(parts) >= 2 and parts[-2].isdigit())
+    if len(parts) >= 2 and parts[-2].isdigit():
+        return int(parts[-2])
+    return None
+
+
+# A series says so in its own words. There is nothing in the markup that marks one:
+# the page of a weekly comedy night and the page of a one-night arena show are built
+# from the same template and differ only in what the copy says.
+RECURS = re.compile(
+    r"\b(every (?:mon|tues|wednes|thurs|fri|satur|sun)day|every week|weekly|"
+    r"each (?:mon|tues|wednes|thurs|fri|satur|sun)day|every other |fortnight|"
+    r"recurring|every month|monthly|nightly|every night)\b", re.I)
+
+
+RECUR_NOTE = "Recurring series; Platinumlist lists only the next occurrence"
+
+
+def drop_note(notes, marker):
+    """Take one marker back out of a carried-over note."""
+    parts = [n.strip() for n in (notes or "").split(";")]
+    marker_parts = [n.strip() for n in marker.split(";")]
+    out, i = [], 0
+    while i < len(parts):
+        if parts[i:i + len(marker_parts)] == marker_parts:
+            i += len(marker_parts)
+            continue
+        out.append(parts[i])
+        i += 1
+    return "; ".join(n for n in out if n)
+
+
+def is_recurring(text):
+    """Does this listing say it repeats?
+
+    It used to be inferred from the URL: a slug with no numeric id meant a series.
+    That held only while Platinumlist gave plain slugs to series alone, and it stopped
+    holding when it began moving every listing onto slugs. The rule then put
+    "Recurring series" on a one-night sitar concert at Coca-Cola Arena and on the IIFA
+    Awards, which is worse than saying nothing, because the note exists to warn that
+    the single date shown is not the whole story.
+
+    Positive evidence only. This misses a series whose copy never mentions it, and
+    that is the right way round to be wrong: an absent caveat is a smaller lie than a
+    confident one.
+    """
+    return bool(RECURS.search(text or ""))
 
 
 # ---------------------------------------------------------------- build
@@ -437,6 +486,9 @@ def build(session, cards, artists, cache, args, log=print):
             previous[e["url"].rstrip("/")] = e
 
     events, review, fetched, reused = [], [], 0, 0
+    # url -> the id Platinumlist gives the event on its own page. Collected as we go
+    # because a URL can change and this cannot.
+    page_ids = {}
     for url in sorted(cards):
         card = cards[url]
         entry = cache.get(url)
@@ -490,14 +542,19 @@ def build(session, cards, artists, cache, args, log=print):
         if not event_time and detail.get("sold_out") and old.get("time"):
             event_time = old["time"]
 
-        notes = old.get("notes", "")
+        # Notes are carried forward and markers are only ever added, so a marker
+        # written under a rule we no longer stand behind would never leave. This one
+        # is decided afresh from the page every run, so the stored copy is dropped
+        # first: otherwise "Recurring series" stays on the IIFA Awards for ever
+        # because a previous run read it off a URL shape.
+        notes = drop_note(old.get("notes", ""), RECUR_NOTE)
         markers = []
         if detail.get("sold_out"):
             markers.append("Sold out on Platinumlist" + (
                 "; time carried over from when it was on sale"
                 if not detail.get("time") and event_time else ""))
-        if is_recurring(url):
-            markers.append("Recurring series; Platinumlist lists only the next occurrence")
+        if is_recurring(f"{title} {detail.get('description', '')}"):
+            markers.append(RECUR_NOTE)
         source = detail.get("time_source")
         if source == "doors":
             markers.append(f"Listing publishes the door time only ({detail['time']}); "
@@ -529,6 +586,8 @@ def build(session, cards, artists, cache, args, log=print):
             "notes": notes,
             "url": url,
         })
+        if detail.get("id"):
+            page_ids[url] = int(detail["id"])
 
         if not match_artist(title, artists) and looks_desi(
                 f"{title} {detail.get('description', '')}", artists):
@@ -551,8 +610,98 @@ def build(session, cards, artists, cache, args, log=print):
         events.append(kept)
         archived += 1
 
+    events, superseded = merge_moved(events, page_ids, log)
     events.sort(key=lambda e: (e["start"], e["city"], e["event"]))
-    return events, review, fetched, reused, archived
+    return events, review, fetched, reused, archived, superseded
+
+
+def merge_moved(events, page_ids, log=print):
+    """One row per Platinumlist event id, not per URL.
+
+    When a listing moves to a new URL the crawl finds the new one and stops finding
+    the old one, which is retained as delisted: the same show twice, once wearing NEW
+    and once wearing "no longer listed". Fourteen of them had built up.
+
+    The id on the page is the same across the move, and the old URL carries that id in
+    its path, so the two can be matched even though the retained row was never
+    refetched. The survivor is whichever row is still listed, and it inherits the
+    earliest first_seen and the latest last_seen, so the archive keeps the day the
+    show really entered the market.
+    """
+    groups = {}
+    for e in events:
+        url = e["url"].rstrip("/")
+        ident = page_ids.get(url) or url_event_id(url)
+        if ident is None:
+            continue
+        groups.setdefault(ident, []).append(e)
+
+    superseded, dropped = [], set()
+    for ident, rows in groups.items():
+        if len(rows) < 2:
+            continue
+        # Prefer the one still on sale; between two of a kind, the one seen most
+        # recently. The loser is the stale URL, not a second show.
+        rows.sort(key=lambda e: (e.get("listed", True), e.get("last_seen") or ""),
+                  reverse=True)
+        keep, rest = rows[0], rows[1:]
+        firsts = [r.get("first_seen") for r in rows if r.get("first_seen")]
+        lasts = [r.get("last_seen") for r in rows if r.get("last_seen")]
+        if firsts:
+            keep["first_seen"] = min(firsts)
+        if lasts:
+            keep["last_seen"] = max(lasts)
+        for r in rest:
+            dropped.add(r["url"].rstrip("/"))
+            superseded.append({"url": r["url"], "event": r["event"],
+                               "start": r.get("start"), "moved_to": keep["url"],
+                               "platinumlist_id": ident})
+    if superseded:
+        log(f"  {len(superseded)} listing(s) moved to a new URL; "
+            f"keeping one row each")
+        for sup in superseded[:6]:
+            log(f"    {sup['event'][:52]}")
+    kept = [e for e in events if e["url"].rstrip("/") not in dropped]
+
+    # The pairs the id cannot reach: both rows delisted, so neither is fetched any
+    # more and the slug URL never yields a page id. What is left is the migration's
+    # own fingerprint, and only it: the same show, same date, same venue, same time,
+    # under two URLs of which exactly one carries a numeric id. A promoter listing two
+    # sittings would differ on the time; a different show would differ on the title.
+    # Nothing else in the data looks like this, and without it these sit in the
+    # archive as permanent doubles, since a delisted row is never looked at again.
+    seen = {}
+    pairs = []
+    for e in kept:
+        if e.get("listed", True):
+            continue
+        sig = (e["event"], e.get("start"), e.get("end"), e.get("venue"), e.get("time"))
+        if sig in seen:
+            pairs.append((seen[sig], e))
+        else:
+            seen[sig] = e
+    for a, b in pairs:
+        ids = [url_event_id(a["url"]), url_event_id(b["url"])]
+        if sum(i is not None for i in ids) != 1:
+            continue                      # two slugs or two ids: not a move
+        older, newer = (a, b) if ids[0] is not None else (b, a)
+        firsts = [r.get("first_seen") for r in (a, b) if r.get("first_seen")]
+        lasts = [r.get("last_seen") for r in (a, b) if r.get("last_seen")]
+        if firsts:
+            newer["first_seen"] = min(firsts)
+        if lasts:
+            newer["last_seen"] = max(lasts)
+        dropped.add(older["url"].rstrip("/"))
+        superseded.append({"url": older["url"], "event": older["event"],
+                           "start": older.get("start"), "moved_to": newer["url"],
+                           "platinumlist_id": url_event_id(older["url"])})
+    if pairs:
+        matched = sum(1 for a, b in pairs
+                      if a["url"].rstrip("/") in dropped or b["url"].rstrip("/") in dropped)
+        if matched:
+            log(f"  {matched} delisted pair(s) matched on show, date, venue and time")
+    kept = [e for e in kept if e["url"].rstrip("/") not in dropped]
+    return kept, superseded
 
 
 def check(events, cfg, log=print):
@@ -600,6 +749,9 @@ def main():
     ap.add_argument("--out", default=str(ROOT / "data" / "events.json"))
     ap.add_argument("--review-out", default=str(ROOT / "data" / "review_queue.json"),
                     help="where to persist the review queue for src/changes.py to diff")
+    ap.add_argument("--superseded-out",
+                    default=str(ROOT / "data" / "superseded.json"),
+                    help="URLs that moved, for src/publish.py to delete")
     ap.add_argument("--dry-run", action="store_true", help="do not write events.json")
     args = ap.parse_args()
 
@@ -620,7 +772,8 @@ def main():
     print(f"  {len(cards)} unique events across {len(LISTINGS)} listings")
 
     print("fetching detail pages")
-    events, review, fetched, reused, archived = build(session, cards, artists, cache, args)
+    events, review, fetched, reused, archived, superseded = build(
+        session, cards, artists, cache, args)
     print(f"  {fetched} fetched, {reused} from cache, {archived} retained after delisting")
 
     print("checks")
@@ -650,6 +803,10 @@ def main():
         print(f"\ndry run, {args.out} left alone")
         return 0
     Path(args.out).write_text(json.dumps(events, indent=1, ensure_ascii=False) + "\n")
+    # The rows these replaced are still in the database, because the events table has
+    # never deleted anything. src/publish.py reads this and removes exactly these.
+    Path(args.superseded_out).write_text(
+        json.dumps(superseded, indent=1, ensure_ascii=False) + "\n")
     # Persisted because it is derived from the detail-page description text, which
     # events.json does not carry: src/changes.py cannot recompute it from the dataset
     # alone, and diffing this file against its committed version is what separates a

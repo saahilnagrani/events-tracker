@@ -60,6 +60,16 @@ def pull(log=print):
     return 0
 
 
+SUPERSEDED_FILE = backend.ROOT / "data" / "superseded.json"
+
+
+def superseded_urls():
+    """Listings the scraper found at a new URL, whose old row is now a duplicate."""
+    if not SUPERSEDED_FILE.exists():
+        return []
+    return [row["url"] for row in json.loads(SUPERSEDED_FILE.read_text())]
+
+
 def push(force=False, log=print):
     pushed = 0
     if backend.EVENTS_FILE.exists():
@@ -82,8 +92,12 @@ def push(force=False, log=print):
         if moved:
             log(f"  kept the stored first_seen on {moved} events")
 
-        if len(events) < len(stored):
-            missing = len(stored) - len(events)
+        # A moved listing is a row this run deliberately drops, so it must not read
+        # as history going missing. Counted separately, and deleted rather than left
+        # to sit there as the duplicate the app was showing.
+        moved = superseded_urls()
+        if len(events) + len(moved) < len(stored):
+            missing = len(stored) - len(events) - len(moved)
             log(f"  NOTE: this run carries {len(events)} events against {len(stored)} "
                 f"stored; {missing} will keep their existing rows.")
             if not force:
@@ -91,6 +105,8 @@ def push(force=False, log=print):
                     "them too. Re-run with --push --force if that is intended.")
                 return 1
         backend.put_events(events, log)
+        if moved:
+            backend.delete_events(moved, log)
         pushed += 1
     else:
         log("  events: no events.json to push")
