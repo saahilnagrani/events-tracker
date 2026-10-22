@@ -28,6 +28,33 @@ TOKEN = {
 CO_BILL_ACTS = ["Ada Testwallah", "Bo Sample"]
 CO_BILL = "; ".join(CO_BILL_ACTS)
 
+# A run long enough to be on through a month it neither starts nor ends in. Searching
+# that month has to find it, because the rule is overlap. The real dataset supplies
+# such a run only sometimes, and the fortnight it did not was the fortnight a test
+# asserting the stricter rule looked correct; when one came back the daily run went
+# down three times. So the case is kept here rather than left to the market.
+LONG_RUN_TITLE = "Test Season: A Run Spanning Three Months"
+
+
+class LongRun:
+    """Where the generated run's middle month lands, for the test to ask about."""
+    middle = None
+
+
+def long_run(today):
+    start = today + dt.timedelta(days=20)
+    end = today + dt.timedelta(days=110)
+    # The month in the middle, which is neither the first nor the last.
+    middle = (start.replace(day=1) + dt.timedelta(days=45)).replace(day=1)
+    return {
+        "event": LONG_RUN_TITLE, "artist": "", "city": "Dubai", "category": "Comedy",
+        "language": "English", "venue": "Test Playhouse",
+        "start": start.isoformat(), "end": end.isoformat(), "time": "20:00",
+        "price_from_aed": 120, "listed": True, "notes": "",
+        "first_seen": "2026-08-17", "last_seen": today.isoformat(),
+        "url": "https://dubai.platinumlist.net/event-tickets/test-long-run",
+    }, middle
+
 
 class FakeBackend:
     def __init__(self, viability=None, checklists=None, allowed=True, paused=False,
@@ -52,6 +79,8 @@ class FakeBackend:
                 stamped += 1
             else:
                 event["first_seen"] = "2026-08-17"
+        row, LongRun.middle = long_run(dt.date.today())
+        viability.setdefault("events", []).append(row)
         # One co-billed show, because the checked-in dataset predates the artist block
         # and holds none. A show billed to two acts has to be findable under either,
         # which is the whole complaint that put real names in this field.

@@ -295,11 +295,35 @@ def main():
 
             # A month with no year means the next one still to come, the same rule
             # the scraper uses for a listing card that prints no year.
+            #
+            # The rule is overlap, not "starts in December": a run from 10 October to
+            # 10 January is on in December and is a correct hit. Asserting the
+            # stricter thing passed for a fortnight and then took the daily run down
+            # three times when a long run happened to be in the data, which is the
+            # worst way for a test to be wrong.
             dec = q("december")
-            check("a month name is read as a date window",
-                  dec and all(((r["end"] or r["start"])[:7].endswith("-12")
-                               or r["start"][:7].endswith("-12")) for r in dec),
+            year = dt.date.today().year + (1 if dt.date.today().month > 12 else 0)
+            frm, to = f"{year}-12-01", f"{year}-12-31"
+            off = [r for r in dec
+                   if not (r["start"] <= to and (r["end"] or r["start"]) >= frm)]
+            check("a month name is read as a date window", dec and not off,
+                  str([(r["start"], r["end"]) for r in off[:3]]))
+            check("and the window is December, not some other month",
+                  any(r["start"][:7] == f"{year}-12" for r in dec),
                   str(sorted({r["start"][:7] for r in dec})))
+
+            # The overlap case itself, from a run the fixture guarantees: on through
+            # a month it neither starts nor ends in. This is the assertion the old one
+            # should have been.
+            from fake_backend import LongRun, LONG_RUN_TITLE
+            mid = LongRun.middle
+            spanning = q(mid.strftime("%B"))
+            titles = ctx.eval_on_selector_all(
+                ".ev", """els => els.filter(e => !e.hidden)
+                    .map(e => e.querySelector('h4 a').textContent.trim())""")
+            check(f"a run through {mid:%B} is found by searching that month, "
+                  f"though it neither starts nor ends in it",
+                  LONG_RUN_TITLE in titles, f"{len(spanning)} rows")
 
             combined = q("comedy in dubai")
             check("two things in one phrase are both applied",
