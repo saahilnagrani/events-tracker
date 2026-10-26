@@ -293,6 +293,10 @@ summary{cursor:pointer;color:var(--ink-2);padding:5px 0}
    the count updates in front of you as you tick. What dims is the content you are
    filtering, which is also what makes the sheet and the row read as one thing. */
 body.ms-open .filters,body.ms-open .filters-meta{position:relative;z-index:36}
+/* The open sheet lives inside .filters, so .filters has to paint over the count
+   row. Equal z-index let the row, coming later, sit on top of a tall sheet's Done
+   button once imported history gave the Month filter three years of months. */
+body.ms-open .filters{z-index:37}
 @keyframes ms-fade{from{opacity:0}to{opacity:1}}
 /* The heading sticks, so a long list still says what it belongs to. */
 .ms-head{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:10px;
