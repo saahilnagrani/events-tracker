@@ -218,39 +218,6 @@ def main():
           len(scrape.merge_moved(gone_pair(listed=True), {},
                                  log=lambda *a: None)[0]) == 2)
 
-    print("\nimported history")
-    # A scrape only ever sees what is on sale, so anything that already happened is
-    # invisible to it. The artist pages carry that record and it is committed.
-    hist = scrape.load_history(log=lambda *a: None)
-    check("the history file loads", len(hist) > 100, f"{len(hist)} rows")
-    check("every row is delisted, so the list hides them until Show past is ticked",
-          all(r["listed"] is False for r in hist))
-    check("every row has what the list and the filters read",
-          all(r.get("url") and r.get("event") and r.get("start") and r.get("city")
-              and r.get("artist") for r in hist))
-    check("nothing is dated in the future; this is history",
-          all(r["start"] <= date.today().isoformat() for r in hist),
-          str(sorted(r["start"] for r in hist)[-1:]))
-    check("and nothing predates the window asked for",
-          all(r["start"] >= "2023-01-01" for r in hist),
-          str(sorted(r["start"] for r in hist)[:1]))
-    # first_seen drives the NEW badge. Stamped with today it would light up all of
-    # them at once, on a run that found nothing new at all.
-    check("first_seen is the show's own date, so none of it arrives wearing NEW",
-          all(r["first_seen"] == r["start"] for r in hist))
-    check("the rows say where they came from",
-          all("imported" in (r.get("notes") or "").lower() for r in hist))
-    urls = [r["url"] for r in hist]
-    check("one row per URL", len(set(urls)) == len(urls))
-
-    # A show this tracker actually watched has better data than a line off an artist
-    # page: a price, a time, the language. The scrape must win.
-    scraped = {"url": hist[0]["url"], "event": hist[0]["event"], "start": hist[0]["start"],
-               "city": hist[0]["city"], "listed": True, "price_from_aed": 150}
-    merged, _ = scrape.merge_moved([scraped], {}, log=lambda *a: None)
-    check("a scraped row is never replaced by the imported one",
-          len(merged) == 1 and merged[0].get("price_from_aed") == 150)
-
     print("\nwhether a listing repeats")
     # The note is carried forward in the stored row and markers are only ever added,
     # so one written under the old rule would outlive the rule itself.

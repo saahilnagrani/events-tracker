@@ -476,29 +476,6 @@ def is_recurring(text):
     return bool(RECURS.search(text or ""))
 
 
-HISTORY_FILE = ROOT / "data" / "history.json"
-
-
-def load_history(log=print):
-    """Shows that happened before this tracker was watching.
-
-    Platinumlist keeps a past-events list on each artist page, and those are the only
-    record of what has already played Dubai and Abu Dhabi: a scrape only ever sees
-    what is on sale today. The file is committed, so every run folds the same history
-    back in rather than it depending on a one-off import that nobody can repeat.
-
-    They are never live. Each row is delisted on arrival, so the list hides them until
-    Show past is ticked, and only a row whose URL we have never scraped is used: a
-    show this tracker actually watched has better data than a line off an artist page.
-    """
-    if not HISTORY_FILE.exists():
-        return []
-    rows = json.loads(HISTORY_FILE.read_text())
-    for row in rows:
-        row["listed"] = False
-    return rows
-
-
 # ---------------------------------------------------------------- build
 
 def build(session, cards, artists, cache, args, log=print):
@@ -632,18 +609,6 @@ def build(session, cards, artists, cache, args, log=print):
         kept.setdefault("first_seen", kept.get("last_seen") or kept.get("start"))
         events.append(kept)
         archived += 1
-
-    # Folded in before the merge, so an imported row that shares an id with a scraped
-    # one is collapsed by the same rule as everything else.
-    have = {e["url"].rstrip("/") for e in events}
-    added = 0
-    for row in load_history(log):
-        if row["url"].rstrip("/") in have:
-            continue
-        events.append(dict(row))
-        added += 1
-    if added:
-        log(f"  {added} past shows folded in from data/history.json")
 
     events, superseded = merge_moved(events, page_ids, log)
     events.sort(key=lambda e: (e["start"], e["city"], e["event"]))
