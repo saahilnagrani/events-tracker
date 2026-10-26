@@ -677,6 +677,21 @@ body.ms-open .filters{z-index:37}
 .ms-opt:has(input:checked){background:var(--plane)}
 .ms-opt:has(input:checked) span{font-weight:600}
 
+/* The artist menu: a sort toggle, then two collapsible sections. */
+.ms-sort{display:flex;gap:6px;align-items:center;padding:4px 4px 8px;font-size:12px;
+ color:var(--muted)}
+.ms-sort .seg{margin-left:auto}
+.ms-sort .seg button{font-size:12px;padding:5px 10px;min-height:30px}
+.ms-sec{border-top:1px solid var(--ring)}
+.ms-sec>summary{list-style:none;display:flex;align-items:center;gap:8px;
+ padding:9px 6px;font-size:12.5px;font-weight:600;color:var(--ink)}
+.ms-sec>summary::-webkit-details-marker{display:none}
+.ms-sec>summary i{font-style:normal;font-weight:400;color:var(--muted)}
+.ms-sec>summary .ms-caret{margin-left:auto;color:var(--muted)}
+.ms-sec[open]>summary .ms-caret{transform:rotate(180deg)}
+.ms-sec-badge{background:var(--ink);color:var(--surface-1);border-radius:20px;
+ font-size:10.5px;padding:1px 6px;font-weight:600}
+
 /* single-choice control: shows the current value and swaps it on pick */
 .ms-choice>summary{justify-content:space-between;gap:10px;min-width:150px}
 .ms-value{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1291,6 +1306,12 @@ JS = """
    var name = ms.dataset.ms;
    var n = (want[name] || []).length;
    var badge = ms.querySelector('.ms-badge');
+   if (badge) { badge.textContent = n; badge.hidden = n === 0; }
+  });
+  // A collapsed section would otherwise hide that something in it is ticked.
+  all('.ms-sec').forEach(function(sec){
+   var n = sec.querySelectorAll('input:checked').length;
+   var badge = sec.querySelector('.ms-sec-badge');
    if (badge) { badge.textContent = n; badge.hidden = n === 0; }
   });
   if (evCount) {
@@ -2797,18 +2818,92 @@ JS = """
    }),
    artist: plain('artist'), category: plain('category'), language: plain('language')
   };
+  function box(facet, o){
+   return '<label class="ms-opt" data-name="' + esc(o[1]) + '" data-count="' + o[2] +
+     '"><input type="checkbox" data-facet="' + facet + '" value="' + esc(o[0]) +
+     '"><span>' + esc(o[1]) + '</span><i>' + o[2] + '</i></label>';
+  }
   return [['month', 'Month'], ['artist', 'Artist'], ['category', 'Category'],
           ['language', 'Language']].map(function(pair){
-   var boxes = (opts[pair[0]] || []).map(function(o){
-    return '<label class="ms-opt"><input type="checkbox" data-facet="' + pair[0] +
-      '" value="' + esc(o[0]) + '"><span>' + esc(o[1]) + '</span><i>' + o[2] +
-      '</i></label>';
-   }).join('');
+   var body;
+   if (pair[0] === 'artist') {
+    var desi = desiArtists(events);
+    var mine = (opts.artist || []).filter(function(o){ return desi[o[0]]; });
+    var rest = (opts.artist || []).filter(function(o){ return !desi[o[0]]; });
+    function section(key, label, list, open){
+     return '<details class="ms-sec" data-sec="' + key + '"' + (open ? ' open' : '') +
+       '><summary>' + label + ' <i>' + list.length + '</i>' +
+       '<span class="ms-sec-badge" hidden></span>' +
+       '<svg class="ic ms-caret" aria-hidden="true"><use href="#i-down"></use></svg>' +
+       '</summary><div class="ms-sec-list">' +
+       list.map(function(o){ return box('artist', o); }).join('') + '</div></details>';
+    }
+    body = '<div class="ms-sort"><span>Sort</span><div class="seg" role="group" ' +
+      'aria-label="Sort artists">' + ARTIST_SORTS.map(function(o){
+       return '<button type="button" data-artist-sort="' + o.value + '" aria-pressed="' +
+         (o.value === artistSort ? 'true' : 'false') + '">' + o.text + '</button>';
+      }).join('') + '</div></div>' +
+      section('desi', 'Indian &amp; desi', mine, true) +
+      section('other', 'Other', rest, false);
+   } else {
+    body = (opts[pair[0]] || []).map(function(o){ return box(pair[0], o); }).join('');
+   }
    return '<details class="ms" data-ms="' + pair[0] + '" data-label="' + pair[1] +
      '"><summary>' + pair[1] + '<span class="ms-badge" hidden></span></summary>' +
-     '<div class="ms-menu">' + boxes + '</div></details>';
+     '<div class="ms-menu">' + body + '</div></details>';
   }).join('');
  }
+
+ // ---- the artist menu's two halves, and its order
+ // There is no nationality anywhere on Platinumlist, so "Indian & desi" is read off
+ // what the tracker does know: an act with any show on the Desi listings or in a South
+ // Asian language, plus a short list from data/artists.json for acts whose shows carry
+ // neither, such as a comedian known only from history. It includes Pakistani
+ // acts too, because the audience is the same one.
+ 
+ var DESI_LANG = /hindi|urdu|punjabi|gujarati|tamil|telugu|malayalam|marathi|bengali|kannada|hinglish|carnatic|indian/i;
+ function artistKey(n){ return String(n || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+ function desiArtists(events){
+  // From the payload rather than the shell: the shell is served before sign-in and is
+  // kept free of anything from the dataset, which the smoke test checks name by name.
+  var curated = ((DATA && DATA.viability && DATA.viability.desi_names) || [])
+    .map(artistKey);
+  var out = {};
+  events.forEach(function(e){
+   var desiShow = /desi/i.test(e.category || '') || DESI_LANG.test(e.language || '');
+   facetValues(e.artist).forEach(function(a){
+    if (desiShow || curated.indexOf(artistKey(a)) >= 0) out[a] = true;
+   });
+  });
+  return out;
+ }
+
+ var ARTIST_SORTS = [{value: 'count', text: 'Most shows'}, {value: 'name', text: 'A\u2013Z'}];
+ var artistSort = store.get('artist-sort', 'count');
+ // Reordered in place rather than re-rendered, so whatever is ticked stays ticked.
+ function sortArtists(){
+  all('.ms-sec-list').forEach(function(list){
+   var rows = Array.prototype.slice.call(list.children);
+   rows.sort(function(a, b){
+    if (artistSort === 'count') {
+     var d = Number(b.dataset.count) - Number(a.dataset.count);
+     if (d) return d;
+    }
+    return a.dataset.name.localeCompare(b.dataset.name, undefined, {sensitivity: 'base'});
+   });
+   rows.forEach(function(r){ list.appendChild(r); });
+  });
+  all('[data-artist-sort]').forEach(function(b){
+   b.setAttribute('aria-pressed', b.dataset.artistSort === artistSort ? 'true' : 'false');
+  });
+ }
+ document.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('[data-artist-sort]');
+  if (!b) return;
+  artistSort = b.dataset.artistSort;
+  store.set('artist-sort', artistSort);
+  sortArtists();
+ });
 
  function lensesHtml(){
   return Object.keys(LENSES).map(function(name){
@@ -2889,6 +2984,7 @@ JS = """
  function paint(){
   var events = (DATA && DATA.viability && DATA.viability.events) || [];
   if ($('facets')) $('facets').innerHTML = facetsHtml(events);
+  sortArtists();
   if ($('ev-sort')) {
    $('ev-sort').innerHTML = sortHtml();
    var box = $('ev-sort').querySelector('.ms-choice');

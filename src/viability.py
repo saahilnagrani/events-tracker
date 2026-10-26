@@ -208,6 +208,11 @@ def main():
         # The page counts its own headline figures from the days it was given, so the
         # one thing it cannot derive travels with them.
         "ramadan": cfg["ramadan"],
+        # Which half of the artist filter an act belongs in, for the acts whose shows
+        # do not say. It travels with the data rather than in the page shell, which is
+        # kept free of anything from the dataset; the smoke test checks for names.
+        "desi_names": sorted(set(artists.get("indian_standup_artists", [])
+                                 + artists.get("desi_artists", []))),
         # `days` stays the default lens so every existing reader keeps working.
         "days": days,
         "lenses": lenses,

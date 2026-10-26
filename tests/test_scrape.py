@@ -131,6 +131,38 @@ def main():
           scrape.parse_artists(HTMLParser(
               '<div class="artist-block__item-inner">  </div>')) == [])
 
+    # A music act's tile carries the track its preview plays, beside the name. Reading
+    # the whole tile glued the two: "Atif AslamDil Diyan Gallan", which then sat in the
+    # artist filter beside a separate "Atif Aslam".
+    audio = """<div class="artist-block__item-inner artist-block__item-inner--audio">
+      <div class="artist-block__details"><a class="artist-block__name" href="/artist/30">
+        Atif Aslam</a><div class="artist-block__audio-title">Dil Diyan Gallan</div></div>
+      </div>"""
+    check("a music act's name is read without the song its preview plays",
+          scrape.parse_artists(HTMLParser(audio)) == ["Atif Aslam"],
+          str(scrape.parse_artists(HTMLParser(audio))))
+    check("a name whose slash has no space after it is still split",
+          scrape.clean_name("Sasha Nezlobin /\u0410\u043b\u0435\u043a\u0441\u0430\u043d\u0434\u0440")
+          == "Sasha Nezlobin")
+    check("but a slash inside a name is left alone", scrape.clean_name("AC/DC") == "AC/DC")
+
+    print("\none spelling per act")
+    rows = [{"artist": "A. R. Rahman", "listed": True},
+            {"artist": "A R Rahman", "listed": False},
+            {"artist": "A R Rahman; A. R. Rahman", "listed": False},
+            {"artist": "Rotating local comedians", "listed": True},
+            {"artist": "No performer listed (live DJ)", "listed": False},
+            {"artist": "Kenny Sebastian", "listed": False}]
+    scrape.canonical_artists(rows)
+    check("two spellings of one act become one",
+          {r["artist"] for r in rows[:2]} == {"A. R. Rahman"}, str([r["artist"] for r in rows[:2]]))
+    check("and the spelling on the live listing is the one kept",
+          rows[1]["artist"] == "A. R. Rahman")
+    check("a row naming the act twice names it once", rows[2]["artist"] == "A. R. Rahman")
+    check("descriptions typed into the artist column are not acts",
+          rows[3]["artist"] == "" and rows[4]["artist"] == "")
+    check("everyone else is untouched", rows[5]["artist"] == "Kenny Sebastian")
+
     print("\none row per show")
     # Platinumlist is moving listings from /event-tickets/<id>/<long-slug> to
     # /event-tickets/<short-slug>. The crawl finds the new URL and loses the old one,

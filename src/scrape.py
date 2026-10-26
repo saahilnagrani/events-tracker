@@ -59,7 +59,7 @@ BACKOFF = [2, 4, 8, 16]
 
 # The cache stores parsed output, not raw HTML, so a change to parse_detail has to
 # invalidate it. Bump this whenever parse_detail's output shape or meaning changes.
-PARSER_VERSION = 5
+PARSER_VERSION = 6
 
 MONTHS = {m: i for i, m in enumerate(
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1)}
@@ -256,7 +256,13 @@ def parse_artists(tree):
     """
     names, seen = [], set()
     for node in tree.css(".artist-block__item-inner"):
-        name = " ".join(node.text().split()).split(" / ")[0].strip()
+        # A music act's tile also carries the track its preview plays, in an element
+        # beside the name, so reading the whole tile glued the song onto the act:
+        # "Atif AslamDil Diyan Gallan". The name has its own element; the tile's text
+        # is only the fallback for a template that lacks one.
+        tag = node.css_first(".artist-block__name")
+        raw = tag.text() if tag is not None else node.text()
+        name = clean_name(raw)
         if name and name.lower() not in seen:
             seen.add(name.lower())
             names.append(name)
@@ -419,6 +425,64 @@ def looks_desi(text, artists):
     if any(k in low for k in artists.get("exclude_keywords", [])):
         return False
     return any(k in low for k in artists["desi_keywords"])
+
+
+# A lowercase letter (or a full stop or bracket) running straight into a capital is
+# what a song title glued onto a name looks like: "Prateek KuhadKasoor". It also
+# matches a real name such as "Manal AlDowayan", which is why a match only prompts a
+# re-read of the page rather than a guess at where to cut.
+GLUED = re.compile(r"[a-z.)][A-Z]")
+HEAL_PER_RUN = 25
+
+# Descriptions typed into the artist column of the original spreadsheet, carried
+# forward ever since because a page with no artist block keeps the old value. They
+# are not acts, and in the artist filter they read as if they were.
+PLACEHOLDER = re.compile(
+    r"^\s*(rotating\b|no performer|various artists|to be announced|tba\b)", re.I)
+
+
+def clean_name(raw):
+    """Whitespace collapsed, and one script of a name given in two.
+
+    The site writes "Alexander Merkul / Александр Меркуль", and sometimes drops the
+    space after the slash, so a split on " / " alone left the Cyrillic attached.
+    """
+    name = " ".join((raw or "").split())
+    return re.split(r"\s+/\s*|\s*/\s+", name)[0].strip()
+
+
+def artist_key(name):
+    """One key for the spellings of one act: "A. R. Rahman" and "A R Rahman"."""
+    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+
+def canonical_artists(events):
+    """Make every row spell each act the same way, and drop the placeholders.
+
+    The live listing and the artist page disagree on punctuation, so the same act was
+    offered twice in the filter. A spelling seen on a listed row wins, since that is
+    the page as it stands today; otherwise the most common one.
+    """
+    votes = {}
+    for e in events:
+        weight = 10 if e.get("listed", True) else 1
+        for name in (e.get("artist") or "").split("; "):
+            name = clean_name(name)
+            if name and not PLACEHOLDER.match(name):
+                votes.setdefault(artist_key(name), {}).setdefault(name, 0)
+                votes[artist_key(name)][name] += weight
+    best = {k: max(c.items(), key=lambda kv: (kv[1], kv[0]))[0] for k, c in votes.items()}
+    for e in events:
+        out = []
+        for name in (e.get("artist") or "").split("; "):
+            name = clean_name(name)
+            if not name or PLACEHOLDER.match(name):
+                continue
+            pick = best.get(artist_key(name), name)
+            if pick not in out:
+                out.append(pick)
+        e["artist"] = "; ".join(out)
+    return events
 
 
 # "/event-tickets/108618/some-long-slug" -> 108618. Platinumlist is migrating these
@@ -599,7 +663,7 @@ def build(session, cards, artists, cache, args, log=print):
     # would rewrite history every time a listing expired. Delisted events keep their
     # last known fields and the date they were last on sale.
     live = {e["url"].rstrip("/") for e in events}
-    archived = 0
+    archived = healed = 0
     for url, old_event in previous.items():
         if url in live:
             continue
@@ -607,10 +671,24 @@ def build(session, cards, artists, cache, args, log=print):
         kept["listed"] = False
         kept.setdefault("last_seen", kept.get("start"))
         kept.setdefault("first_seen", kept.get("last_seen") or kept.get("start"))
+        # A delisted row is never fetched again, so a name that was misread while it
+        # was on sale would stay misread for good. The page outlives the sale and
+        # still carries its artist block, so a name that looks glued is read again.
+        if healed < HEAL_PER_RUN and GLUED.search(kept.get("artist") or ""):
+            try:
+                names = parse_artists(HTMLParser(fetch(session, url, args.delay).text))
+            except Exception:
+                names = []
+            if names:
+                kept["artist"] = "; ".join(names)
+                healed += 1
         events.append(kept)
         archived += 1
+    if healed:
+        log(f"  re-read {healed} delisted page(s) to clean the artist names")
 
     events, superseded = merge_moved(events, page_ids, log)
+    canonical_artists(events)
     events.sort(key=lambda e: (e["start"], e["city"], e["event"]))
     return events, review, fetched, reused, archived, superseded
 

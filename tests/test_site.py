@@ -237,6 +237,8 @@ def main():
             # inside an closed menu are not clickable.
             ctx.click('details.ms[data-ms="artist"] summary')
             ctx.wait_for_timeout(150)
+            # The acts can land in either half, and the second starts collapsed.
+            ctx.evaluate("() => document.querySelectorAll('.ms-sec').forEach(d => d.open = true)")
             for act in CO_BILL_ACTS:
                 ctx.click(f'input[data-facet="artist"][value="{act}"]')
                 ctx.wait_for_timeout(150)
@@ -369,6 +371,88 @@ def main():
                   ctx.input_value("#ev-q") == ""
                   and int(ctx.get_attribute("#ev-count", "data-count")) == everything
                   and ctx.is_hidden("#ev-read"))
+
+            print("\nthe artist menu")
+            # Fresh, so the sections are as a reader first finds them; the test above
+            # opened both to reach its boxes.
+            ctx.reload()
+            ctx.wait_for_timeout(900)
+            ctx.click('details.ms[data-ms="artist"] summary')
+            ctx.wait_for_timeout(200)
+            secs = ctx.eval_on_selector_all(
+                '.ms[data-ms="artist"] .ms-sec',
+                """els => els.map(d => ({key: d.dataset.sec, open: d.open,
+                    label: d.querySelector('summary').textContent.trim(),
+                    names: [...d.querySelectorAll('input')].map(i => i.value)}))""")
+            check("it is split into two sections", [x["key"] for x in secs] == ["desi", "other"],
+                  str([x["label"] for x in secs]))
+            check("Indian & desi first and open, Other collapsed",
+                  secs and secs[0]["open"] and not secs[1]["open"]
+                  and secs[0]["label"].startswith("Indian"))
+            every = ctx.eval_on_selector_all('.ms[data-ms="artist"] input[data-facet="artist"]',
+                                             "els => els.map(e => e.value)")
+            check("every act is in exactly one section",
+                  sorted(secs[0]["names"] + secs[1]["names"]) == sorted(every)
+                  and not set(secs[0]["names"]) & set(secs[1]["names"]))
+            # The rule is the data's, not a guess from a name: anyone billed on a show from
+            # the Desi listings is in the first half.
+            desi_billed = ctx.evaluate("""() => {
+                const out = new Set();
+                (window.__T_EVENTS__ || []).forEach(() => {});
+                document.querySelectorAll('.ev').forEach(el => {
+                  if (/desi/i.test(el.dataset.category || ''))
+                    (el.dataset.artist || '').split('; ').filter(Boolean)
+                      .forEach(a => out.add(a));
+                });
+                return [...out]; }""")
+            check("anyone billed on a Desi-listed show is filed under Indian & desi",
+                  desi_billed and all(a in secs[0]["names"] for a in desi_billed),
+                  str([a for a in desi_billed if a not in secs[0]["names"]][:3]))
+            check("a curated act with no Desi show still lands there",
+                  all(n in secs[0]["names"] for n in ("Ravi Gupta",) if n in every))
+
+            def order(key):
+                return ctx.eval_on_selector_all(
+                    f'.ms-sec[data-sec="{key}"] .ms-opt',
+                    "els => els.map(e => [e.dataset.name, Number(e.dataset.count)])")
+            ctx.evaluate("() => document.querySelectorAll('.ms-sec').forEach(d => d.open = true)")
+            ctx.click('[data-artist-sort="count"]')
+            ctx.wait_for_timeout(120)
+            o = order("desi")
+            check("Most shows puts the busiest act first",
+                  all(a[1] >= b[1] for a, b in zip(o, o[1:])), str(o[:3]))
+            ctx.click('[data-artist-sort="name"]')
+            ctx.wait_for_timeout(120)
+            o = order("other")
+            names = [n for n, _ in o]
+            check("A-Z is alphabetical, ignoring case",
+                  names == sorted(names, key=lambda n: n.casefold()), str(names[:4]))
+            check("the toggle shows which order is in force",
+                  ctx.get_attribute('[data-artist-sort="name"]', "aria-pressed") == "true"
+                  and ctx.get_attribute('[data-artist-sort="count"]', "aria-pressed") == "false")
+            # Reordering in place rather than re-rendering keeps what is ticked.
+            first = names[0]
+            ctx.check(f'.ms-sec[data-sec="other"] input[value="{first}"]')
+            ctx.wait_for_timeout(120)
+            ctx.click('[data-artist-sort="count"]')
+            ctx.wait_for_timeout(120)
+            check("a ticked act stays ticked when the order changes",
+                  ctx.is_checked(f'.ms-sec[data-sec="other"] input[value="{first}"]'))
+            ctx.evaluate("() => document.querySelector('.ms-sec[data-sec=\"other\"]').open = false")
+            ctx.wait_for_timeout(100)
+            check("a collapsed section still shows that something in it is ticked",
+                  ctx.inner_text('.ms-sec[data-sec="other"] .ms-sec-badge') == "1")
+            ctx.click('[data-artist-sort="name"]')
+            # On a phone the open sheet covers the controls under it, as it should.
+            ctx.click(".ms[open] .ms-done")
+            ctx.wait_for_timeout(150)
+            ctx.click("#ev-clear")
+            ctx.wait_for_timeout(150)
+            ctx.reload()
+            ctx.wait_for_timeout(900)
+            check("the chosen order survives a reload",
+                  ctx.get_attribute('[data-artist-sort="name"]', "aria-pressed") == "true")
+            ctx.evaluate("() => localStorage.removeItem('artist-sort')")
 
             print("\nfilter sheets on a phone")
             # These open at the bottom, far from the chip that was tapped, so they
