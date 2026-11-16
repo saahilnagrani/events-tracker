@@ -146,6 +146,23 @@ def main():
           == "Sasha Nezlobin")
     check("but a slash inside a name is left alone", scrape.clean_name("AC/DC") == "AC/DC")
 
+    print("\na date from the ticket box")
+    # Six shows had a listing card with no date and a page with no analytics
+    # timestamp, so every run skipped them; three sat in the list as "no longer
+    # listed" while on sale. The ticket box prints the date a buyer reads.
+    page = """<h1>Double Trouble</h1><div class="buy-block__section">
+      <div class="buy-block__date">Sun 29 Nov</div>
+      <span class="buy-block__time-text">Start:</span>
+      <span class="buy-block__time-value">17:00</span></div>"""
+    d = scrape.parse_detail(page)
+    check("the ticket box date is read off the page", d.get("page_date") == "Sun 29 Nov",
+          str(d.get("page_date")))
+    check("and it resolves to a real date when the card has none",
+          scrape.parse_card_dates(None or d["page_date"], None, today=TODAY,
+                                  log=lambda *a: None)[0] == "2026-11-29")
+    check("a page without a ticket box says so rather than guessing",
+          scrape.parse_detail("<h1>x</h1>").get("page_date") is None)
+
     print("\none spelling per act")
     rows = [{"artist": "A. R. Rahman", "listed": True},
             {"artist": "A R Rahman", "listed": False},

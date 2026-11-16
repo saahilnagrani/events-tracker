@@ -59,7 +59,7 @@ BACKOFF = [2, 4, 8, 16]
 
 # The cache stores parsed output, not raw HTML, so a change to parse_detail has to
 # invalidate it. Bump this whenever parse_detail's output shape or meaning changes.
-PARSER_VERSION = 6
+PARSER_VERSION = 7
 
 MONTHS = {m: i for i, m in enumerate(
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1)}
@@ -320,6 +320,14 @@ def parse_detail(html):
         t.css_first(".buy-block__section--on-sale") is None
         and any("sold out" in " ".join(s.text().split()).lower() for s in sections))
 
+    # The date as the ticket box prints it, "Sun 29 Nov". The listing card usually
+    # carries the same thing, but not always: Double Trouble at Emirates Theatre had a
+    # card with no date and a page with no analytics timestamp, so every run logged
+    # "no date, skipping" and the show never reached the list. This is the third place
+    # to look, and it is the one a person buying a ticket reads.
+    box = t.css_first(".buy-block__date")
+    out["page_date"] = " ".join(box.text().split()) if box else None
+
     stamp = webengage_iso(html)
     if stamp:
         out["iso_start"] = stamp[:10]
@@ -576,7 +584,8 @@ def build(session, cards, artists, cache, args, log=print):
         title = detail.get("title") or card["title"]
         iso = detail.get("iso_start")
         year_hint = int(iso[:4]) if iso else None
-        start, end = parse_card_dates(card["card_date"], year_hint)
+        start, end = parse_card_dates(card["card_date"] or detail.get("page_date"),
+                                      year_hint)
         start = iso or start
         if not start:
             log(f"  ! no date, skipping: {title[:60]}")
