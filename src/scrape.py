@@ -59,7 +59,7 @@ BACKOFF = [2, 4, 8, 16]
 
 # The cache stores parsed output, not raw HTML, so a change to parse_detail has to
 # invalidate it. Bump this whenever parse_detail's output shape or meaning changes.
-PARSER_VERSION = 7
+PARSER_VERSION = 8
 
 MONTHS = {m: i for i, m in enumerate(
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1)}
@@ -269,6 +269,23 @@ def parse_artists(tree):
     return names
 
 
+VENUE_SEP = " · "
+
+
+def parse_venue(tree):
+    """The venue line. A touring show lists every venue it plays, each in its own
+    container, and reading the block's text runs them together into one name."""
+    box = tree.css_first(".event-item__venue-name")
+    if not box:
+        return None
+    names = []
+    for node in box.css(".event-item__venue-name-text"):
+        name = " ".join(node.text().split())
+        if name and name not in names:
+            names.append(name)
+    return VENUE_SEP.join(names) if names else (" ".join(box.text().split()) or None)
+
+
 def parse_detail(html):
     t = HTMLParser(html)
     out = {}
@@ -287,8 +304,7 @@ def parse_detail(html):
 
     # Works for both markup variants: venues with their own Platinumlist page and
     # venues that only render a geo-anchor.
-    venue = t.css_first(".event-item__venue-name")
-    out["venue"] = " ".join(venue.text().split()) if venue else None
+    out["venue"] = parse_venue(t)
 
     # Only "Start:" is actually the start time. Plenty of pages publish "Doors:" alone,
     # or neither, and treating either of those as the start silently shifts an event
@@ -440,6 +456,9 @@ def looks_desi(text, artists):
 # matches a real name such as "Manal AlDowayan", which is why a match only prompts a
 # re-read of the page rather than a guess at where to cut.
 GLUED = re.compile(r"[a-z.)][A-Z]")
+# Venues glued together look like "Abu DhabiMarriott". Stricter than GLUED so that a
+# venue with an acronym in it, "(ToDA)", is not re-read on every run.
+GLUED_VENUE = re.compile(r"[a-z)][A-Z][a-z]")
 HEAL_PER_RUN = 25
 
 # Descriptions typed into the artist column of the original spreadsheet, carried
@@ -683,18 +702,25 @@ def build(session, cards, artists, cache, args, log=print):
         # A delisted row is never fetched again, so a name that was misread while it
         # was on sale would stay misread for good. The page outlives the sale and
         # still carries its artist block, so a name that looks glued is read again.
-        if healed < HEAL_PER_RUN and GLUED.search(kept.get("artist") or ""):
+        glued_artist = GLUED.search(kept.get("artist") or "")
+        glued_venue = GLUED_VENUE.search(kept.get("venue") or "")
+        if healed < HEAL_PER_RUN and (glued_artist or glued_venue):
             try:
-                names = parse_artists(HTMLParser(fetch(session, url, args.delay).text))
+                page = HTMLParser(fetch(session, url, args.delay).text)
             except Exception:
-                names = []
+                page = None
+            names = parse_artists(page) if page and glued_artist else []
+            venue = parse_venue(page) if page and glued_venue else None
             if names:
                 kept["artist"] = "; ".join(names)
+            if venue:
+                kept["venue"] = venue
+            if names or venue:
                 healed += 1
         events.append(kept)
         archived += 1
     if healed:
-        log(f"  re-read {healed} delisted page(s) to clean the artist names")
+        log(f"  re-read {healed} delisted page(s) to clean artist and venue names")
 
     events, superseded = merge_moved(events, page_ids, log)
     canonical_artists(events)

@@ -291,6 +291,27 @@ def main():
     ]:
         check(f"{why}", scrape.is_recurring(text) is want, repr(text[:40]))
 
+    # A touring show lists each venue in its own container. Reading the block's text
+    # ran them into one name: "Al Habtoor Polo ResortThe Club, Mina Sadiyat".
+    def venue_box(*names):
+        inner = "".join(
+            f'<div class="event-item__venue-name-container"><a href="#">'
+            f'<span class="event-item__venue-name-text">{n}</span></a></div>' for n in names)
+        return HTMLParser(f'<div class="event-item__venue-name no-mobile">{inner}</div>')
+    check("several venues are kept apart",
+          scrape.parse_venue(venue_box("Polo Resort", "The Club, Abu Dhabi", "Marriott, Dubai"))
+          == "Polo Resort · The Club, Abu Dhabi · Marriott, Dubai")
+    check("one venue reads as itself", scrape.parse_venue(venue_box("Coca-Cola Arena")) == "Coca-Cola Arena")
+    check("a venue repeated in the markup is listed once",
+          scrape.parse_venue(venue_box("Dubai Opera", "Dubai Opera")) == "Dubai Opera")
+    check("markup without the name spans still gives the text",
+          scrape.parse_venue(HTMLParser('<div class="event-item__venue-name"> Zabeel  Theatre </div>'))
+          == "Zabeel Theatre")
+    check("no venue block, no venue", scrape.parse_venue(HTMLParser("<p>x</p>")) is None)
+    check("glued venues are spotted", bool(scrape.GLUED_VENUE.search("Abu DhabiMarriott Hotel")))
+    check("an acronym in brackets is not",
+          not scrape.GLUED_VENUE.search("Theatre of Digital Art (ToDA)"))
+
     print(f"\n{checks - len(failures)}/{checks} checks passed")
     for f in failures:
         print(f"  FAILED: {f}")

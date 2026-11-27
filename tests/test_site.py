@@ -54,6 +54,7 @@ def check(name, ok, detail=""):
 def find_chromium():
     """The image ships a browser build that may not match playwright's expected one."""
     for pattern in ("/opt/pw-browsers/chromium-*/chrome-linux/chrome",
+                    "/opt/pw-browsers/chromium-*/chrome-linux64/chrome",
                     "/opt/pw-browsers/chromium_headless_shell-*/chrome-linux/headless_shell"):
         hits = sorted(glob.glob(pattern))
         if hits:
